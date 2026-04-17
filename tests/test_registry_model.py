@@ -47,9 +47,17 @@ def test_get_diplotype_frequencies_homozygous():
     assert result.iloc[0]['haplotype1'] == result.iloc[0]['haplotype2']
 
 
+def _sparse_haplo_df(n_haplotypes=200):
+    """Many small haplotypes so coverage differences are distinguishable at N=100-10000."""
+    freq = 1.0 / n_haplotypes
+    rows = [{'ethnicity': 'Chinese', 'haplotype': f'A{i}|B{i}|C{i}|D{i}|Q{i}', 'frequency': freq}
+            for i in range(n_haplotypes)]
+    return pd.DataFrame(rows)
+
+
 def test_compute_coverage_monotone_increasing():
     """Coverage should increase with N."""
-    df = _haplo_df([('A|B|C|D|Q', 0.3), ('A2|B2|C2|D2|Q2', 0.7)])
+    df = _sparse_haplo_df()
     diplo = get_diplotype_frequencies(df)
     coverages = [compute_coverage(diplo, n) for n in [100, 1000, 10000]]
     assert coverages[0] < coverages[1] < coverages[2]
@@ -58,7 +66,7 @@ def test_compute_coverage_monotone_increasing():
 
 def test_find_registry_size_reaches_target():
     """find_registry_size should return N where coverage >= target."""
-    df = _haplo_df([('A|B|C|D|Q', 0.3), ('A2|B2|C2|D2|Q2', 0.7)])
+    df = _sparse_haplo_df()
     diplo = get_diplotype_frequencies(df)
     for target in [0.75, 0.85, 0.90]:
         n = find_registry_size(diplo, target)
