@@ -34,7 +34,7 @@ _ALLELE_PATTERN = re.compile(
 _LOCUS_NAME = {"A": "HLA-A", "B": "HLA-B", "C": "HLA-C", "DRB1": "DRB1", "DQB1": "DQB1"}
 
 
-def normalize_allele(val) -> str:
+def normalize_allele(val) -> "str | float":
     """Return 2-field allele string (e.g. '11:01') or NaN if missing/unparseable."""
     if val is None or (isinstance(val, float) and np.isnan(val)):
         return np.nan
@@ -48,7 +48,7 @@ def normalize_allele(val) -> str:
     return np.nan
 
 
-def map_ethnicity(val) -> str:
+def map_ethnicity(val) -> "str | float":
     """Map raw ethnicity code/name to one of Chinese/Malay/Indian/Others."""
     if val is None or (isinstance(val, float) and np.isnan(val)):
         return np.nan

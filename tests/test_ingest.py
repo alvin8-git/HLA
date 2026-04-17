@@ -97,3 +97,40 @@ def test_load_txt_haplotypes_missing_allele():
         assert pd.isna(dqb1_row["allele1"].values[0])
     finally:
         os.unlink(fname)
+
+
+def test_load_excel_sheet_produces_tidy_output():
+    import tempfile, os
+    # Create a minimal Excel sheet mimicking BMDP.out structure
+    test_df = pd.DataFrame({
+        "A1": ["11:01", "24:02"],
+        "A2": ["33:03", "11:01"],
+        "B1": ["15:02", "40:01"],
+        "B2": ["58:01", "15:02"],
+        "C1": ["08:01", "07:02"],
+        "C2": ["03:02", "15:02"],
+        "DRB11": ["12:02", "04:01"],
+        "DRB12": ["03:01", "12:02"],
+        "DQB11": ["03:01", "03:02"],
+        "DQB12": ["02:01", "03:01"],
+        "Ethnicity": ["C", "M"],
+    })
+    with tempfile.NamedTemporaryFile(suffix=".xlsx", delete=False) as f:
+        fname = f.name
+    try:
+        test_df.to_excel(fname, index=False, sheet_name="BMDP.out")
+        result = _mod.load_excel_sheet(pathlib.Path(fname), "BMDP.out", "TEST")
+        # 2 people × 5 loci = 10 rows
+        assert len(result) == 10
+        assert set(result["locus"]) == {"HLA-A", "HLA-B", "HLA-C", "DRB1", "DQB1"}
+        # Check ethnicity mapping
+        assert set(result["ethnicity"]) == {"Chinese", "Malay"}
+        # Check a specific allele
+        row = result[(result["sample_id"] == "TEST_0") & (result["locus"] == "HLA-A")]
+        assert row["allele1"].values[0] == "11:01"
+        assert row["allele2"].values[0] == "33:03"
+        # DRB11/DRB12 pattern correctly detected
+        row_drb = result[(result["sample_id"] == "TEST_0") & (result["locus"] == "DRB1")]
+        assert row_drb["allele1"].values[0] == "12:02"
+    finally:
+        os.unlink(fname)
