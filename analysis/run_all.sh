@@ -8,8 +8,8 @@ python3 01_ingest.py
 echo "=== Step 2: Allele frequency verification ==="
 python3 02_allele_freq.py
 
-echo "=== Step 3: HWE tests + haplo.stats (R) ==="
-Rscript 03_hwe_test.R
+echo "=== Step 3: HWE tests + haplo.stats (Python EM) ==="
+python3 03_hwe_test.py
 
 echo "=== Step 4: Registry size model ==="
 python3 04_registry_model.py
