@@ -142,7 +142,7 @@
 | 2 | 24:02|38:02|07:02|15:02|05:02 | 0.0028 |
 | 3 | 24:07|35:05|04:01|12:02|03:01 | 0.0027 |
 | 4 | 34:01|38:02|07:02|15:02|05:02 | 0.0023 |
-| 5 | 11:01|15:02|08:01|12:02|03:01 | 0.0021 |
+| 5 | 34:01|40:02|15:02|15:02|05:02 | 0.0021 |
 
 ---
 
@@ -245,10 +245,10 @@ These files contain single-field (allele1 only) typing — allele2 is 100% missi
 | 10of10 | Chinese | same_ethnicity | 85% | 6,008 |
 | 10of10 | Chinese | same_ethnicity | 90% | 7,926 |
 | 10of10 | Chinese | same_ethnicity | 95% | 11,616 |
-| 10of10 | Chinese | cross_ethnic | 75% | 6,843 |
-| 10of10 | Chinese | cross_ethnic | 85% | 11,191 |
-| 10of10 | Chinese | cross_ethnic | 90% | 15,808 |
-| 10of10 | Chinese | cross_ethnic | 95% | 30,167 |
+| 10of10 | Chinese | cross_ethnic | 75% | 6,767 |
+| 10of10 | Chinese | cross_ethnic | 85% | 10,977 |
+| 10of10 | Chinese | cross_ethnic | 90% | 15,332 |
+| 10of10 | Chinese | cross_ethnic | 95% | 27,518 |
 | 10of10 | Malay | same_ethnicity | 75% | 5,840 |
 | 10of10 | Malay | same_ethnicity | 85% | 9,096 |
 | 10of10 | Malay | same_ethnicity | 90% | 12,017 |
@@ -261,9 +261,9 @@ These files contain single-field (allele1 only) typing — allele2 is 100% missi
 | 10of10 | Indian | same_ethnicity | 85% | 2,121 |
 | 10of10 | Indian | same_ethnicity | 90% | 2,692 |
 | 10of10 | Indian | same_ethnicity | 95% | 3,759 |
-| 10of10 | Indian | cross_ethnic | 75% | 222,769 |
-| 10of10 | Indian | cross_ethnic | 85% | 407,371 |
-| 10of10 | Indian | cross_ethnic | 90% | 1,068,464 |
+| 10of10 | Indian | cross_ethnic | 75% | 220,545 |
+| 10of10 | Indian | cross_ethnic | 85% | 398,262 |
+| 10of10 | Indian | cross_ethnic | 90% | 879,462 |
 | 10of10 | Indian | cross_ethnic | 95% | ≥10,000,000 (ceiling) |
 | 10of10 | Others | same_ethnicity | 75% | 1,001 |
 | 10of10 | Others | same_ethnicity | 85% | 1,001 |
@@ -290,7 +290,7 @@ These files contain single-field (allele1 only) typing — allele2 is 100% missi
 **Same-ethnicity vs cross-ethnic at 90% coverage:**
 
 - Indian 8of8: same_ethnicity=2,612, cross_ethnic=≥10M (ceiling)
-- Indian 10of10: same_ethnicity=2,692, cross_ethnic=1,068,464
+- Indian 10of10: same_ethnicity=2,692, cross_ethnic=879,462
 - Malay 8of8: same_ethnicity=11,799, cross_ethnic=≥10M (ceiling)
 - Malay 10of10: same_ethnicity=12,017, cross_ethnic=≥10M (ceiling)
 - Others 8of8: same_ethnicity=1,001, cross_ethnic=≥10M (ceiling)

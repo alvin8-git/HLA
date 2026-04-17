@@ -39,10 +39,10 @@ match_level,ethnicity,model_variant,target_coverage,registry_size
 10of10,Chinese,same_ethnicity,0.85,6008
 10of10,Chinese,same_ethnicity,0.9,7926
 10of10,Chinese,same_ethnicity,0.95,11616
-10of10,Chinese,cross_ethnic,0.75,6843
-10of10,Chinese,cross_ethnic,0.85,11191
-10of10,Chinese,cross_ethnic,0.9,15808
-10of10,Chinese,cross_ethnic,0.95,30167
+10of10,Chinese,cross_ethnic,0.75,6767
+10of10,Chinese,cross_ethnic,0.85,10977
+10of10,Chinese,cross_ethnic,0.9,15332
+10of10,Chinese,cross_ethnic,0.95,27518
 10of10,Malay,same_ethnicity,0.75,5840
 10of10,Malay,same_ethnicity,0.85,9096
 10of10,Malay,same_ethnicity,0.9,12017
@@ -55,9 +55,9 @@ match_level,ethnicity,model_variant,target_coverage,registry_size
 10of10,Indian,same_ethnicity,0.85,2121
 10of10,Indian,same_ethnicity,0.9,2692
 10of10,Indian,same_ethnicity,0.95,3759
-10of10,Indian,cross_ethnic,0.75,222769
-10of10,Indian,cross_ethnic,0.85,407371
-10of10,Indian,cross_ethnic,0.9,1068464
+10of10,Indian,cross_ethnic,0.75,220545
+10of10,Indian,cross_ethnic,0.85,398262
+10of10,Indian,cross_ethnic,0.9,879462
 10of10,Indian,cross_ethnic,0.95,10000000
 10of10,Others,same_ethnicity,0.75,1001
 10of10,Others,same_ethnicity,0.85,1001
