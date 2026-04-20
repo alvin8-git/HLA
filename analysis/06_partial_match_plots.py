@@ -26,7 +26,7 @@ LOCI_4 = ['HLA-A', 'HLA-B', 'HLA-C', 'DRB1']             # 8-allele framework
 
 ETHNICITIES = ['Chinese', 'Malay', 'Indian', 'Others']
 SG_WEIGHTS = {'Chinese': 0.77, 'Malay': 0.08, 'Indian': 0.09, 'Others': 0.06}
-N_VALUES = np.logspace(3, 6, 300)
+N_VALUES = np.logspace(0, 6, 300)
 
 
 # ---------------------------------------------------------------------------
@@ -182,7 +182,7 @@ def make_figure(eth_curves_dict, match_levels, framework_name, out_path):
             ax.plot(N_VALUES, cov * 100, color=color, linewidth=2, label=label)
 
         ax.set_xscale('log')
-        ax.set_xlim(1e3, 1e6)
+        ax.set_xlim(1, 1e6)
         ax.set_ylim(0, 100)
         ax.set_xlabel('Number of donors in the registry', fontsize=10)
         ax.set_ylabel('Percentage of patients with donors', fontsize=10)
