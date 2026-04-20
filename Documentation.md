@@ -161,7 +161,9 @@ The Excel files use non-standard column naming (`DRB11`/`DRB12` instead of `DRB1
 
 For each (ethnicity, locus), the observed allele frequency is computed as:
 
-$$f(a) = \frac{\text{count}(a \in \text{allele}_1) + \text{count}(a \in \text{allele}_2)}{2 \times N_{\text{individuals typed at locus}}}$$
+$$
+f(a) = \frac{\text{count}(a \in \text{allele}_1) + \text{count}(a \in \text{allele}_2)}{2 \times N_{\text{individuals typed at locus}}}
+$$
 
 where NaN values of allele₂ are excluded from both numerator and denominator. This is the **maximum likelihood estimator** under the assumption of random mating (Hardy–Weinberg equilibrium): it converges in one step of the EM algorithm.
 
@@ -169,7 +171,9 @@ where NaN values of allele₂ are excluded from both numerator and denominator. 
 
 Published allele frequencies were loaded from `BMDPnSCBB.results.xlsx`, which stores Gene[Rate] software outputs in a wide format. For each (ethnicity, locus, allele), the signed difference is computed:
 
-$$\Delta f(a) = f_{\text{observed}}(a) - f_{\text{published}}(a)$$
+$$
+\Delta f(a) = f_{\text{observed}}(a) - f_{\text{published}}(a)
+$$
 
 Alleles with $|\Delta f| > 0.005$ (0.5 percentage points) are flagged.
 
@@ -197,28 +201,41 @@ Alleles with $|\Delta f| > 0.005$ (0.5 percentage points) are flagged.
 
 Hardy–Weinberg Equilibrium (HWE) describes the genotype frequency distribution expected in a large, randomly mating population with no selection, mutation, migration, or genetic drift. For a locus with alleles $a_1, a_2, \ldots, a_k$ with frequencies $p_1, p_2, \ldots, p_k$:
 
-$$P(\text{genotype } a_i a_i) = p_i^2 \qquad \text{(homozygote)}$$
-$$P(\text{genotype } a_i a_j) = 2 p_i p_j \quad i \neq j \qquad \text{(heterozygote)}$$
+$$
+P(\text{genotype } a_i a_i) = p_i^2 \qquad \text{(homozygote)}
+$$
+
+$$
+P(\text{genotype } a_i a_j) = 2 p_i p_j \quad i \neq j \qquad \text{(heterozygote)}
+$$
 
 **Expected heterozygosity** under HWE:
 
-$$H_{\exp} = 1 - \sum_{i} p_i^2$$
+$$
+H_{\exp} = 1 - \sum_{i} p_i^2
+$$
 
 **Observed heterozygosity:**
 
-$$H_{\text{obs}} = \frac{\text{count}(\text{allele}_1 \neq \text{allele}_2)}{N}$$
+$$
+H_{\text{obs}} = \frac{\text{count}(\text{allele}_1 \neq \text{allele}_2)}{N}
+$$
 
 ### 5.2 HWE Test Statistic
 
 The chi-squared test statistic used here compares observed vs expected heterozygosity:
 
-$$\chi^2 = N \cdot \frac{(H_{\text{obs}} - H_{\text{exp}})^2}{H_{\text{exp}} \cdot (1 - H_{\text{exp}})}$$
+$$
+\chi^2 = N \cdot \frac{(H_{\text{obs}} - H_{\text{exp}})^2}{H_{\text{exp}} \cdot (1 - H_{\text{exp}})}
+$$
 
 with 1 degree of freedom (df = 1 for the 2-class partition heterozygous/homozygous). The p-value is obtained from `scipy.stats.chi2.sf(χ², df=1)`.
 
 **Bonferroni correction:** With 20 simultaneous tests (5 loci × 4 ethnicities), the family-wise significance threshold is:
 
-$$\alpha_{\text{corrected}} = \frac{0.05}{20} = 0.0025$$
+$$
+\alpha_{\text{corrected}} = \frac{0.05}{20} = 0.0025
+$$
 
 ### 5.3 EM Haplotype Frequency Estimation
 
@@ -246,10 +263,14 @@ Due to the computational complexity of full 5-locus phase resolution, this pipel
 2. For 5-locus haplotype frequencies: enumerate all $(h_i, h_j)$ haplotype pairs consistent with each individual's genotype. A haplotype $h = (a_A, a_B, a_C, a_{DRB1}, a_{DQB1})$ combines allele 1 or allele 2 at each locus. Each individual contributes exactly 2 phase assignments (combining allele 1 at all loci, and allele 2 at all loci). 
 
 3. **E-step:** weight each phase assignment by the product of haplotype frequencies:
-   $$w_{ij} = \frac{f(h_i) \cdot f(h_j)}{\sum_{i'j'} f(h_{i'}) \cdot f(h_{j'})}$$
+   $$
+   w_{ij} = \frac{f(h_i) \cdot f(h_j)}{\sum_{i'j'} f(h_{i'}) \cdot f(h_{j'})}
+   $$
 
 4. **M-step:** update frequencies from fractional counts:
-   $$f'(h_k) = \frac{\sum_{\text{individuals}} \sum_{(i,j): h_i=h_k} w_{ij} + \sum_{(i,j): h_j=h_k} w_{ij}}{2N}$$
+   $$
+   f'(h_k) = \frac{\sum_{\text{individuals}} \sum_{(i,j): h_i=h_k} w_{ij} + \sum_{(i,j): h_j=h_k} w_{ij}}{2N}
+   $$
 
 5. Iterate until $\max_k |f'(h_k) - f(h_k)| < 10^{-6}$ or 100 iterations.
 
@@ -293,8 +314,13 @@ All violations show **heterozygosity deficit** (H_obs < H_exp), consistent with:
 
 Given a set of haplotypes $\{h_1, \ldots, h_K\}$ with frequencies $\{f_1, \ldots, f_K\}$ (summing to 1), diplotype frequencies under HWE are:
 
-$$P(h_i, h_i) = f_i^2 \qquad \text{(homozygous diplotype)}$$
-$$P(h_i, h_j) = 2 f_i f_j \quad i < j \qquad \text{(heterozygous diplotype)}$$
+$$
+P(h_i, h_i) = f_i^2 \qquad \text{(homozygous diplotype)}
+$$
+
+$$
+P(h_i, h_j) = 2 f_i f_j \quad i < j \qquad \text{(heterozygous diplotype)}
+$$
 
 The sum of all diplotype frequencies is $(\sum_i f_i)^2 = 1$.
 
@@ -304,7 +330,9 @@ A **residual "other" haplotype** pools all haplotypes not in the top-K set (thos
 
 For a patient with diplotype $g$ (occurring with frequency $f_g$ in the patient population), the probability of finding **at least one matching donor** in a registry of $N$ independently drawn donors is:
 
-$$P(\geq 1 \text{ match} \mid N, g) = 1 - (1 - f_g)^N$$
+$$
+P(\geq 1 \text{ match} \mid N, g) = 1 - (1 - f_g)^N
+$$
 
 This uses the complement of the probability that all $N$ donors are non-matches.
 
@@ -312,7 +340,9 @@ This uses the complement of the probability that all $N$ donors are non-matches.
 
 The expected fraction of patients who find at least one match is the weighted average over all diplotypes:
 
-$$\text{Coverage}(N) = \sum_g f_g \cdot \left[1 - (1 - f_g)^N\right]$$
+$$
+\text{Coverage}(N) = \sum_g f_g \cdot \left[1 - (1 - f_g)^N\right]
+$$
 
 where the outer $f_g$ is the probability that a random patient has diplotype $g$, and the bracket is the match probability for that patient given $N$ donors. This formula assumes:
 
@@ -330,7 +360,9 @@ Four scenario combinations are evaluated per ethnicity:
 
 For **cross-ethnic matching**, the coverage formula becomes:
 
-$$\text{Coverage}_{\text{cross}}(N) = \sum_{g \in \text{patient}} f_g^{\text{patient}} \cdot \left[1 - (1 - f_g^{\text{donor}})^N\right]$$
+$$
+\text{Coverage}_{\text{cross}}(N) = \sum_{g \in \text{patient}} f_g^{\text{patient}} \cdot \left[1 - (1 - f_g^{\text{donor}})^N\right]
+$$
 
 where $f_g^{\text{patient}}$ is the diplotype frequency in the patient's ethnic group and $f_g^{\text{donor}}$ is the frequency of that same diplotype in the combined donor pool (0 if the haplotype pair does not appear in the combined pool).
 
@@ -352,7 +384,9 @@ where $f_g^{\text{patient}}$ is the diplotype frequency in the patient's ethnic 
 
 For a target coverage $\theta \in \{0.75, 0.85, 0.90, 0.95\}$, the minimum registry size is:
 
-$$N^* = \min \{N \in \mathbb{Z}^+ : \text{Coverage}(N) \geq \theta\}$$
+$$
+N^* = \min \{N \in \mathbb{Z}^+ : \text{Coverage}(N) \geq \theta\}
+$$
 
 Found via **binary search on a log₁₀ scale** over $N \in [1{,}000, 10{,}000{,}000]$ with 50 iterations (precision ~10⁻¹⁵).
 
@@ -374,7 +408,9 @@ For rare diplotypes with $f_g \approx 10^{-5}$, even $N = 10^7$ may give $(1-f_g
 
 **What it shows:** A seaborn heatmap where each cell represents one (ethnicity, locus, allele group) combination. Cell colour indicates the signed difference between independently computed allele frequency and the Gene[Rate]-published frequency:
 
-$$\Delta f = f_{\text{observed}} - f_{\text{published}}$$
+$$
+\Delta f = f_{\text{observed}} - f_{\text{published}}
+$$
 
 **Colour scale:**
 - **Red/warm:** Observed frequency is higher than published
@@ -542,7 +578,9 @@ Run `pytest tests/ -v` to verify all 29 tests pass before reproducing the analys
 
 Match probabilities are computed using **haplotype-pair enumeration** over EM-estimated haplotype frequencies (capturing linkage disequilibrium between loci). For each patient diplotype (h_p, h_q), the match probability for match threshold m is:
 
-$$p_m(g) = \sum_{(h_r, h_s)} f_{h_r, h_s} \cdot \mathbf{1}\left[\text{allele\_match\_count}(h_p, h_q, h_r, h_s) \geq m\right]$$
+$$
+p_m(g) = \sum_{(h_r, h_s)} f_{h_r, h_s} \cdot \mathbf{1}\left[\text{allele\_match\_count}(h_p, h_q, h_r, h_s) \geq m\right]
+$$
 
 where the allele match count at each locus uses optimal bipartite assignment: `max((pa==da)+(pb==db), (pa==db)+(pb==da))`.
 
