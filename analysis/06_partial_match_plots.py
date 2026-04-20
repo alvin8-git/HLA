@@ -4,6 +4,8 @@ Partial-match registry coverage curves for CMIO populations.
 Produces two figures matching WBMT Figure 5 style:
   - partial_match_10locus.png  (10/10, 9/10, 8/10)
   - partial_match_8locus.png   (8/8, 7/8, 6/8)
+
+Uses haplotype-pair enumeration to correctly capture linkage disequilibrium (LD).
 """
 
 import pandas as pd
@@ -12,7 +14,6 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import os
-from itertools import combinations_with_replacement
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.join(HERE, 'data')
@@ -37,7 +38,7 @@ def parse_haplotypes(haplo_df, loci):
     haplo_df: DataFrame with columns [ethnicity, haplotype, frequency]
               haplotype = pipe-separated 5-locus alleles A|B|C|DRB1|DQB1
     loci:     list of locus names (LOCI_5 or LOCI_4)
-    Returns:  list of (allele_tuple, frequency)
+    Returns:  list of (allele_tuple, frequency), normalized to sum=1.0
     """
     n = len(loci)  # number of loci to use (4 or 5)
     records = {}
@@ -48,130 +49,88 @@ def parse_haplotypes(haplo_df, loci):
     total = sum(records.values())
     if total == 0:
         return []
+    # Normalize so frequencies sum to 1.0 (EM output may not include all haplotypes)
     return [(k, v / total) for k, v in records.items()]
 
 
-def get_allele_freqs_dict(allele_freq_df, ethnicity, loci):
-    """
-    Returns dict: {locus: {allele: frequency}}
-    Normalised per locus.
-    """
-    # Map locus names: allele_freqs_per_locus uses 'DRB1'/'DQB1' without prefix
-    # and 'HLA-A' etc. — check actual values
-    sub = allele_freq_df[allele_freq_df['ethnicity'] == ethnicity]
-    result = {}
-    for locus in loci:
-        lsub = sub[sub['locus'] == locus]
-        if lsub.empty:
-            result[locus] = {}
-            continue
-        d = dict(zip(lsub['allele'], lsub['frequency']))
-        total = sum(d.values())
-        if total > 0:
-            d = {a: f / total for a, f in d.items()}
-        result[locus] = d
-    return result
-
-
 # ---------------------------------------------------------------------------
-# Match probability computation
+# Vectorized allele match count
 # ---------------------------------------------------------------------------
 
-def locus_match_dist(p1, p2, freq_dict):
+def allele_match_count_matrix(pat_a, pat_b, don_a, don_b):
     """
-    Returns numpy array [P(0 match), P(1 match), P(2 match)] at one locus.
-    p1, p2: patient alleles at this locus
-    freq_dict: {allele: frequency} for this locus
+    pat_a, pat_b: shape (N_pat, n_loci) — patient allele arrays (object dtype)
+    don_a, don_b: shape (N_don, n_loci) — donor allele arrays (object dtype)
+    Returns: shape (N_pat, N_don) int8 — total allele match count per pair
     """
-    qp1 = freq_dict.get(p1, 0.0)
-    qp2 = freq_dict.get(p2, 0.0)
+    # Expand dims for broadcasting: (N_pat, 1, n_loci) vs (1, N_don, n_loci)
+    pa = pat_a[:, None, :]   # (N_pat, 1, n_loci)
+    pb = pat_b[:, None, :]
+    da = don_a[None, :, :]   # (1, N_don, n_loci)
+    db = don_b[None, :, :]
 
-    if p1 == p2:
-        # Homozygous patient
-        p = qp1
-        p2m = p * p
-        p1m = 2 * p * (1 - p)
-        p0m = (1 - p) ** 2
-    else:
-        # Heterozygous patient
-        p2m = 2 * qp1 * qp2
-        # P(1 match): donor has exactly one of p1 or p2
-        # = P(donor has p1 but not p2) + P(donor has p2 but not p1)
-        # donor genotype (x,y) with x<=y under HWE:
-        # More directly from multiset intersection:
-        # P(1 match) = q[p1]^2 + q[p2]^2
-        #            + 2*q[p1]*(1-q[p1]-q[p2])
-        #            + 2*q[p2]*(1-q[p1]-q[p2])
-        p1m = (qp1**2 + qp2**2
-               + 2 * qp1 * (1 - qp1 - qp2)
-               + 2 * qp2 * (1 - qp1 - qp2))
-        p0m = 1.0 - p2m - p1m
-
-    # Clip to [0, 1] to handle floating point edge cases
-    arr = np.array([p0m, p1m, p2m], dtype=np.float64)
-    arr = np.clip(arr, 0.0, 1.0)
-    arr /= arr.sum()
-    return arr
+    # Two possible allele assignments at each locus, take the better one
+    assign1 = (pa == da).astype(np.int8) + (pb == db).astype(np.int8)
+    assign2 = (pa == db).astype(np.int8) + (pb == da).astype(np.int8)
+    locus_match = np.maximum(assign1, assign2)  # (N_pat, N_don, n_loci)
+    return locus_match.sum(axis=2).astype(np.int8)  # (N_pat, N_don)
 
 
-def compute_diplotype_partial_match_probs(haplotypes, allele_freqs, loci, min_matches):
+def compute_partial_match_probs(haplotypes, match_thresholds):
     """
-    For each diplotype (h_p, h_q):
-      - compute P(total allele matches >= min_matches) against a random donor
-    Returns: (f_g_arr, p_match_arr) as numpy arrays.
+    haplotypes: list of (allele_tuple, frequency), normalized to sum=1
+    match_thresholds: list of ints, e.g. [8, 9, 10] for 10-locus
+    Returns: dict {threshold: (f_diplo, p_match)} where both are np.arrays
     """
-    n_loci = len(loci)
-    max_matches = 2 * n_loci
+    n = len(haplotypes)
+    if n == 0:
+        return {m: (np.array([]), np.array([])) for m in match_thresholds}
 
-    f_g_list = []
-    p_match_list = []
+    allele_tuples = [h for h, f in haplotypes]
+    freqs = np.array([f for h, f in haplotypes])
 
-    haps = haplotypes  # list of (allele_tuple, freq)
-    n_haps = len(haps)
+    # Parse haplotype alleles into arrays: shape (n, n_loci)
+    allele_array = np.array(allele_tuples, dtype=object)  # (n, n_loci)
 
-    for i in range(n_haps):
-        h_p, f_p = haps[i]
-        for j in range(i, n_haps):
-            h_q, f_q = haps[j]
+    # Build diplotype list (upper triangle including diagonal)
+    diplo_list = []
+    for i in range(n):
+        for j in range(i, n):
+            f = freqs[i] ** 2 if i == j else 2 * freqs[i] * freqs[j]
+            diplo_list.append((i, j, f))
 
-            # Diplotype frequency under HWE
-            if i == j:
-                f_g = f_p * f_q          # homozygous diplotype
-            else:
-                f_g = 2 * f_p * f_q      # heterozygous
+    idx_i = np.array([d[0] for d in diplo_list])
+    idx_j = np.array([d[1] for d in diplo_list])
+    f_diplo = np.array([d[2] for d in diplo_list])
 
-            if f_g < 1e-12:
-                continue
+    # Patient and donor diplotype allele arrays (same population pool)
+    pat_a = allele_array[idx_i]   # (N_diplo, n_loci)
+    pat_b = allele_array[idx_j]
+    don_a = allele_array[idx_i]   # (N_diplo, n_loci)
+    don_b = allele_array[idx_j]
 
-            # Convolve locus match distributions
-            d = np.zeros(max_matches + 1)
-            d[0] = 1.0
+    # Compute allele match count matrix: (N_diplo_patient, N_diplo_donor)
+    total_match = allele_match_count_matrix(pat_a, pat_b, don_a, don_b)
 
-            for li, locus in enumerate(loci):
-                p1 = h_p[li]
-                p2 = h_q[li]
-                lmd = locus_match_dist(p1, p2, allele_freqs[locus])
-                d = np.convolve(d, lmd)[:max_matches + 1]
+    results = {}
+    for m in match_thresholds:
+        # p_match[i] = Σ_j f_diplo[j] * I[total_match[i,j] >= m]
+        p_match = (total_match >= m).astype(np.float64) @ f_diplo
+        results[m] = (f_diplo, p_match)
 
-            # P(total >= min_matches)
-            p_m = float(d[min_matches:].sum())
-
-            f_g_list.append(f_g)
-            p_match_list.append(p_m)
-
-    return np.array(f_g_list), np.array(p_match_list)
+    return results
 
 
-def coverage_curve(f_g_arr, p_m_arr, n_values):
+def coverage_curve(f_diplo, p_match, n_values):
     """
     Vectorised coverage curve computation.
     Returns array of shape (len(n_values),).
     """
-    if len(f_g_arr) == 0:
+    if len(f_diplo) == 0:
         return np.zeros(len(n_values))
     # Shape: (K, len(N)) — then sum over K
-    contrib = f_g_arr[:, None] * (1 - np.power(
-        np.clip(1 - p_m_arr[:, None], 0, 1),
+    contrib = f_diplo[:, None] * (1.0 - np.power(
+        np.clip(1.0 - p_match[:, None], 0, 1),
         n_values[None, :]
     ))
     return contrib.sum(axis=0)
@@ -184,7 +143,7 @@ def coverage_curve(f_g_arr, p_m_arr, n_values):
 def build_combined_haplotypes(haplo_by_eth, loci):
     """
     Weighted combination of per-ethnicity haplotypes.
-    Returns list of (allele_tuple, frequency).
+    Returns list of (allele_tuple, frequency), normalized to sum=1.
     """
     combined = {}
     for eth, haps in haplo_by_eth.items():
@@ -194,26 +153,7 @@ def build_combined_haplotypes(haplo_by_eth, loci):
     total = sum(combined.values())
     if total == 0:
         return []
-    return [(k, v / total) for k, v in combined.items()]
-
-
-def build_combined_allele_freqs(allele_freqs_by_eth, loci):
-    """
-    Weighted average allele frequencies across ethnicities.
-    Returns {locus: {allele: freq}}, normalised.
-    """
-    combined = {locus: {} for locus in loci}
-    for eth, afreqs in allele_freqs_by_eth.items():
-        w = SG_WEIGHTS[eth]
-        for locus in loci:
-            for allele, freq in afreqs.get(locus, {}).items():
-                combined[locus][allele] = combined[locus].get(allele, 0.0) + w * freq
-    # Normalise each locus
-    for locus in loci:
-        total = sum(combined[locus].values())
-        if total > 0:
-            combined[locus] = {a: f / total for a, f in combined[locus].items()}
-    return combined
+    return [(k, v / total) for k, v in sorted(combined.items(), key=lambda x: -x[1])]
 
 
 # ---------------------------------------------------------------------------
@@ -265,10 +205,6 @@ def make_figure(eth_curves_dict, match_levels, framework_name, out_path):
 def main():
     # Load data
     haplo_df = pd.read_csv(os.path.join(DATA_DIR, 'haplo_freqs_em.csv'))
-    allele_df = pd.read_csv(os.path.join(DATA_DIR, 'allele_freqs_per_locus.csv'))
-
-    # Check locus names in allele_df
-    print("Loci in allele_freqs:", sorted(allele_df['locus'].unique()))
 
     for framework_name, loci, match_levels, out_fname in [
         (
@@ -287,46 +223,48 @@ def main():
         print(f"\n=== {framework_name} ===")
         eth_curves_dict = {}
         haplo_by_eth = {}
-        afreqs_by_eth = {}
+        match_thresholds = [ml[0] for ml in match_levels]
 
         for eth in ETHNICITIES:
             print(f"  Processing {eth}...")
             eth_haplo_df = haplo_df[haplo_df['ethnicity'] == eth]
             haplotypes = parse_haplotypes(eth_haplo_df, loci)
-            allele_freqs = get_allele_freqs_dict(allele_df, eth, loci)
             haplo_by_eth[eth] = haplotypes
-            afreqs_by_eth[eth] = allele_freqs
+            print(f"    {len(haplotypes)} haplotypes loaded")
+
+            partial_match_results = compute_partial_match_probs(haplotypes, match_thresholds)
 
             curves = {}
             for min_m, label, color in match_levels:
-                f_g_arr, p_m_arr = compute_diplotype_partial_match_probs(
-                    haplotypes, allele_freqs, loci, min_m
-                )
-                curves[min_m] = coverage_curve(f_g_arr, p_m_arr, N_VALUES)
+                f_diplo, p_match = partial_match_results[min_m]
+                curves[min_m] = coverage_curve(f_diplo, p_match, N_VALUES)
             eth_curves_dict[eth] = curves
 
-            # Sanity check at N=1,000,000
+            # Sanity check at N=100K and N=1M
+            idx_100k = np.searchsorted(N_VALUES, 1e5)
             idx_1m = np.searchsorted(N_VALUES, 1e6)
             for min_m, label, _ in match_levels:
-                val = curves[min_m][idx_1m] * 100
-                print(f"    {label} @ N=1M: {val:.1f}%")
+                v100k = curves[min_m][idx_100k] * 100
+                v1m = curves[min_m][idx_1m] * 100
+                print(f"    {label} @ N=100K: {v100k:.1f}%   @ N=1M: {v1m:.1f}%")
 
         # Overall
         print("  Processing Overall...")
         combined_haps = build_combined_haplotypes(haplo_by_eth, loci)
-        combined_afreqs = build_combined_allele_freqs(afreqs_by_eth, loci)
+        print(f"    {len(combined_haps)} combined haplotypes")
+        partial_match_results = compute_partial_match_probs(combined_haps, match_thresholds)
         curves = {}
         for min_m, label, color in match_levels:
-            f_g_arr, p_m_arr = compute_diplotype_partial_match_probs(
-                combined_haps, combined_afreqs, loci, min_m
-            )
-            curves[min_m] = coverage_curve(f_g_arr, p_m_arr, N_VALUES)
+            f_diplo, p_match = partial_match_results[min_m]
+            curves[min_m] = coverage_curve(f_diplo, p_match, N_VALUES)
         eth_curves_dict['Overall'] = curves
 
+        idx_100k = np.searchsorted(N_VALUES, 1e5)
         idx_1m = np.searchsorted(N_VALUES, 1e6)
         for min_m, label, _ in match_levels:
-            val = curves[min_m][idx_1m] * 100
-            print(f"    Overall {label} @ N=1M: {val:.1f}%")
+            v100k = curves[min_m][idx_100k] * 100
+            v1m = curves[min_m][idx_1m] * 100
+            print(f"    Overall {label} @ N=100K: {v100k:.1f}%   @ N=1M: {v1m:.1f}%")
 
         out_path = os.path.join(FIG_DIR, out_fname)
         make_figure(eth_curves_dict, match_levels, framework_name, out_path)
