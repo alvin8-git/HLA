@@ -180,8 +180,10 @@ See [Documentation.md](Documentation.md) for full methodology and figure interpr
 | Figure | Description |
 |--------|-------------|
 | `analysis/figures/allele_freq_heatmap.png` | Heatmap of allele frequency discrepancies (observed − published) across all loci and CMIO groups |
-| `analysis/figures/coverage_curves_8of8.png` | Registry coverage curves for 8/8 HLA match (A, B, C, DRB1) |
-| `analysis/figures/coverage_curves_10of10.png` | Registry coverage curves for 10/10 HLA match (A, B, C, DRB1, DQB1) |
+| `analysis/figures/coverage_curves_8of8.png` | Registry coverage curves for 8/8 HLA match (A, B, C, DRB1) — exact match only |
+| `analysis/figures/coverage_curves_10of10.png` | Registry coverage curves for 10/10 HLA match (A, B, C, DRB1, DQB1) — exact match only |
+| `analysis/figures/partial_match_10locus.png` | Partial match coverage curves: 8/10, 9/10, 10/10 for each CMIO group + Overall (WBMT Fig 5 style) |
+| `analysis/figures/partial_match_8locus.png` | Partial match coverage curves: 6/8, 7/8, 8/8 for each CMIO group + Overall |
 
 See [Documentation.md](Documentation.md) for detailed figure interpretation.
 

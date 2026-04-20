@@ -521,4 +521,63 @@ Run `pytest tests/ -v` to verify all 29 tests pass before reproducing the analys
 
 ---
 
+---
+
+### Figure 4: Partial Match Coverage — 10-Locus Framework (8/10, 9/10, 10/10)
+
+**File:** `analysis/figures/partial_match_10locus.png`
+
+![Partial Match Coverage — 10-Locus](analysis/figures/partial_match_10locus.png)
+
+**What it shows:** Five panels (Chinese, Malay, Indian, Others, Overall), each plotting registry coverage as a function of registry size N for three match stringency levels under the 10-locus framework (HLA-A, B, C, DRB1, DQB1 — 10 total allele positions):
+
+- **Blue (10/10):** All 10 alleles match exactly across 5 loci
+- **Red (9/10):** At least 9 of 10 alleles match (≤1 mismatch tolerated)
+- **Green (8/10):** At least 8 of 10 alleles match (≤2 mismatches tolerated)
+
+**X-axis:** Registry size N (log₁₀ scale, 1,000 to 100,000,000)  
+**Y-axis:** Percentage of patients with at least one matching donor (0–100%)
+
+**How to interpret:**
+
+Match probabilities are computed using **haplotype-pair enumeration** over EM-estimated haplotype frequencies (capturing linkage disequilibrium between loci). For each patient diplotype (h_p, h_q), the match probability for match threshold m is:
+
+$$p_m(g) = \sum_{(h_r, h_s)} f_{h_r, h_s} \cdot \mathbf{1}\left[\text{allele\_match\_count}(h_p, h_q, h_r, h_s) \geq m\right]$$
+
+where the allele match count at each locus uses optimal bipartite assignment: `max((pa==da)+(pb==db), (pa==db)+(pb==da))`.
+
+**Key observations:**
+
+- **Relaxing from 10/10 to 9/10 dramatically increases coverage at small N.** A single mismatch tolerance roughly halves the registry size needed to achieve a given coverage level for most ethnic groups.
+- **8/10 tolerance achieves high coverage (~90–100%) even at N ≈ 100,000** for Chinese patients, making this a pragmatic target for patient counselling when no 10/10 donor is found.
+- **Chinese and Malay curves converge quickly** because their haplotype distributions (concentrated in common regional haplotypes) allow rapid coverage accumulation with increasing registry size.
+- **Others group shows wider spacing** between 10/10 and 8/10 curves, reflecting higher HLA diversity in this heterogeneous population — relaxing match stringency provides greater marginal benefit for this group.
+
+---
+
+### Figure 5: Partial Match Coverage — 8-Locus Framework (6/8, 7/8, 8/8)
+
+**File:** `analysis/figures/partial_match_8locus.png`
+
+![Partial Match Coverage — 8-Locus](analysis/figures/partial_match_8locus.png)
+
+**What it shows:** Identical layout but for the 8-locus framework (HLA-A, B, C, DRB1 only — 8 total allele positions):
+
+- **Blue (8/8):** All 8 alleles match exactly across 4 loci
+- **Red (7/8):** At least 7 of 8 alleles match (≤1 mismatch)
+- **Green (6/8):** At least 6 of 8 alleles match (≤2 mismatches)
+
+**Differences from 10-locus figure:**
+
+The 4-locus (A, B, C, DRB1) framework excludes DQB1. Because DQB1 is in strong linkage disequilibrium with DRB1, the 8/8 curve is very close to the 10/10 curve — knowing DRB1 largely predicts DQB1, so excluding it provides only modest coverage improvement. Correspondingly, the **separation between the 8/8 and 7/8 curves is smaller** in the 8-locus figure than between 10/10 and 9/10 in the 10-locus figure, because there are fewer loci at which a mismatch can occur.
+
+**Clinical context:**
+
+The 8-locus framework is relevant for:
+1. Earlier-generation registries that typed only A, B, C, DRB1
+2. Clinical decisions when only 8-locus typing is available
+3. Assessment of whether adding DQB1 (moving to 10-locus) meaningfully changes registry size requirements
+
+---
+
 *End of Documentation*
