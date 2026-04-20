@@ -1,5 +1,6 @@
 # HLA Registry Analysis — Singapore CMIO Population
 
+[![Version](https://img.shields.io/badge/version-1.3.0-informational)](VERSION.md)
 [![Python](https://img.shields.io/badge/python-3.10%2B-blue?logo=python&logoColor=white)](https://www.python.org/)
 [![Tests](https://img.shields.io/badge/tests-29%20passing-brightgreen?logo=pytest&logoColor=white)](tests/)
 [![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
@@ -214,7 +215,8 @@ HLA/
 ├── docs/
 │   └── superpowers/           # Design spec & implementation plan
 ├── README.md
-└── Documentation.md
+├── Documentation.md
+└── VERSION.md
 ```
 
 ---

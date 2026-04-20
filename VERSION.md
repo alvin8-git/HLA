@@ -1,0 +1,116 @@
+# Version History
+
+## v1.3.0 — 2026-04-20
+
+### Added
+- **Partial match coverage curves** (`analysis/06_partial_match_plots.py`)
+  - 10-locus framework: 8/10, 9/10, 10/10 match levels for each CMIO group + Overall
+  - 8-locus framework: 6/8, 7/8, 8/8 match levels for each CMIO group + Overall
+  - Style matches WBMT (Aljurf et al. 2019) Figure 5
+  - Model uses haplotype-pair enumeration capturing linkage disequilibrium (LD)
+- `analysis/figures/partial_match_10locus.png`
+- `analysis/figures/partial_match_8locus.png`
+
+### Fixed
+- Partial match model initially used per-locus allele frequencies (ignoring LD),
+  giving Chinese 10/10 coverage of 2.9% at N=1M. Fixed to use EM haplotype-pair
+  enumeration — Chinese 10/10 at N=1M now correctly reaches ~100%.
+- x-axis adjusted to 1,000–10,000,000 so the S-curve body is visible in all panels.
+
+---
+
+## v1.2.0 — 2026-04-20
+
+### Added
+- `README.md` — badges, pipeline diagram, results tables, quick start, figure index
+- `Documentation.md` — full technical documentation with HLA biology background,
+  EM algorithm derivation, HWE theory, registry model math, figure interpretation
+- `LICENSE` — MIT
+- Figures embedded inline in `Documentation.md` (GitHub renders automatically)
+
+---
+
+## v1.1.0 — 2026-04-17
+
+### Added
+- `analysis/05_report.py` → `analysis/verification_summary.md` (580 lines, 6 sections)
+- `analysis/run_all.sh` verified end-to-end; all 12 output files produced
+
+### Pipeline outputs (complete)
+| File | Description |
+|------|-------------|
+| `analysis/data/hla_clean.csv` | 305,745 rows, 61,149 samples |
+| `analysis/data/allele_freq_comparison.csv` | 1,488 alleles, 0 flagged |
+| `analysis/data/haplo_freqs_em.csv` | 251 haplotypes (≥0.1% freq) |
+| `analysis/data/allele_freqs_per_locus.csv` | Per-locus allele frequencies |
+| `analysis/data/hwe_results.csv` | 20 tests; 8 violations |
+| `analysis/data/coverage_curves.csv` | 3,600 rows (200 N points × 18 scenarios) |
+| `analysis/data/registry_size_targets.csv` | 72 rows (4 thresholds × 18 scenarios) |
+| `analysis/figures/allele_freq_heatmap.png` | Discrepancy heatmap |
+| `analysis/figures/coverage_curves_8of8.png` | Exact 8/8 coverage curves |
+| `analysis/figures/coverage_curves_10of10.png` | Exact 10/10 coverage curves |
+
+---
+
+## v1.0.0 — 2026-04-17
+
+### Initial pipeline implementation
+
+**IMPL-1: Project setup**
+- `analysis/requirements.txt`, `analysis/run_all.sh`
+
+**IMPL-2: Data ingestion** (`analysis/01_ingest.py`, 13 tests)
+- Reads BMDP + SCBB Excel sheets + HSA txt files
+- Normalises to 2-field resolution, maps CMIO ethnicity codes
+- Output: `analysis/data/hla_clean.csv` — 305,745 rows, 61,149 unique samples
+
+**IMPL-3: Allele frequency verification** (`analysis/02_allele_freq.py`, 5 tests)
+- Recomputes allele frequencies from BMDP+SCBB; compares to Gene[Rate] published values
+- **Result: 0 flagged alleles; max discrepancy 0.27% (HLA-C) — fully reproducible**
+
+**IMPL-4: EM haplotype estimation + HWE tests** (`analysis/03_hwe_test.py`, 5 tests)
+- Product-approximation EM for 5-locus haplotype frequencies
+- Chi-squared HWE test with Bonferroni correction (p < 0.0025)
+- **Result: 8 violations — Indian (DQB1, HLA-B, HLA-C), Others (all 5 loci)**
+
+**IMPL-5: Registry model core math** (`analysis/registry_model.py`, 6 tests)
+- `get_diplotype_frequencies`: HWE expansion from haplotype freqs
+- `compute_coverage`: Coverage(N) = Σ f_g · [1 − (1 − f_g)^N]
+- `find_registry_size`: log-scale binary search for minimum N
+- `get_combined_haplotype_freqs`: Singapore-weighted combined pool
+
+**IMPL-6: Full registry model run** (`analysis/04_registry_model.py`)
+- N sweep: log-spaced 1,000–10,000,000
+- 18 scenarios: 2 match levels × 5 ethnicities × (1–2 model variants)
+- 4 coverage thresholds: 75%, 85%, 90%, 95%
+
+**IMPL-7: Report assembly** (`analysis/05_report.py`)
+- `analysis/verification_summary.md` — 6-section narrative report
+
+**IMPL-8: End-to-end verification**
+- 29/29 tests passing; all outputs reproduced via `run_all.sh`
+
+---
+
+## Test Coverage
+
+| Module | Tests | Status |
+|--------|-------|--------|
+| `01_ingest.py` | 13 | ✅ |
+| `02_allele_freq.py` | 5 | ✅ |
+| `03_hwe_test.py` (hwe_test.py) | 5 | ✅ |
+| `04_registry_model.py` (registry_model.py) | 6 | ✅ |
+| **Total** | **29** | **✅ All passing** |
+
+---
+
+## Key Findings
+
+| Finding | Value |
+|---------|-------|
+| Allele frequency reproducibility | Max discrepancy 0.27%; **0 alleles flagged** |
+| HWE violations | 8/20 tests (Indian: 3 loci; Others: 5 loci) |
+| Chinese 10/10 registry (95% coverage) | **11,616 donors** (same-ethnicity) |
+| Malay 10/10 registry (95% coverage) | **17,601 donors** (same-ethnicity) |
+| Cross-ethnic 10/10 for Malay/Others | **Infeasible** (hits 10M ceiling) |
+| Combined registry (95% coverage, 10/10) | **83,541 donors** |

@@ -535,7 +535,7 @@ Run `pytest tests/ -v` to verify all 29 tests pass before reproducing the analys
 - **Red (9/10):** At least 9 of 10 alleles match (≤1 mismatch tolerated)
 - **Green (8/10):** At least 8 of 10 alleles match (≤2 mismatches tolerated)
 
-**X-axis:** Registry size N (log₁₀ scale, 1,000 to 100,000,000)  
+**X-axis:** Registry size N (log₁₀ scale, 1,000 to 10,000,000)  
 **Y-axis:** Percentage of patients with at least one matching donor (0–100%)
 
 **How to interpret:**
