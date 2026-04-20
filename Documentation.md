@@ -416,11 +416,8 @@ The EM algorithm identified **79 distinct haplotypes** (frequency ≥ 0.1%) in t
 
 > A\*02:07~B\*46:01~C\*01:02~DRB1\*09:01~DQB1\*03:03, $f_1 = 0.0516$
 
-The **most common diplotype** is the heterozygote formed by the top two haplotypes:
-
-$$
-(h_1, h_2) \text{ where } h_2 = \text{A*11:01{\textasciitilde}B*40:01{\textasciitilde}C*03:02{\textasciitilde}DRB1*03:01{\textasciitilde}DQB1*02:01},\ f_2 = 0.0344
-$$
+The **most common diplotype** is the heterozygote formed by the top two haplotypes.
+$h_2$ = `A*11:01~B*40:01~C*03:02~DRB1*03:01~DQB1*02:01`, $f_2 = 0.0344$:
 
 $$
 f_g(h_1, h_2) = 2 \times 0.0516 \times 0.0344 = 0.00355
