@@ -370,6 +370,8 @@ For rare diplotypes with $f_g \approx 10^{-5}$, even $N = 10^7$ may give $(1-f_g
 
 **File:** `analysis/figures/allele_freq_heatmap.png`
 
+![Allele Frequency Discrepancy Heatmap](analysis/figures/allele_freq_heatmap.png)
+
 **What it shows:** A seaborn heatmap where each cell represents one (ethnicity, locus, allele group) combination. Cell colour indicates the signed difference between independently computed allele frequency and the Gene[Rate]-published frequency:
 
 $$\Delta f = f_{\text{observed}} - f_{\text{published}}$$
@@ -391,6 +393,8 @@ $$\Delta f = f_{\text{observed}} - f_{\text{published}}$$
 ### Figure 2: Coverage Curves — 8/8 Match
 
 **File:** `analysis/figures/coverage_curves_8of8.png`
+
+![Coverage Curves — 8/8 Match](analysis/figures/coverage_curves_8of8.png)
 
 **What it shows:** Five panels (Chinese, Malay, Indian, Others, Combined), each plotting registry coverage as a function of registry size N for an **8/8 HLA match** (loci A, B, C, DRB1 — excluding DQB1).
 
@@ -424,6 +428,8 @@ $$\Delta f = f_{\text{observed}} - f_{\text{published}}$$
 ### Figure 3: Coverage Curves — 10/10 Match
 
 **File:** `analysis/figures/coverage_curves_10of10.png`
+
+![Coverage Curves — 10/10 Match](analysis/figures/coverage_curves_10of10.png)
 
 **What it shows:** Identical layout to Figure 2 but for **10/10 HLA match** (all 5 loci: A, B, C, DRB1, DQB1).
 
