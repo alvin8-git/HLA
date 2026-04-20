@@ -390,11 +390,109 @@ $$
 
 Found via **binary search on a log₁₀ scale** over $N \in [1{,}000, 10{,}000{,}000]$ with 50 iterations (precision ~10⁻¹⁵).
 
+#### Literature context
+
+This framework follows the probabilistic registry-size model established in the transplant literature. The formula $\text{Coverage}(N) = \sum_g f_g [1-(1-f_g)^N]$ was formalised by Beatty et al. (1988) and subsequently applied to large-scale population datasets by Maiers, Gragert and colleagues. Key references:
+
+- **Beatty PG, Dahlberg S, Mickelson EM et al.** (1988). Probability of finding HLA-matched unrelated marrow donors. *Transplantation*, 45(4):714–718. *(Original probabilistic formulation of unrelated donor registry size.)*
+- **Maiers M, Gragert L, Klitz W.** (2007). High-resolution HLA alleles and haplotypes in the United States population. *Human Immunology*, 68(9):779–788. *(First large-scale application of the coverage-curve formula to a national registry.)*
+- **Gragert L, Madbouly A, Freeman J, Maiers M.** (2013). Six-locus high resolution HLA haplotype frequencies derived from mixed-resolution DNA typing for the entire US donor pool. *Human Immunology*, 74(10):1313–1320. *(Extension to 6-locus haplotypes and treatment of the "long tail" rare-diplotype problem.)*
+- **Lim FLWI, Cheong SKS, Ho AYL et al.** (2010). HLA genetic analysis of the Singapore bone marrow donor programme — evidence for a heterogeneous Malay population. *Ann Acad Med Singapore*, 39(1):27–33. *(Singapore BMDP registry study providing the foundation for CMIO-specific models.)*
+- **Aljurf M, Weisdorf D, Alfraih F et al.** (2019). Worldwide Network for Blood and Marrow Transplantation (WBMT) special article: Challenges facing developing countries in the establishment and maintenance of unrelated donor registries. *Bone Marrow Transplantation*, 54:1179–1188. *(International benchmarks for registry coverage targets and the partial-match curve framework.)*
+
 ### 6.2 Numerical Considerations
 
 For large $N$ and small $f_g$, $(1-f_g)^N$ underflows to 0 in IEEE 754 double precision. This is numerically harmless — it means the match probability for that diplotype approaches 1.0, which is mathematically correct. The computation uses `numpy.float64` throughout.
 
 For rare diplotypes with $f_g \approx 10^{-5}$, even $N = 10^7$ may give $(1-f_g)^N \approx e^{-100} \approx 3.7 \times 10^{-44}$ — effectively 1.0 match probability.
+
+### 6.3 Numeric Examples from CMIO Data
+
+This section walks through concrete calculations using the Singapore BMDP+SCBB data to illustrate how the model behaves in practice.
+
+#### 6.3.1 Chinese population — 10/10 same-ethnicity matching
+
+The EM algorithm identified **79 distinct haplotypes** (frequency ≥ 0.1%) in the Chinese cohort (~44,400 donors). HWE expansion produces **3,160 diplotype combinations**. The most frequent haplotype is:
+
+> A\*02:07~B\*46:01~C\*01:02~DRB1\*09:01~DQB1\*03:03, $f_1 = 0.0516$
+
+The **most common diplotype** is the heterozygote formed by the top two haplotypes:
+
+$$
+(h_1, h_2) \text{ where } h_2 = \text{A*11:01{\textasciitilde}B*40:01{\textasciitilde}C*03:02{\textasciitilde}DRB1*03:01{\textasciitilde}DQB1*02:01},\ f_2 = 0.0344
+$$
+
+$$
+f_g(h_1, h_2) = 2 \times 0.0516 \times 0.0344 = 0.00355
+$$
+
+**Per-patient match probability for this diplotype:**
+
+$$
+P(\geq 1\ \text{match} \mid N,\ g) = 1 - (1 - 0.00355)^N
+$$
+
+| $N$ donors | $(1 - 0.00355)^N$ | Match probability |
+|------------|-------------------|-------------------|
+| 100 | 0.699 | 30.1% |
+| 500 | 0.168 | 83.2% |
+| 1,000 | 0.028 | 97.2% |
+| 3,000 | 0.000026 | 99.997% |
+
+Even for the single most common diplotype in the Chinese population ($f_g = 0.00355$), a patient needs roughly **1,000 donors** before the match probability exceeds 97%. This is because each donor independently has only a 0.36% chance of carrying this exact diplotype.
+
+**Population coverage across all 3,160 diplotypes:**
+
+| $N$ donors | Coverage $\text{Coverage}(N)$ |
+|------------|-------------------------------|
+| 1,000 | 37.9% |
+| 3,883 | **75.0%** ← 75% registry target |
+| 6,008 | **85.0%** ← 85% registry target |
+| 7,926 | **90.0%** ← 90% registry target |
+| 11,616 | **95.0%** ← 95% registry target |
+| 50,000 | 99.97% |
+
+These figures confirm that the existing Chinese BMDP cohort (~44,400 donors) far exceeds all coverage targets — at 95% coverage the minimum requirement is 11,616 donors, less than 27% of the current registry.
+
+**Note on incremental cost:** Moving from 85% → 90% requires +1,918 donors (+32%), while 90% → 95% requires +3,690 donors (+47%). Each additional 5% of coverage is progressively more expensive because it targets increasingly rare diplotypes.
+
+#### 6.3.2 Effect of haplotype diversity on registry requirements
+
+The number of distinct haplotypes and the concentration of their frequencies together determine how rapidly coverage accumulates with registry size.
+
+| Ethnicity | Haplotypes (≥ 0.1%) | Diplotypes | Coverage at $N = 1{,}000$ | $N^*$ at 95%, 10/10 |
+|-----------|----------------------|------------|---------------------------|----------------------|
+| Others | 28 | 406 | 89.9% | 1,430 |
+| Indian | 47 | 1,128 | 63.1% | 3,759 |
+| Chinese | 79 | 3,160 | 37.9% | 11,616 |
+| Malay | 97 | 4,753 | 29.2% | 17,601 |
+
+**Indian patients** achieve the highest early-$N$ coverage despite being a smaller cohort. Their 47 haplotypes are more concentrated: the top-5 Chinese haplotypes carry $\sum f_i = 0.179$ of all frequency mass; the equivalent for Indian is $\sum f_i = 0.196$. Fewer, more common diplotypes mean fewer donors are needed to achieve high coverage.
+
+**Malay patients** require the largest registry. The 97 haplotypes are spread more evenly — producing 4,753 diplotypes with a flatter frequency distribution. At $N = 1{,}000$ donors, a Malay patient has only a 29.2% chance of finding a 10/10 match, versus 63.1% for an Indian patient of the same registry size.
+
+**Others** (a heterogeneous group) appear to need the fewest donors, but this reflects the concentration of a few very common North-European-type haplotypes (e.g. A\*01:01~B\*08:01~C\*07:01~DRB1\*03:01~DQB1\*02:01, $f = 0.129$) in a small admixed sample — HWE violations in this group add uncertainty to these estimates.
+
+#### 6.3.3 The rare-diplotype long tail
+
+The 79 Chinese haplotypes generate 3,160 diplotypes, but frequency is highly skewed:
+
+| Diplotype tier | Cumulative frequency |
+|----------------|----------------------|
+| Top 10 | 2.8% |
+| Top 100 | 14.8% |
+| Top 500 | 41.1% |
+| All 3,160 | 100.0% |
+
+The top 10 diplotypes together represent only 2.8% of the patient population. The remaining 97.2% is distributed across 3,150 diplotypes — many of them with frequencies in the range $10^{-4}$–$10^{-3}$.
+
+This is the "long-tail" problem inherent to HLA diversity. The coverage formula handles it correctly by summing contributions from every diplotype simultaneously, but it means:
+
+- Early donors (small $N$) cover many patients at once — the S-curve rises steeply
+- Late donors hit diminishing returns, each one matching an increasingly narrow slice of the population
+- Achieving the final few percent of coverage requires disproportionately large registry growth
+
+For the 5% of Chinese patients not covered by a 11,616-donor registry, their diplotypes have $f_g \lesssim 5 \times 10^{-4}$ — requiring on the order of $N \sim 1/(f_g) \approx 2{,}000$ donors just to reach 63% match probability for that individual diplotype. These patients would require a combined registry size of 50,000+ for near-certain coverage.
 
 ---
 
