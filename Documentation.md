@@ -721,13 +721,13 @@ Run `pytest tests/ -v` to verify all 29 tests pass before reproducing the analys
 
 **How to interpret:**
 
-Match probabilities are computed using **haplotype-pair enumeration** over EM-estimated haplotype frequencies (capturing linkage disequilibrium between loci). For each patient diplotype (h_p, h_q), the match probability for match threshold m is:
+Match probabilities are computed using **haplotype-pair enumeration** over EM-estimated haplotype frequencies (capturing linkage disequilibrium between loci). For each patient diplotype $g_p = (h_p, h_q)$, the match probability for threshold $m$ is:
 
 $$
-p_m(g) = \sum_{(h_r, h_s)} f_{h_r, h_s} \cdot \mathbf{1}\left[\text{allele\_match\_count}(h_p, h_q, h_r, h_s) \geq m\right]
+p_m(g_p) = \sum_{(h_r,\, h_s)} f_{h_r, h_s} \cdot \mathbf{1}\!\left[M\!\left(g_p,\, (h_r, h_s)\right) \geq m\right]
 $$
 
-where the allele match count at each locus uses optimal bipartite assignment: `max((pa==da)+(pb==db), (pa==db)+(pb==da))`.
+where $M(g_p, g_d)$ is the total allele match count defined in Section 6.4, using optimal per-locus assignment: $M_\ell = \max\!\bigl((a_\ell(h_p){=}a_\ell(h_r))+(a_\ell(h_q){=}a_\ell(h_s)),\ (a_\ell(h_p){=}a_\ell(h_s))+(a_\ell(h_q){=}a_\ell(h_r))\bigr)$.
 
 **Key observations:**
 
