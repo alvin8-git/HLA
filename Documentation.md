@@ -491,6 +491,56 @@ This is the "long-tail" problem inherent to HLA diversity. The coverage formula 
 
 For the 5% of Chinese patients not covered by a 11,616-donor registry, their diplotypes have $f_g \lesssim 5 \times 10^{-4}$ — requiring on the order of $N \sim 1/(f_g) \approx 2{,}000$ donors just to reach 63% match probability for that individual diplotype. These patients would require a combined registry size of 50,000+ for near-certain coverage.
 
+### 6.4 Partial Match Coverage Model
+
+**Script:** `analysis/06_partial_match_plots.py`  
+**Figures:** `analysis/figures/partial_match_10locus.png`, `analysis/figures/partial_match_8locus.png`
+
+Sections 6.1–6.3 treat only **exact** HLA matching. In practice, transplant centres also consider partially matched donors (e.g. 9/10 or 8/10) when a fully matched donor cannot be found. The partial match model extends the framework to count allele-level matches across all loci.
+
+#### Allele match count
+
+Let $g_p = (h_p, h_q)$ be a patient diplotype and $g_d = (h_r, h_s)$ be a candidate donor diplotype. At each locus $\ell$, let $a_\ell(h)$ denote the allele carried on haplotype $h$. The **per-locus match score** takes the better of the two possible allele assignments:
+
+$$
+M_\ell(g_p, g_d) = \max\!\Bigl(
+  \mathbf{1}[a_\ell(h_p) = a_\ell(h_r)] + \mathbf{1}[a_\ell(h_q) = a_\ell(h_s)],\;
+  \mathbf{1}[a_\ell(h_p) = a_\ell(h_s)] + \mathbf{1}[a_\ell(h_q) = a_\ell(h_r)]
+\Bigr)
+$$
+
+The **total allele match count** over all $L$ loci is:
+
+$$
+M(g_p, g_d) = \sum_{\ell=1}^{L} M_\ell(g_p, g_d)
+$$
+
+For the 10-locus framework ($L = 5$ loci, 10 allele positions) $M \in \{0, 1, \ldots, 10\}$; for 8-locus ($L = 4$) $M \in \{0, \ldots, 8\}$.
+
+#### Per-patient partial match probability
+
+For a patient with diplotype $g_p$ and a minimum match threshold $m$, the probability that a single randomly drawn donor meets or exceeds the threshold is:
+
+$$
+p_m(g_p) = \sum_{(h_r,\, h_s)} f_{h_r, h_s} \cdot \mathbf{1}\!\left[M(g_p,\, (h_r, h_s)) \geq m\right]
+$$
+
+where the sum runs over all donor diplotypes $(h_r, h_s)$ weighted by their frequency $f_{h_r, h_s}$ (computed under HWE from EM haplotype frequencies). $\mathbf{1}[\cdot]$ is the indicator function.
+
+#### Partial match coverage curve
+
+Substituting $p_m(g_p)$ in place of the exact-match diplotype frequency gives the partial match coverage curve:
+
+$$
+\text{Coverage}_m(N) = \sum_{g_p} f_{g_p} \cdot \left[1 - \left(1 - p_m(g_p)\right)^N\right]
+$$
+
+This generalises the exact-match formula (Section 6.1, Step 3): when $m$ equals the total number of allele positions, $p_m(g_p) = f_{g_p}$ and the two formulae are identical.
+
+#### Implementation note
+
+The full diplotype enumeration scales as $O(K^2)$ in the number of haplotypes $K$. For the Chinese population ($K = 79$) this produces 3,160 patient diplotypes × 3,160 donor diplotypes = ~10 million pairs per threshold level. The implementation (`compute_partial_match_probs`) uses NumPy broadcasting to vectorise the allele comparison across all pairs simultaneously, keeping wall time under one minute per ethnicity on a modern CPU.
+
 ---
 
 ## 7. Figure Interpretation
