@@ -261,14 +261,24 @@ This pipeline implements a **full multi-locus EM** that correctly handles phase 
 
 1. **Phase enumeration (`_enum_phase_configs`):** for each individual, produce the list of all valid (h₁, h₂) pairs by fixing the first heterozygous locus on h₁ and varying the remaining $k-1$ heterozygous loci over all $2^{k-1}$ assignments.
 
-2. **E-step:** for each individual with phase configurations $\{(h_i, h_j)\}$, weight each configuration by its diplotype frequency under the current estimates:
+2. **E-step:** for each individual $n$, let $\mathcal{C}_n$ be its set of valid phase configurations. Define the diplotype probability:
+
    $$
-   w_{ij} = \frac{f(h_i)^2 \cdot \mathbf{1}[i=j] + 2 f(h_i) f(h_j) \cdot \mathbf{1}[i \neq j]}{\sum_{i'j'} \left(f(h_{i'})^2 \cdot \mathbf{1}[i'=j'] + 2 f(h_{i'}) f(h_{j'}) \cdot \mathbf{1}[i' \neq j']\right)}
+   P(h,\,h') = \begin{cases} f(h)^2 & \text{if } h = h' \\ 2\,f(h)\,f(h') & \text{if } h \neq h' \end{cases}
    $$
 
-3. **M-step:** accumulate fractional haplotype counts across all individuals and configurations:
+   Weight each configuration $c = (h_c^{(1)},\, h_c^{(2)}) \in \mathcal{C}_n$ by its relative diplotype frequency:
+
    $$
-   f'(h_k) = \frac{\sum_{\text{ind.}} \sum_{(i,j)} w_{ij} \left(\mathbf{1}[h_i = h_k] + \mathbf{1}[h_j = h_k]\right)}{2N}
+   w_c^{(n)} = \frac{P\!\left(h_c^{(1)},\, h_c^{(2)}\right)}{\displaystyle\sum_{c' \in \mathcal{C}_n} P\!\left(h_{c'}^{(1)},\, h_{c'}^{(2)}\right)}
+   $$
+
+   The denominator sums only over the valid phase configurations for individual $n$, not over all haplotype pairs.
+
+3. **M-step:** accumulate fractional haplotype counts across all $N$ individuals and all their configurations:
+
+   $$
+   f'(h_k) = \frac{1}{2N} \sum_{n=1}^{N} \sum_{c\,\in\,\mathcal{C}_n} w_c^{(n)} \left(\mathbf{1}\!\left[h_c^{(1)} = h_k\right] + \mathbf{1}\!\left[h_c^{(2)} = h_k\right]\right)
    $$
 
 4. Iterate until $\max_k |f'(h_k) - f(h_k)| < 10^{-6}$ or 200 iterations.
@@ -515,6 +525,12 @@ The full multi-locus EM dramatically changes the diversity picture. All four CMI
 
 **Others** (a heterogeneous group) requires 32,360 donors at 95% — fewer than the three main groups, but still substantial. The earlier product-approximation EM appeared to show this group as trivial (N* = 1,430 at 95%) due to a spurious concentration of frequency mass in mis-phased haplotype combinations. HWE violations in the Others group (all 5 loci significant) were a diagnostic signal of this problem; the full EM resolves phase by LD context rather than arbitrary column assignment.
 
+**Figure 6** below compares the minimum registry sizes across all four CMIO groups at each coverage threshold:
+
+![Registry size targets bar chart](analysis/figures/registry_targets_bar.png)
+
+*Figure 6: Minimum registry size for same-ethnicity 10/10 matching by CMIO group and coverage target (full multi-locus EM). All groups require 30,000–50,000 donors at 95% coverage — a 2–22× upward revision from the product-approximation estimates.*
+
 #### 6.3.3 The rare-diplotype long tail
 
 The 140 Chinese haplotypes generate 9,870 diplotypes (within the captured haplotype pool), and frequency is highly skewed:
@@ -535,7 +551,13 @@ This is the "long-tail" problem inherent to HLA diversity. The full-EM captures 
 - Late donors hit diminishing returns, each one matching an increasingly narrow slice of the population
 - Achieving the final few percent of coverage requires disproportionately large registry growth
 
-For the 5% of Chinese patients not covered by a 11,616-donor registry, their diplotypes have $f_g \lesssim 5 \times 10^{-4}$ — requiring on the order of $N \sim 1/(f_g) \approx 2{,}000$ donors just to reach 63% match probability for that individual diplotype. These patients would require a combined registry size of 50,000+ for near-certain coverage.
+**Figure 7** below plots the cumulative diplotype frequency coverage versus diplotype rank for all four CMIO groups, illustrating the long-tail structure across ethnicities:
+
+![Diplotype long-tail cumulative frequency](analysis/figures/diplotype_longtail.png)
+
+*Figure 7: Cumulative share of the haplotype pool covered by the top-K diplotypes (log scale). All four CMIO groups show a steep initial rise followed by a long tail — the top 100 diplotypes cover only 20–30% of pool frequency, with thousands more required to reach 90%+.*
+
+For the 5% of Chinese patients not covered by a 42,871-donor registry, their diplotypes have $f_g \lesssim 5 \times 10^{-4}$ — requiring on the order of $N \sim 1/(f_g) \approx 2{,}000$ donors just to reach 63% match probability for that individual diplotype. These patients would require a combined registry size of 50,000+ for near-certain coverage.
 
 ### 6.4 Partial Match Coverage Model
 
@@ -758,9 +780,9 @@ Run `pytest tests/ -v` to verify all 35 tests pass before reproducing the analys
 
 **What it shows:** Five panels (Chinese, Malay, Indian, Others, Overall), each plotting registry coverage as a function of registry size N for three match stringency levels under the 10-locus framework (HLA-A, B, C, DRB1, DQB1 — 10 total allele positions):
 
-- **Blue (10/10):** All 10 alleles match exactly across 5 loci
-- **Red (9/10):** At least 9 of 10 alleles match (≤1 mismatch tolerated)
-- **Green (8/10):** At least 8 of 10 alleles match (≤2 mismatches tolerated)
+- **Green (10/10):** All 10 alleles match exactly across 5 loci
+- **Blue (9/10):** At least 9 of 10 alleles match (≤1 mismatch tolerated)
+- **Red (8/10):** At least 8 of 10 alleles match (≤2 mismatches tolerated)
 
 **X-axis:** Registry size N (log₁₀ scale, 1,000 to 10,000,000)  
 **Y-axis:** Percentage of patients with at least one matching donor (0–100%)
@@ -792,9 +814,9 @@ where $M(g_p, g_d)$ is the total allele match count defined in Section 6.4, usin
 
 **What it shows:** Identical layout but for the 8-locus framework (HLA-A, B, C, DRB1 only — 8 total allele positions):
 
-- **Blue (8/8):** All 8 alleles match exactly across 4 loci
-- **Red (7/8):** At least 7 of 8 alleles match (≤1 mismatch)
-- **Green (6/8):** At least 6 of 8 alleles match (≤2 mismatches)
+- **Green (8/8):** All 8 alleles match exactly across 4 loci
+- **Blue (7/8):** At least 7 of 8 alleles match (≤1 mismatch)
+- **Red (6/8):** At least 6 of 8 alleles match (≤2 mismatches)
 
 **Differences from 10-locus figure:**
 
@@ -806,6 +828,26 @@ The 8-locus framework is relevant for:
 1. Earlier-generation registries that typed only A, B, C, DRB1
 2. Clinical decisions when only 8-locus typing is available
 3. Assessment of whether adding DQB1 (moving to 10-locus) meaningfully changes registry size requirements
+
+---
+
+### Figure 6: Registry Size Targets — All CMIO Groups (10/10, Same-Ethnicity)
+
+**File:** `analysis/figures/registry_targets_bar.png`
+
+![Registry size targets bar chart](analysis/figures/registry_targets_bar.png)
+
+**What it shows:** Grouped bar chart of the minimum registry size required to achieve 75%, 85%, 90%, and 95% same-ethnicity 10/10 coverage for each CMIO group (full multi-locus EM). All four groups require 30,000–50,000 donors at 95% coverage — a 2–22× upward revision from product-approximation estimates. Indian has the highest requirement at every threshold due to its most evenly distributed haplotype pool (top-5 Σf = 0.098).
+
+---
+
+### Figure 7: Diplotype Long-Tail — Cumulative Frequency Coverage
+
+**File:** `analysis/figures/diplotype_longtail.png`
+
+![Diplotype long-tail cumulative frequency](analysis/figures/diplotype_longtail.png)
+
+**What it shows:** For each CMIO group, the cumulative share of haplotype pool frequency covered by the top-K diplotypes (x-axis log scale). All groups exhibit a steep initial rise followed by a long tail — the top 100 diplotypes cover only 20–30% of pool frequency. Coverage past 90% requires thousands of diplotypes, each with frequency in the $10^{-4}$–$10^{-3}$ range. The Others group (red) reaches 90% slightly faster due to its lower pool diversity relative to the three main CMIO groups at comparable haplotype counts.
 
 ---
 
