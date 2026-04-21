@@ -22,8 +22,8 @@ FIG_DIR  = os.path.join(HERE, 'figures')
 os.makedirs(FIG_DIR, exist_ok=True)
 
 ETHNICITIES = ['Chinese', 'Malay', 'Indian', 'Others']
-COLORS = {'Chinese': '#1f77b4', 'Malay': '#ff7f0e',
-          'Indian': '#2ca02c', 'Others': '#d62728'}
+COLORS = {'Chinese': '#d62728', 'Malay': '#2ca02c',
+          'Indian': '#9467bd', 'Others': '#DAA520'}
 
 
 # ---------------------------------------------------------------------------
