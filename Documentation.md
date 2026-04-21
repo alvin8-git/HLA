@@ -455,46 +455,46 @@ This section walks through concrete calculations using the Singapore BMDP+SCBB d
 
 #### 6.3.1 Chinese population — 10/10 same-ethnicity matching
 
-The EM algorithm identified **79 distinct haplotypes** (frequency ≥ 0.1%) in the Chinese cohort (~44,400 donors). HWE expansion produces **3,160 diplotype combinations**. The most frequent haplotype is:
+The full-EM algorithm identified **140 distinct haplotypes** (frequency ≥ 0.1%) in the Chinese cohort (capped at 5,000 donors for EM tractability; Gene[Rate] used the full ~44,400). HWE expansion produces **9,870 diplotype combinations**. The most frequent haplotype is:
 
-> A\*02:07~B\*46:01~C\*01:02~DRB1\*09:01~DQB1\*03:03, $f_1 = 0.0516$
+> A\*33:03~B\*58:01~C\*03:02~DRB1\*03:01~DQB1\*02:01, $f_1 = 0.0541$
 
 The **most common diplotype** is the heterozygote formed by the top two haplotypes.
-$h_2$ = `A*11:01~B*40:01~C*03:02~DRB1*03:01~DQB1*02:01`, $f_2 = 0.0344$:
+$h_2$ = `A*02:07~B*46:01~C*01:02~DRB1*09:01~DQB1*03:03`, $f_2 = 0.0383$:
 
 $$
-f_g(h_1, h_2) = 2 \times 0.0516 \times 0.0344 = 0.00355
+f_g(h_1, h_2) = 2 \times 0.0541 \times 0.0383 = 0.00415
 $$
 
 **Per-patient match probability for this diplotype:**
 
 $$
-P(\geq 1\ \text{match} \mid N,\ g) = 1 - (1 - 0.00355)^N
+P(\geq 1\ \text{match} \mid N,\ g) = 1 - (1 - 0.00415)^N
 $$
 
-| $N$ donors | $(1 - 0.00355)^N$ | Match probability |
-|------------|-------------------|-------------------|
-| 100 | 0.699 | 30.1% |
-| 500 | 0.168 | 83.2% |
-| 1,000 | 0.028 | 97.2% |
-| 3,000 | 0.000026 | 99.997% |
+| $N$ donors | Match probability |
+|------------|-------------------|
+| 100 | 34.0% |
+| 500 | 87.5% |
+| 1,000 | 98.4% |
+| 3,000 | ≈100% |
 
-Even for the single most common diplotype in the Chinese population ($f_g = 0.00355$), a patient needs roughly **1,000 donors** before the match probability exceeds 97%. This is because each donor independently has only a 0.36% chance of carrying this exact diplotype.
+Even for the most common diplotype ($f_g = 0.00415$), a patient needs roughly **1,000 donors** before the match probability exceeds 98%. Each donor independently has only a 0.42% chance of carrying this exact diplotype.
 
-**Population coverage across all 3,160 diplotypes:**
+**Population coverage across all 9,870 diplotypes:**
 
 | $N$ donors | Coverage $\text{Coverage}(N)$ |
 |------------|-------------------------------|
-| 1,000 | 37.9% |
-| 3,883 | **75.0%** ← 75% registry target |
-| 6,008 | **85.0%** ← 85% registry target |
-| 7,926 | **90.0%** ← 90% registry target |
-| 11,616 | **95.0%** ← 95% registry target |
-| 50,000 | 99.97% |
+| 1,000 | 38.8% |
+| 7,581 | ≈75% ← 75% registry target |
+| 15,181 | ≈85% ← 85% registry target |
+| 23,506 | ≈90% ← 90% registry target |
+| 42,871 | ≈95% ← 95% registry target |
+| 50,000 | 95.8% |
 
-These figures confirm that the existing Chinese BMDP cohort (~44,400 donors) far exceeds all coverage targets — at 95% coverage the minimum requirement is 11,616 donors, less than 27% of the current registry.
+The existing Chinese BMDP cohort (~44,400 donors) is close to — but only just meets — the 95% coverage threshold. The full multi-locus EM reveals far greater haplotype diversity than the product-approximation estimate: where the earlier method required only 11,616 donors for 95% coverage, proper phase resolution raises that figure to 42,871 — 97% of the current registry size.
 
-**Note on incremental cost:** Moving from 85% → 90% requires +1,918 donors (+32%), while 90% → 95% requires +3,690 donors (+47%). Each additional 5% of coverage is progressively more expensive because it targets increasingly rare diplotypes.
+**Note on incremental cost:** Moving from 85% → 90% requires +8,325 donors (+55%), while 90% → 95% requires +19,365 donors (+82%). The steep slope at high coverage reflects the long tail of rare diplotypes that each require disproportionately large registry growth to reach.
 
 #### 6.3.2 Effect of haplotype diversity on registry requirements
 
@@ -502,31 +502,34 @@ The number of distinct haplotypes and the concentration of their frequencies tog
 
 | Ethnicity | Haplotypes (≥ 0.1%) | Diplotypes | Coverage at $N = 1{,}000$ | $N^*$ at 95%, 10/10 |
 |-----------|----------------------|------------|---------------------------|----------------------|
-| Others | 28 | 406 | 89.9% | 1,430 |
-| Indian | 47 | 1,128 | 63.1% | 3,759 |
-| Chinese | 79 | 3,160 | 37.9% | 11,616 |
-| Malay | 97 | 4,753 | 29.2% | 17,601 |
+| Others | 123 | 7,626 | 33.1% | 32,360 |
+| Malay | 137 | 9,453 | 40.7% | 41,779 |
+| Chinese | 140 | 9,870 | 38.8% | 42,871 |
+| Indian | 144 | 10,440 | 31.7% | 44,863 |
 
-**Indian patients** achieve the highest early-$N$ coverage despite being a smaller cohort. Their 47 haplotypes are more concentrated: the top-5 Chinese haplotypes carry $\sum f_i = 0.179$ of all frequency mass; the equivalent for Indian is $\sum f_i = 0.196$. Fewer, more common diplotypes mean fewer donors are needed to achieve high coverage.
+The full multi-locus EM dramatically changes the diversity picture. All four CMIO groups now have similar haplotype counts (123–144) and similarly large diplotype spaces, in contrast to the product-approximation result which erroneously showed Others (28 haplotypes) and Indian (47 haplotypes) as far simpler than Chinese and Malay. Proper phase resolution reveals that each ethnic group carries substantial hidden haplotype structure.
 
-**Malay patients** require the largest registry. The 97 haplotypes are spread more evenly — producing 4,753 diplotypes with a flatter frequency distribution. At $N = 1{,}000$ donors, a Malay patient has only a 29.2% chance of finding a 10/10 match, versus 63.1% for an Indian patient of the same registry size.
+**Malay patients** achieve the highest early-$N$ coverage (40.7% at $N=1{,}000$), reflecting a moderate concentration in the top haplotypes ($\sum f_{\text{top-5}} = 0.141$). Despite this, they still require 41,779 donors at 95% coverage — comparable to other groups.
 
-**Others** (a heterogeneous group) appear to need the fewest donors, but this reflects the concentration of a few very common North-European-type haplotypes (e.g. A\*01:01~B\*08:01~C\*07:01~DRB1\*03:01~DQB1\*02:01, $f = 0.129$) in a small admixed sample — HWE violations in this group add uncertainty to these estimates.
+**Indian patients** now show the lowest early-$N$ coverage (31.7%) and the largest registry requirement (44,863 donors at 95%), reversing the product-approximation finding. With proper phase resolution, the Indian population's top-5 haplotypes carry $\sum f_i = 0.098$ — the most evenly spread of all CMIO groups — meaning more donors are needed to cover the long tail.
+
+**Others** (a heterogeneous group) requires 32,360 donors at 95% — fewer than the three main groups, but still substantial. The earlier product-approximation EM appeared to show this group as trivial (N* = 1,430 at 95%) due to a spurious concentration of frequency mass in mis-phased haplotype combinations. HWE violations in the Others group (all 5 loci significant) were a diagnostic signal of this problem; the full EM resolves phase by LD context rather than arbitrary column assignment.
 
 #### 6.3.3 The rare-diplotype long tail
 
-The 79 Chinese haplotypes generate 3,160 diplotypes, but frequency is highly skewed:
+The 140 Chinese haplotypes generate 9,870 diplotypes (within the captured haplotype pool), and frequency is highly skewed:
 
-| Diplotype tier | Cumulative frequency |
-|----------------|----------------------|
-| Top 10 | 2.8% |
-| Top 100 | 14.8% |
-| Top 500 | 41.1% |
-| All 3,160 | 100.0% |
+| Diplotype tier | Cumulative share of pool |
+|----------------|--------------------------|
+| Top 10 | 7.3% |
+| Top 100 | 24.4% |
+| Top 500 | 47.5% |
+| Top 1,000 | 60.2% |
+| All 9,870 | 100.0% |
 
-The top 10 diplotypes together represent only 2.8% of the patient population. The remaining 97.2% is distributed across 3,150 diplotypes — many of them with frequencies in the range $10^{-4}$–$10^{-3}$.
+The top 10 diplotypes account for only 7.3% of frequency mass within the captured pool; the remaining 92.7% is distributed across 9,860 diplotypes — many with frequencies in the range $10^{-4}$–$10^{-3}$. An additional ~49% of frequency mass sits in haplotype combinations below the 0.1% detection threshold (handled in the model as a residual "other" haplotype).
 
-This is the "long-tail" problem inherent to HLA diversity. The coverage formula handles it correctly by summing contributions from every diplotype simultaneously, but it means:
+This is the "long-tail" problem inherent to HLA diversity. The full-EM captures significantly more of this tail than the product-approximation (140 vs 79 haplotypes for Chinese, 144 vs 47 for Indian), which explains the substantially higher registry targets. The coverage formula handles the tail correctly by summing contributions from every diplotype simultaneously, but it means:
 
 - Early donors (small $N$) cover many patients at once — the S-curve rises steeply
 - Late donors hit diminishing returns, each one matching an increasingly narrow slice of the population
@@ -688,13 +691,13 @@ For the Chinese population, adding DQB1 increases the required registry size by 
 
 ### Registry Size Model
 
-- **Chinese patients are best served** by the current registry: ~11,600 donors achieve 95% coverage at 10/10 resolution. The existing BMDP (~44,400 Chinese donors) far exceeds this threshold.
+- **All four CMIO groups require large same-ethnicity registries under proper phase resolution.** The full multi-locus EM reveals 123–144 distinct haplotypes per group, yielding 7,600–10,400 diplotypes each. Minimum registry sizes at 95%, 10/10 coverage: Others 32,360; Malay 41,779; Chinese 42,871; Indian 44,863. The existing Chinese BMDP cohort (~44,400 donors) only just meets its 95% target, and no minority group registry is currently adequate.
+
+- **The product-approximation EM substantially underestimated registry requirements** — by 2–22× depending on ethnicity. It erroneously suggested Others needed only 1,430 donors and Indian only 3,759 at 95% coverage, by misattributing arbitrary allele-column assignments as known phase. Proper phase enumeration corrects this by resolving haplotypes from LD context, validated against Gene[Rate] (Spearman r ≥ 0.91 across all CMIO groups).
 
 - **Minority group coverage depends critically on same-ethnicity matching.** Cross-ethnic matching is infeasible for Malay, Indian, and Others at 90%+ coverage targets, regardless of total registry size. This quantitatively demonstrates the importance of ethnic-specific donor recruitment.
 
 - **The addition of DQB1 (10/10 vs 8/8) increases required registry size by ~6–10%** for Chinese patients due to strong DRB1-DQB1 linkage disequilibrium. The effect may be larger for other populations.
-
-- **Haplotype frequency concentrations differ markedly.** The Indian "Others" group appears to have a concentrated haplotype distribution (requiring surprisingly few donors for same-ethnicity coverage) — this should be interpreted cautiously given the small sample size (n=754 "Others" individuals in the EM estimate) and HWE violations.
 
 ---
 
@@ -704,7 +707,7 @@ For the Chinese population, adding DQB1 increases the required registry size by 
 
 1. **2-field resolution:** The analysis uses 2-field HLA typing throughout. High-resolution (4-field) typing is increasingly standard and would improve match discrimination, particularly for DRB1 and HLA-B.
 
-2. **Simplified EM (product approximation):** Full 5-locus phase resolution was approximated using a per-locus product model. This ignores multi-locus linkage disequilibrium (LD) — the tendency for certain allele combinations across loci to co-occur more (or less) than expected by chance. Strong LD (as exists between DRB1 and DQB1) means the simplified EM will over-estimate the number of distinct haplotypes and under-estimate their frequencies. A full haplo.stats-style EM would resolve phase ambiguity properly.
+2. **EM sample cap:** Haplotype estimation is capped at 5,000 individuals per ethnicity for computational tractability. Gene[Rate] used the full cohort (up to ~44,400 Chinese), enabling detection of haplotypes with frequencies down to ~0.001–0.01%. Our 0.1% frequency threshold and cap mean rare haplotypes contributing individually < 0.1% are pooled into a residual "other" term. Lifting the cap (or using a sparse EM formulation) would improve registry size estimates for high-coverage targets.
 
 3. **No bootstrap confidence intervals:** Point estimates from the EM algorithm carry sampling uncertainty, especially for rare haplotypes in small cohorts (Indian n=1,098, Others n=754 for EM). Bootstrap CIs would quantify this uncertainty and allow propagation into registry size predictions.
 
@@ -716,7 +719,7 @@ For the Chinese population, adding DQB1 increases the required registry size by 
 
 1. **Linkage disequilibrium reporting (D', r²):** Pairwise LD between the 5 loci would validate the per-locus independence assumption and characterise the haplotype block structure in each CMIO group.
 
-2. **Full multi-locus EM:** Replace the product approximation with a proper full-phase EM (equivalent to haplo.stats in R) for accurate 5-locus haplotype frequency estimation. This is computationally feasible for n ≤ 5,000 samples.
+2. **Lift the EM sample cap:** Extend the full-phase EM to the complete cohort (>5,000 per ethnicity) using a sparse haplotype representation or chunked processing, enabling detection of rarer haplotypes and more accurate high-coverage registry targets.
 
 3. **Higher-resolution typing:** Reanalyse with 4-field allele designations where available, particularly for DRB1 and HLA-B where high polymorphism affects transplant outcomes.
 
@@ -741,7 +744,7 @@ For the Chinese population, adding DQB1 increases the required registry size by 
 
 All randomised steps (EM sampling cap) use `random_state=42` for reproducibility.
 
-Run `pytest tests/ -v` to verify all 29 tests pass before reproducing the analysis.
+Run `pytest tests/ -v` to verify all 35 tests pass before reproducing the analysis.
 
 ---
 
