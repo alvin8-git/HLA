@@ -33,54 +33,68 @@ N_VALUES = np.logspace(0, 6, 300)
 # Data loading helpers
 # ---------------------------------------------------------------------------
 
-def parse_haplotypes(haplo_df, loci):
+def parse_haplotypes(haplo_df, loci, cum_freq_cap=0.995):
     """
     haplo_df: DataFrame with columns [ethnicity, haplotype, frequency]
               haplotype = pipe-separated 5-locus alleles A|B|C|DRB1|DQB1
     loci:     list of locus names (LOCI_5 or LOCI_4)
-    Returns:  list of (allele_tuple, frequency), normalized to sum=1.0
+    cum_freq_cap: keep the top-K haplotypes covering this fraction of total
+                  frequency mass, then renormalise to sum=1.0
+    Returns:  list of (allele_tuple, frequency), sorted descending by frequency
     """
-    n = len(loci)  # number of loci to use (4 or 5)
+    n = len(loci)
     records = {}
     for _, row in haplo_df.iterrows():
         parts = row['haplotype'].split('|')
         key = tuple(parts[:n])
         records[key] = records.get(key, 0.0) + row['frequency']
-    total = sum(records.values())
-    if total == 0:
+
+    sorted_haps = sorted(records.items(), key=lambda x: -x[1])
+    total_all = sum(v for _, v in sorted_haps)
+    if total_all == 0:
         return []
-    # Normalize so frequencies sum to 1.0 (EM output may not include all haplotypes)
-    return [(k, v / total) for k, v in records.items()]
+
+    kept, cum = [], 0.0
+    for k, v in sorted_haps:
+        kept.append((k, v))
+        cum += v / total_all
+        if cum >= cum_freq_cap:
+            break
+
+    kept_total = sum(v for _, v in kept)
+    return [(k, v / kept_total) for k, v in kept]
 
 
 # ---------------------------------------------------------------------------
-# Vectorized allele match count
+# Vectorized allele match count (integer-encoded for speed)
 # ---------------------------------------------------------------------------
 
 def allele_match_count_matrix(pat_a, pat_b, don_a, don_b):
     """
-    pat_a, pat_b: shape (N_pat, n_loci) — patient allele arrays (object dtype)
-    don_a, don_b: shape (N_don, n_loci) — donor allele arrays (object dtype)
+    pat_a, pat_b: shape (N_pat, n_loci) — int16 allele-index arrays
+    don_a, don_b: shape (N_don, n_loci) — int16 allele-index arrays
     Returns: shape (N_pat, N_don) int8 — total allele match count per pair
     """
-    # Expand dims for broadcasting: (N_pat, 1, n_loci) vs (1, N_don, n_loci)
-    pa = pat_a[:, None, :]   # (N_pat, 1, n_loci)
+    pa = pat_a[:, None, :]
     pb = pat_b[:, None, :]
-    da = don_a[None, :, :]   # (1, N_don, n_loci)
+    da = don_a[None, :, :]
     db = don_b[None, :, :]
 
-    # Two possible allele assignments at each locus, take the better one
     assign1 = (pa == da).astype(np.int8) + (pb == db).astype(np.int8)
     assign2 = (pa == db).astype(np.int8) + (pb == da).astype(np.int8)
-    locus_match = np.maximum(assign1, assign2)  # (N_pat, N_don, n_loci)
-    return locus_match.sum(axis=2).astype(np.int8)  # (N_pat, N_don)
+    locus_match = np.maximum(assign1, assign2)
+    return locus_match.sum(axis=2).astype(np.int8)
 
 
-def compute_partial_match_probs(haplotypes, match_thresholds):
+def compute_partial_match_probs(haplotypes, match_thresholds, chunk_size=2000):
     """
-    haplotypes: list of (allele_tuple, frequency), normalized to sum=1
+    haplotypes:       list of (allele_tuple, frequency), normalised to sum=1
     match_thresholds: list of ints, e.g. [8, 9, 10] for 10-locus
+    chunk_size:       donor diplotypes processed per iteration (caps peak RAM)
     Returns: dict {threshold: (f_diplo, p_match)} where both are np.arrays
+
+    Alleles are integer-encoded before comparison so NumPy uses fast SIMD
+    integer ops rather than slow Python-object string comparisons.
     """
     n = len(haplotypes)
     if n == 0:
@@ -89,36 +103,44 @@ def compute_partial_match_probs(haplotypes, match_thresholds):
     allele_tuples = [h for h, f in haplotypes]
     freqs = np.array([f for h, f in haplotypes])
 
-    # Parse haplotype alleles into arrays: shape (n, n_loci)
-    allele_array = np.array(allele_tuples, dtype=object)  # (n, n_loci)
+    # Encode allele strings as int16 indices for fast comparison
+    all_alleles = sorted({a for h in allele_tuples for a in h})
+    enc = {a: np.int16(i) for i, a in enumerate(all_alleles)}
+    n_loci = len(allele_tuples[0])
+    int_array = np.array(
+        [[enc[a] for a in h] for h in allele_tuples], dtype=np.int16
+    )  # shape (n_haps, n_loci)
 
-    # Build diplotype list (upper triangle including diagonal)
-    diplo_list = []
+    # Build diplotype index lists (upper triangle incl. diagonal)
+    idx_i, idx_j, f_list = [], [], []
     for i in range(n):
         for j in range(i, n):
-            f = freqs[i] ** 2 if i == j else 2 * freqs[i] * freqs[j]
-            diplo_list.append((i, j, f))
+            idx_i.append(i)
+            idx_j.append(j)
+            f_list.append(freqs[i] ** 2 if i == j else 2.0 * freqs[i] * freqs[j])
 
-    idx_i = np.array([d[0] for d in diplo_list])
-    idx_j = np.array([d[1] for d in diplo_list])
-    f_diplo = np.array([d[2] for d in diplo_list])
+    idx_i = np.array(idx_i)
+    idx_j = np.array(idx_j)
+    f_diplo = np.array(f_list)
 
-    # Patient and donor diplotype allele arrays (same population pool)
-    pat_a = allele_array[idx_i]   # (N_diplo, n_loci)
-    pat_b = allele_array[idx_j]
-    don_a = allele_array[idx_i]   # (N_diplo, n_loci)
-    don_b = allele_array[idx_j]
+    pat_a = int_array[idx_i]   # (N_diplo, n_loci)
+    pat_b = int_array[idx_j]
+    don_a = int_array[idx_i]
+    don_b = int_array[idx_j]
 
-    # Compute allele match count matrix: (N_diplo_patient, N_diplo_donor)
-    total_match = allele_match_count_matrix(pat_a, pat_b, don_a, don_b)
+    N_diplo = len(f_diplo)
+    p_match_acc = {m: np.zeros(N_diplo) for m in match_thresholds}
 
-    results = {}
-    for m in match_thresholds:
-        # p_match[i] = Σ_j f_diplo[j] * I[total_match[i,j] >= m]
-        p_match = (total_match >= m).astype(np.float64) @ f_diplo
-        results[m] = (f_diplo, p_match)
+    # Chunked donor loop — avoids allocating the full (N_diplo × N_diplo) matrix
+    for start in range(0, N_diplo, chunk_size):
+        end = min(start + chunk_size, N_diplo)
+        chunk_match = allele_match_count_matrix(
+            pat_a, pat_b, don_a[start:end], don_b[start:end]
+        )  # (N_diplo, chunk_size)
+        for m in match_thresholds:
+            p_match_acc[m] += (chunk_match >= m).astype(np.float64) @ f_diplo[start:end]
 
-    return results
+    return {m: (f_diplo, p_match_acc[m]) for m in match_thresholds}
 
 
 def coverage_curve(f_diplo, p_match, n_values):
@@ -140,10 +162,11 @@ def coverage_curve(f_diplo, p_match, n_values):
 # Combined (Overall) haplotype pool
 # ---------------------------------------------------------------------------
 
-def build_combined_haplotypes(haplo_by_eth, loci):
+def build_combined_haplotypes(haplo_by_eth, loci, cum_freq_cap=0.95):
     """
-    Weighted combination of per-ethnicity haplotypes.
-    Returns list of (allele_tuple, frequency), normalized to sum=1.
+    Weighted combination of per-ethnicity haplotypes, capped at cum_freq_cap
+    of total frequency mass and renormalised to sum=1.
+    Returns list of (allele_tuple, frequency), sorted descending by frequency.
     """
     combined = {}
     for eth, haps in haplo_by_eth.items():
@@ -153,7 +176,15 @@ def build_combined_haplotypes(haplo_by_eth, loci):
     total = sum(combined.values())
     if total == 0:
         return []
-    return [(k, v / total) for k, v in sorted(combined.items(), key=lambda x: -x[1])]
+    sorted_haps = sorted(combined.items(), key=lambda x: -x[1])
+    kept, cum = [], 0.0
+    for k, v in sorted_haps:
+        kept.append((k, v))
+        cum += v / total
+        if cum >= cum_freq_cap:
+            break
+    kept_total = sum(v for _, v in kept)
+    return [(k, v / kept_total) for k, v in kept]
 
 
 # ---------------------------------------------------------------------------

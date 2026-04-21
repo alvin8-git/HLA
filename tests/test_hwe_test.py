@@ -8,6 +8,8 @@ from hwe_test import (
     compute_allele_frequencies,
     compute_hwe_stats,
     run_em_haplotypes,
+    _enum_phase_configs,
+    _em_full_phase,
 )
 
 def _make_typed_df(n=100, seed=0):
@@ -93,3 +95,120 @@ def test_run_em_haplotypes_returns_valid_frequencies():
     # Haplotype format: 5 alleles pipe-separated
     sample_hap = result['haplotype'].iloc[0]
     assert sample_hap.count('|') == 4
+
+
+# ---------------------------------------------------------------------------
+# Tests for _enum_phase_configs
+# ---------------------------------------------------------------------------
+
+def test_enum_phase_configs_all_homozygous():
+    geno = [('A', 'A'), ('B', 'B'), ('C', 'C'), ('D', 'D'), ('E', 'E')]
+    configs = _enum_phase_configs(geno)
+    assert len(configs) == 1
+    h1, h2 = configs[0]
+    assert h1 == h2 == ('A', 'B', 'C', 'D', 'E')
+
+
+def test_enum_phase_configs_one_het_locus():
+    # 1 het locus → 2^0 = 1 distinct phase
+    geno = [('A', 'a'), ('B', 'B'), ('C', 'C'), ('D', 'D'), ('E', 'E')]
+    configs = _enum_phase_configs(geno)
+    assert len(configs) == 1
+    h1, h2 = configs[0]
+    assert set(h1) | set(h2)  # both haplotypes present
+    assert h1[0] != h2[0]     # het locus differs
+
+
+def test_enum_phase_configs_two_het_loci():
+    # 2 het loci → 2^1 = 2 distinct phases (coupling and repulsion)
+    geno = [('A', 'a'), ('B', 'b'), ('C', 'C'), ('D', 'D'), ('E', 'E')]
+    configs = _enum_phase_configs(geno)
+    assert len(configs) == 2
+    hap_sets = [frozenset([h1, h2]) for h1, h2 in configs]
+    assert hap_sets[0] != hap_sets[1], "Two phases should produce different diplotypes"
+
+
+def test_enum_phase_configs_five_het_loci():
+    # 5 het loci → 2^4 = 16 distinct phases
+    geno = [('A', 'a'), ('B', 'b'), ('C', 'c'), ('D', 'd'), ('E', 'e')]
+    configs = _enum_phase_configs(geno)
+    assert len(configs) == 16
+    # All configs are distinct
+    assert len(set(frozenset([h1, h2]) for h1, h2 in configs)) == 16
+
+
+def test_enum_phase_configs_covers_all_alleles():
+    geno = [('X', 'Y'), ('P', 'Q'), ('A', 'A'), ('B', 'B'), ('C', 'C')]
+    configs = _enum_phase_configs(geno)
+    for h1, h2 in configs:
+        for locus_idx, (a1, a2) in enumerate(geno):
+            assert frozenset([h1[locus_idx], h2[locus_idx]]) == frozenset([a1, a2])
+
+
+# ---------------------------------------------------------------------------
+# Test that full EM recovers correct phase when column assignment is scrambled
+# ---------------------------------------------------------------------------
+
+def _make_phase_test_df(n_anchor=80, n_scrambled=40):
+    """
+    Construct a dataset with known true haplotypes h_true1 and h_true2.
+
+    Anchoring individuals (n_anchor each): homozygous at all 5 loci for one
+    true haplotype — no phase ambiguity, establishes LD signal in the EM.
+
+    Scrambled individuals (n_scrambled): heterozygous at all 5 loci (true
+    phase is h_true1/h_true2) but the HLA-B allele column is swapped,
+    creating a mis-stated phase in the raw data.
+
+    The proper EM uses the LD established by the anchors to correctly resolve
+    the scrambled individuals back to h_true1 and h_true2.
+    """
+    LOCI_NAMES = ['HLA-A', 'HLA-B', 'HLA-C', 'DRB1', 'DQB1']
+    h_true1 = ('02:01', '46:01', '01:02', '09:01', '03:03')
+    h_true2 = ('11:01', '40:01', '03:02', '03:01', '02:01')
+
+    rows = []
+    sid = 0
+
+    def add_individual(allele_pairs):
+        nonlocal sid
+        for locus, (a1, a2) in zip(LOCI_NAMES, allele_pairs):
+            rows.append({'sample_id': f'S{sid}', 'source': 'BMDP_OUT',
+                         'ethnicity': 'Chinese', 'locus': locus,
+                         'allele1': a1, 'allele2': a2})
+        sid += 1
+
+    # Anchors: homozygous for h_true1 and h_true2 (unambiguous phase)
+    for _ in range(n_anchor):
+        add_individual([(a, a) for a in h_true1])
+    for _ in range(n_anchor):
+        add_individual([(a, a) for a in h_true2])
+
+    # Scrambled: all loci het (h_true1/h_true2), but HLA-B column is swapped
+    for _ in range(n_scrambled):
+        pairs = list(zip(h_true1, h_true2))
+        pairs[1] = (h_true2[1], h_true1[1])   # swap HLA-B col assignment
+        add_individual(pairs)
+
+    return pd.DataFrame(rows), h_true1, h_true2
+
+
+def test_full_em_resolves_phase_correctly():
+    """
+    The proper EM must identify the two true haplotypes as dominant even when
+    some individuals have a scrambled (wrong-phase) column assignment.
+
+    The anchoring homozygous individuals establish LD so the E-step assigns
+    near-zero weight to the spurious 'scrambled' phase configurations.
+    """
+    from hwe_test import _pivot_to_individuals
+    df, h_true1, h_true2 = _make_phase_test_df()
+    wide = _pivot_to_individuals(df[df['ethnicity'] == 'Chinese'])
+    result = _em_full_phase(wide, max_iter=300, tol=1e-8)
+
+    sorted_haps = sorted(result.items(), key=lambda x: -x[1])
+    top2 = {h for h, _ in sorted_haps[:2]}
+    assert h_true1 in top2, f"h_true1 not in top-2: {sorted_haps[:5]}"
+    assert h_true2 in top2, f"h_true2 not in top-2: {sorted_haps[:5]}"
+    assert result[h_true1] > 0.45
+    assert result[h_true2] > 0.45

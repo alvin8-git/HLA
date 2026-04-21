@@ -2,7 +2,7 @@
 
 [![Version](https://img.shields.io/badge/version-1.3.0-informational)](VERSION.md)
 [![Python](https://img.shields.io/badge/python-3.10%2B-blue?logo=python&logoColor=white)](https://www.python.org/)
-[![Tests](https://img.shields.io/badge/tests-29%20passing-brightgreen?logo=pytest&logoColor=white)](tests/)
+[![Tests](https://img.shields.io/badge/tests-35%20passing-brightgreen?logo=pytest&logoColor=white)](tests/)
 [![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 [![Dataset](https://img.shields.io/badge/dataset-n%3D59%2C186%20donors-informational)](analysis/data/)
 [![Paper](https://img.shields.io/badge/paper-Blood%20Cell%20Therapy%202022-red)](2022_HLA_BloodCellTherapy.pdf)
@@ -260,13 +260,13 @@ With fewer samples, rare haplotypes will be missed and registry size estimates w
 
 | Ethnicity | 75% coverage | 85% coverage | 90% coverage | 95% coverage |
 |-----------|-------------|-------------|-------------|-------------|
-| Chinese | 3,883 | 6,008 | 7,926 | 11,616 |
-| Malay | 5,840 | 9,096 | 12,017 | 17,601 |
-| Indian | 1,459 | 2,121 | 2,692 | 3,759 |
-| Others | 1,001 | 1,001 | 1,008 | 1,430 |
-| **Combined** | **14,041** | **26,749** | **42,212** | **83,541** |
+| Chinese | 7,581 | 15,181 | 23,506 | 42,871 |
+| Malay | 6,433 | 13,298 | 21,546 | 41,779 |
+| Indian | 9,857 | 18,363 | 26,906 | 44,863 |
+| Others | 7,207 | 13,119 | 19,246 | 32,360 |
+| **Combined** | **24,530** | **57,443** | **102,032** | **236,906** |
 
-> Cross-ethnic matching is infeasible for Malay, Indian, and Others at high coverage targets (≥90%) — model reaches the 10M ceiling.
+> Targets reflect full multi-locus EM (proper phase resolution). Earlier estimates used a product-approximation EM that treated arbitrary allele-column ordering as known phase, underestimating haplotype diversity by ~40–75%. Cross-ethnic matching remains infeasible for minority groups at high coverage targets.
 
 See [Documentation.md](Documentation.md) for full methodology and figure interpretation.
 

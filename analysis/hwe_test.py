@@ -105,7 +105,7 @@ def compute_hwe_stats(df: pd.DataFrame, allele_freqs: pd.DataFrame) -> pd.DataFr
     return pd.DataFrame(rows).reset_index(drop=True)
 
 
-def run_em_haplotypes(df: pd.DataFrame, max_iter: int = 100,
+def run_em_haplotypes(df: pd.DataFrame, max_iter: int = 200,
                       tol: float = 1e-6, freq_threshold: float = 0.001,
                       cap: int = 5000, random_state: int = 42) -> pd.DataFrame:
     """
@@ -135,7 +135,7 @@ def run_em_haplotypes(df: pd.DataFrame, max_iter: int = 100,
         if len(pivoted) > cap:
             pivoted = pivoted.sample(n=cap, random_state=random_state)
 
-        haplo_freqs = _em_phase(pivoted, max_iter=max_iter, tol=tol)
+        haplo_freqs = _em_full_phase(pivoted, max_iter=max_iter, tol=tol)
 
         for hap, freq in haplo_freqs.items():
             if freq >= freq_threshold:
@@ -186,53 +186,125 @@ def _pivot_to_individuals(df: pd.DataFrame) -> pd.DataFrame | None:
     return wide.reset_index()
 
 
-def _em_phase(wide: pd.DataFrame, max_iter: int = 100, tol: float = 1e-6) -> dict:
+def _enum_phase_configs(geno: list) -> list:
     """
-    EM to estimate 5-locus haplotype frequencies.
-    Phase ambiguity resolved probabilistically.
+    Enumerate all distinct phase configurations for a multi-locus genotype.
+
+    Parameters
+    ----------
+    geno : list of (a1, a2) pairs, one per locus.
+           a1 == a2 indicates a homozygous locus.
+
+    Returns
+    -------
+    List of (h1_tuple, h2_tuple) pairs.  The first heterozygous locus is
+    always assigned a1→h1 (canonical form), so each unordered diplotype
+    appears exactly once.  A fully homozygous genotype returns one entry.
+    """
+    het_idx = [i for i, (a1, a2) in enumerate(geno) if a1 != a2]
+    n_het = len(het_idx)
+
+    base_h1 = [a1 for a1, _ in geno]
+    base_h2 = [a2 for _, a2 in geno]
+
+    if n_het <= 1:
+        return [(tuple(base_h1), tuple(base_h2))]
+
+    configs = []
+    # Fix first het locus on h1 (removes h1↔h2 symmetry).
+    # Vary the remaining n_het-1 loci over all 2^(n_het-1) assignments.
+    for bits in range(2 ** (n_het - 1)):
+        h1 = base_h1[:]
+        h2 = base_h2[:]
+        for j, locus_i in enumerate(het_idx[1:]):
+            if (bits >> j) & 1:
+                h1[locus_i], h2[locus_i] = h2[locus_i], h1[locus_i]
+        configs.append((tuple(h1), tuple(h2)))
+    return configs
+
+
+def _em_full_phase(wide: pd.DataFrame, max_iter: int = 200,
+                   tol: float = 1e-6) -> dict:
+    """
+    Full multi-locus EM for 5-locus haplotype frequency estimation.
+
+    Unlike the previous product-approximation approach, this correctly
+    handles phase uncertainty: for each individual the E-step weights every
+    valid phase configuration by f(h1)*f(h2) under the current frequency
+    estimates, then the M-step accumulates fractional haplotype counts.
 
     Returns dict: haplotype_tuple → frequency
     """
     locus_cols1 = [f"{loc}_1" for loc in LOCI]
     locus_cols2 = [f"{loc}_2" for loc in LOCI]
 
-    # Build (h1, h2) pairs per individual
-    individuals = []
+    # Build genotype as list of (a1, a2) per locus; treat missing allele2
+    # as homozygous (allele2 = allele1).
+    genotypes = []
     for _, row in wide.iterrows():
-        h1 = tuple(
-            str(row[c]) if pd.notna(row[c]) else '__missing__'
-            for c in locus_cols1
-        )
-        h2 = tuple(
-            str(row[c]) if pd.notna(row[c]) else str(row[locus_cols1[i]])
-            for i, c in enumerate(locus_cols2)
-        )
-        individuals.append((h1, h2))
+        geno = []
+        for c1, c2 in zip(locus_cols1, locus_cols2):
+            a1 = str(row[c1]) if pd.notna(row[c1]) else None
+            a2 = str(row[c2]) if pd.notna(row[c2]) else a1
+            if a1 is None:
+                break
+            geno.append((a1, a2))
+        if len(geno) == len(LOCI):
+            genotypes.append(geno)
 
-    # Collect all distinct haplotypes
-    all_haps = list({h for pair in individuals for h in pair})
-    n_haps = len(all_haps)
+    if not genotypes:
+        return {}
+
+    # Pre-enumerate phase configs per individual (done once, outside EM loop)
+    individual_configs = [_enum_phase_configs(g) for g in genotypes]
+
+    # Collect all haplotypes that appear in any valid config
+    all_haps = list({h for configs in individual_configs
+                     for h1, h2 in configs for h in (h1, h2)})
     hap_idx = {h: i for i, h in enumerate(all_haps)}
+    n_haps = len(all_haps)
 
-    # Uniform initialization
-    freqs = np.ones(n_haps) / n_haps
+    freqs = np.ones(n_haps) / n_haps  # uniform initialisation
 
     for _ in range(max_iter):
         counts = np.zeros(n_haps)
 
-        for h1, h2 in individuals:
-            i1, i2 = hap_idx[h1], hap_idx[h2]
-            if i1 == i2:
-                counts[i1] += 2.0
+        for configs in individual_configs:
+            if len(configs) == 1:
+                # No phase ambiguity — contribute directly
+                h1, h2 = configs[0]
+                i1, i2 = hap_idx[h1], hap_idx[h2]
+                if i1 == i2:
+                    counts[i1] += 2.0
+                else:
+                    counts[i1] += 1.0
+                    counts[i2] += 1.0
             else:
-                # Both phase assignments (h1,h2) and (h2,h1) equally weighted
-                counts[i1] += 1.0
-                counts[i2] += 1.0
+                # E-step: weight each config by diplotype frequency
+                weights = np.empty(len(configs))
+                for k, (h1, h2) in enumerate(configs):
+                    i1, i2 = hap_idx[h1], hap_idx[h2]
+                    weights[k] = (freqs[i1] ** 2 if i1 == i2
+                                  else 2.0 * freqs[i1] * freqs[i2])
+
+                total_w = weights.sum()
+                if total_w == 0.0:
+                    weights = np.ones(len(configs)) / len(configs)
+                    total_w = 1.0
+
+                # M-step: accumulate fractional counts
+                for (h1, h2), w in zip(configs, weights):
+                    wn = w / total_w
+                    i1, i2 = hap_idx[h1], hap_idx[h2]
+                    if i1 == i2:
+                        counts[i1] += 2.0 * wn
+                    else:
+                        counts[i1] += wn
+                        counts[i2] += wn
 
         total = counts.sum()
         new_freqs = counts / total if total > 0 else freqs
-
-        delta = np.max(np.abs(new_freqs - freqs))
+        delta = float(np.max(np.abs(new_freqs - freqs)))
         freqs = new_freqs
         if delta < tol:
             break
