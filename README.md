@@ -299,6 +299,9 @@ See [Documentation.md](Documentation.md) for full methodology and figure interpr
 | `analysis/figures/partial_match_8locus.png` | Partial match coverage curves: 6/8, 7/8, 8/8 for each CMIO group + Overall |
 | `analysis/figures/registry_targets_bar.png` | Grouped bar chart: minimum registry N at 75/85/90/95% coverage for all CMIO groups (10/10, same-ethnicity, full-EM) |
 | `analysis/figures/diplotype_longtail.png` | Cumulative diplotype frequency coverage vs rank (log scale) for all CMIO groups — illustrates the long-tail problem |
+| `analysis/figures/ld_heatmap_dprime.png` | Composite D′ heatmap between all 5 HLA loci for each CMIO group (DRB1–DQB1 D′ ≥ 0.93, B–C D′ ≥ 0.95) |
+| `analysis/figures/ld_heatmap_r2.png` | Composite r² heatmap between all 5 HLA loci for each CMIO group |
+| `analysis/figures/registry_ci_plot.png` | Forest plot of registry size targets with 95% bootstrap CIs (Dirichlet resampling, B=500) |
 
 See [Documentation.md](Documentation.md) for detailed figure interpretation.
 
