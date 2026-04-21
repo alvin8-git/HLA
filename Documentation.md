@@ -19,6 +19,9 @@
    - [5.5 EM Validation Against Gene[Rate] Published Frequencies](#55-em-validation-against-generate-published-frequencies)
    - [5.6 Linkage Disequilibrium Between HLA Loci](#56-linkage-disequilibrium-between-hla-loci)
    - [6.5 Bootstrap Confidence Intervals on Registry Size Targets](#65-bootstrap-confidence-intervals-on-registry-size-targets)
+   - [6.6 Ancestry Stratification of the "Others" Group](#66-ancestry-stratification-of-the-others-group)
+   - [6.7 Donor-Patient Match Rate Validation](#67-donor-patient-match-rate-validation)
+   - [6.8 Cross-Ethnic Sensitivity Analysis](#68-cross-ethnic-sensitivity-analysis)
 6. [Registry Size Model — Pipeline Steps 4–5](#6-registry-size-model--pipeline-steps-45)
 7. [Figure Interpretation](#7-figure-interpretation)
 8. [Key Findings](#8-key-findings)
@@ -681,6 +684,131 @@ Full CI table (all thresholds × all match levels) in `analysis/data/registry_si
 
 ---
 
+### 6.6 Ancestry Stratification of the "Others" Group
+
+**Script:** `analysis/11_others_stratification.py`  
+**Figures:** `analysis/figures/others_pca_scatter.png`, `analysis/figures/others_registry_by_cluster.png`
+
+The "Others" group (n = 3,941) is a genetically heterogeneous residual category encompassing South-East Asian, Eurasian, and other non-CMIO individuals. HWE violations across all 5 loci in this group indicate population sub-structure that can distort haplotype frequency estimates and inflate or mask registry size requirements.
+
+#### Method
+
+1. All 3,941 Others individuals with complete 5-locus typing were pivoted to a binary allele indicator matrix (columns = alleles present in ≥ 1% of individuals, ~200–350 features across 5 loci).
+2. PCA (10 components) was applied to the indicator matrix to project individuals into a low-dimensional ancestry space.
+3. K-means clustering (k = 2–5) was run on the top 5 PCA components; best k selected by silhouette coefficient.
+4. The full multi-locus EM was run independently within each cluster; N* was computed at each coverage threshold.
+
+#### Results
+
+**Best clustering:** k = 3 clusters (silhouette = 0.97), with all clusters of meaningful size:
+
+| Cluster | n individuals | n haplotypes | N* at 90% | N* at 95% |
+|---------|--------------|-------------|-----------|-----------|
+| Cluster 1 | 1,029 | 122 | 16,845 | 35,193 |
+| Cluster 2 | 1,257 | 168 | 37,239 | 63,856 |
+| Cluster 3 | 1,561 | 151 | 28,287 | 45,731 |
+| **Others (pooled)** | **3,941** | **123** | **~21,000** | **32,360** |
+
+See Figure 11 for the PCA scatter and silhouette selection, Figure 12 for registry targets by cluster.
+
+#### Interpretation
+
+**The pooled Others estimate (N* = 32,360 at 95%) is misleading.** Stratification reveals three sub-populations with N* values ranging from 35,193 to 63,856 — Cluster 2 requires nearly **twice as many donors** as implied by the pooled model. The pooled model masks this because pooling blends distinct haplotype distributions, artificially reducing the apparent diversity per individual.
+
+**Cluster 2 (the most diverse sub-group)** would require ~64,000 same-cluster donors for 95% coverage — far exceeding any current minority registry in Singapore. This may correspond to a South Asian or Eurasian sub-group with high haplotypic diversity and weaker LD structure. The cluster assignments and per-individual PC scores are stored in `analysis/data/others_cluster_assignments.csv` for downstream demographic linkage.
+
+**Practical implication:** Registry recruitment for the Others category should be treated as three distinct sub-populations. Reporting a single N* for "Others" systematically understates the requirement for the most diverse sub-group by ~2×.
+
+---
+
+### 6.7 Donor-Patient Match Rate Validation
+
+**Script:** `analysis/12_match_validation.py`  
+**Figure:** `analysis/figures/match_validation_scatter.png`  
+**Data:** `DonorPatient.txt` (1,350 haplotype rows), `Patient.txt` (564 haplotype rows)
+
+#### Dataset Structure
+
+`Patient.txt` contains 564 single haplotype observations (ethnicity + A, B, C, DRB1, DQB1 per row) across four ethnic groups. Of these, 362 rows (64%) have DQB1 missing (`-`). `DonorPatient.txt` (1,350 rows, same format) contains haplotypes from both patients and matched donors. By construction, all Patient.txt haplotypes appear in DonorPatient.txt for the same ethnicity.
+
+| Ethnicity | Patient.txt haplotypes | DonorPatient.txt haplotypes |
+|-----------|----------------------|----------------------------|
+| Chinese | 406 | 948 |
+| Malay | 84 | 206 |
+| Indian | 28 | 68 |
+| Others | 46 | 128 |
+
+#### EM Frequency Validation Against Patient Haplotypes
+
+For the 5-locus validation, the small number of shared haplotypes limits statistical power (Patient.txt haplotypes are not independent observations — they represent only a few hundred observed haplotypes):
+
+| Ethnicity | Shared haplotypes | Spearman r | RMSE |
+|-----------|------------------|-----------|------|
+| Chinese | 33 | 0.700 | 0.00941 |
+| Malay | 11 | — (n < 15) | 0.0284 |
+| Indian | 1 | — | — |
+| Others | 4 | — | — |
+
+The Chinese result (r = 0.70, p < 0.001) indicates moderate correlation between EM-predicted and patient-observed haplotype frequencies. The low shared haplotype count for minority groups reflects the high diversity of their haplotype pools relative to the small Patient.txt sample size.
+
+#### Predicted Match Probability
+
+Using the 4-locus EM (A–B–C–DRB1, excluding DQB1 for comparability with missing data), the model predicts the probability that a random same-ethnicity donor carries a given patient haplotype:
+
+| Ethnicity | Mean predicted P(match | haplotype) |
+|-----------|------------------------------------|
+| Chinese | 0.0275 |
+| Malay | 0.0151 |
+| Indian | 0.0098 |
+| Others | 0.0080 |
+
+These are per-haplotype match probabilities. A 10/10 genotype match requires both haplotypes to match, so the probability of a single donor being a 10/10 match for a given patient is approximately P₁ × P₂ (the product of individual haplotype match probabilities). With N donors, the coverage is $1 - (1 - P_1)(1 - P_2)^N$ approximately.
+
+#### Interpretation
+
+The Patient.txt dataset is too small (28–406 haplotype observations per ethnicity) for a high-power validation of the EM frequencies against real patient data. However, the Chinese r = 0.70 result indicates the EM model correctly ranks haplotype frequencies relative to observed patient haplotype representation. The RMSE values (0.009–0.042) are comparable to those from the Gene[Rate] validation (§5.5), suggesting no systematic bias in the patient haplotype distribution compared to the donor-derived EM.
+
+---
+
+### 6.8 Cross-Ethnic Sensitivity Analysis
+
+**Script:** `analysis/13_cross_ethnic_sensitivity.py`  
+**Figure:** `analysis/figures/cross_ethnic_sensitivity.png`
+
+The registry model assumes donors are drawn from the Singapore population with ethnic composition weights (Chinese 77%, Malay 8%, Indian 9%, Others 6%). This section tests how sensitive the aggregate registry size targets are to this assumption.
+
+#### Scenarios
+
+| Scenario | Chinese | Malay | Indian | Others |
+|----------|---------|-------|--------|--------|
+| SG population (current model) | 77.0% | 8.0% | 9.0% | 6.0% |
+| BMDP+SCBB registry (observed) | 75.0% | 9.4% | 9.3% | 6.4% |
+| Patient.txt composition | 72.0% | 14.9% | 5.0% | 8.2% |
+| Minority-focus (no Chinese) | 0.0% | 40.0% | 40.0% | 20.0% |
+
+The BMDP+SCBB weights are derived from the actual ethnic breakdown of 3,767 donors across both registries. The minority-focus scenario is a stress-test for the case where the registry is restructured to prioritise under-served groups.
+
+#### Results — Aggregate N* by Scenario (Same-Ethnicity Weighted Average)
+
+| Scenario | N* at 75% | N* at 85% | N* at 90% | N* at 95% |
+|----------|-----------|-----------|-----------|-----------|
+| SG population | 7,672 | 15,193 | 23,400 | 42,332 |
+| BMDP+SCBB registry | 7,661 | 15,169 | 23,368 | 42,289 |
+| Patient.txt composition | 7,492 | 14,890 | 23,035 | 41,950 |
+| Minority-focus | 7,957 | 15,288 | 23,230 | 41,129 |
+
+See Figure 13 for the grouped bar chart.
+
+#### Interpretation
+
+**Registry size targets are robust to ethnic composition assumptions.** Across all four scenarios — including the extreme minority-focus case with no Chinese donors — N* at 95% varies by only 1,203 donors (41,129–42,332), a range of ~3%. This robustness arises because the per-ethnicity N* values are of similar magnitude (32,360–44,863), so changing the weighting does not dramatically shift the weighted average.
+
+**The actual BMDP+SCBB composition (75/9.4/9.3/6.4) is nearly identical to the SG population weights** used in the current model. The largest departure is in the Patient.txt composition, which has a higher Malay fraction (14.9% vs 8%), reflecting the over-representation of Malay patients in the matched-donor dataset — possibly due to referral patterns or higher search initiation rates.
+
+**Practical implication:** The 40,000–45,000 donor target for 95% coverage is not an artefact of the ethnic composition assumption; it is a structural property of HLA diversity in the CMIO population. Changing who is recruited changes the ethnic mix but not the total required headcount by any meaningful margin.
+
+---
+
 ## 7. Figure Interpretation
 
 ### Figure 1: Allele Frequency Discrepancy Heatmap
@@ -791,6 +919,10 @@ For the Chinese population, adding DQB1 increases the required registry size by 
 
 - **The addition of DQB1 (10/10 vs 8/8) increases required registry size by ~6–10%** for Chinese patients due to strong DRB1-DQB1 linkage disequilibrium. The effect may be larger for other populations.
 
+- **The "Others" group is genetically heterogeneous** — PCA-based stratification into 3 sub-clusters reveals N* at 95% ranging from 35,193 to 63,856. The pooled Others estimate (32,360) understates the requirement for the most diverse sub-cluster by ~2×. No single-number registry target is adequate for this group.
+
+- **Cross-ethnic sensitivity is low.** Aggregate N* at 95% varies by only ~3% across population-weight scenarios, including an extreme minority-focused registry. The 40,000–45,000 donor target is a structural property of CMIO HLA diversity, not an assumption artefact.
+
 ---
 
 ## 9. Limitations and Suggested Improvements
@@ -801,23 +933,27 @@ For the Chinese population, adding DQB1 increases the required registry size by 
 
 2. **EM sample cap:** Haplotype estimation is capped at 5,000 individuals per ethnicity for computational tractability. Gene[Rate] used the full cohort (up to ~44,400 Chinese), enabling detection of haplotypes with frequencies down to ~0.001–0.01%. Our 0.1% frequency threshold and cap mean rare haplotypes contributing individually < 0.1% are pooled into a residual "other" term. Lifting the cap (or using a sparse EM formulation) would improve registry size estimates for high-coverage targets.
 
-3. **No bootstrap confidence intervals:** Point estimates from the EM algorithm carry sampling uncertainty, especially for rare haplotypes in small cohorts (Indian n=1,098, Others n=754 for EM). Bootstrap CIs would quantify this uncertainty and allow propagation into registry size predictions.
+3. ~~**No bootstrap confidence intervals:**~~ ✅ **Done** — see §6.5 and Figure 10. Dirichlet parametric bootstrap (B=500) gives tight 95% CIs (~5% width); all lower bounds > 30,000 donors.
 
-4. **"Others" group heterogeneity:** The 5-locus HWE violations in the Others group are consistent with population admixture. Registry size predictions for this group are unreliable without stratification by ancestry.
+4. ~~**"Others" group heterogeneity:**~~ ✅ **Done** — see §6.6 and Figures 11–12. PCA stratification identifies 3 meaningful sub-clusters with N* at 95% ranging from 35,193 to 63,856. Registry planning should treat Others as 3 distinct target groups.
 
-5. **Registry composition idealization:** The model assumes donors are drawn randomly from the population. Real registries have demographic biases (age, recruitment campaigns) that may inflate or deflate effective coverage.
+5. **Registry composition idealisation:** The model assumes donors are drawn randomly from the population. Real registries have demographic biases (age, recruitment campaigns) that may inflate or deflate effective coverage. The sensitivity analysis (§6.8) confirms aggregate N* is robust to composition changes, but per-group coverage for the minority Others sub-clusters remains sensitive to targeted recruitment.
 
 ### Suggested Future Analyses
 
 1. ~~**Linkage disequilibrium reporting (D', r²)**~~ ✅ **Done** — see §5.6 and Figures 8–9. DRB1–DQB1 D′ = 0.93–0.99, B–C D′ = 0.95–0.99 across all CMIO groups.
 
-2. **Lift the EM sample cap:** Extend the full-phase EM to the complete cohort (>5,000 per ethnicity) using a sparse haplotype representation or chunked processing, enabling detection of rarer haplotypes and more accurate high-coverage registry targets.
+2. ~~**Bootstrap registry size confidence intervals**~~ ✅ **Done** — see §6.5 and Figure 10. CIs are tight (~5% width); all lower bounds > 30,000 donors for all groups.
 
-3. **Higher-resolution typing:** Reanalyse with 4-field allele designations where available, particularly for DRB1 and HLA-B where high polymorphism affects transplant outcomes.
+3. ~~**Ancestry stratification for "Others"**~~ ✅ **Done** — see §6.6. k=3 clusters; Cluster 2 needs ~64K donors at 95%, nearly 2× the pooled estimate.
 
-4. **Ancestry stratification for "Others":** Apply principal component analysis (PCA) on HLA allele vectors to identify genetic sub-clusters within the Others group, then model each sub-cluster separately.
+4. ~~**Cross-ethnic sensitivity analysis**~~ ✅ **Done** — see §6.8. N* at 95% is stable (±3%) across population-weight scenarios including extreme minority-focus.
 
-5. ~~**Bootstrap registry size confidence intervals**~~ ✅ **Done** — see §6.5 and Figure 10. CIs are tight (~5% width); all lower bounds > 30,000 donors for all groups.
+5. **Lift the EM sample cap:** Extend the full-phase EM to the complete cohort (>5,000 per ethnicity) using a sparse haplotype representation or chunked processing, enabling detection of rarer haplotypes and more accurate high-coverage registry targets.
+
+6. **Higher-resolution typing:** Reanalyse with 4-field allele designations where available, particularly for DRB1 and HLA-B where high polymorphism affects transplant outcomes.
+
+7. **Larger patient validation dataset:** Patient.txt (564 haplotypes) is too small for per-ethnicity frequency validation — especially for Indian (28 haplotypes) and Others (46 haplotypes). A larger matched-pair dataset would enable proper calibration of predicted vs observed match rates.
 
 ---
 
@@ -948,6 +1084,36 @@ The 8-locus framework is relevant for:
 ![Bootstrap CI forest plot](analysis/figures/registry_ci_plot.png)
 
 **What it shows:** Forest plot of minimum registry size (dot = point estimate, horizontal bar = 95% bootstrap CI) for each CMIO group × coverage threshold × match level. Left panel = 10/10, right = 8/8. CIs are narrow (~5% of point estimate width) reflecting the large effective EM sample sizes.
+
+---
+
+### Figure 11: Others PCA Scatter and Silhouette Selection
+
+**File:** `analysis/figures/others_pca_scatter.png`
+
+![Others PCA Scatter](analysis/figures/others_pca_scatter.png)
+
+**What it shows:** Left panel — PCA scatter (PC1 vs PC2) of the 3,941 Others individuals, coloured by K-means cluster (k = 3). Right panel — silhouette coefficient for k = 2–5, with the selected k marked. The high silhouette (0.97) at k = 3 reflects well-separated clusters in PCA space, consistent with distinct ancestry sub-groups within the heterogeneous Others category.
+
+---
+
+### Figure 12: Registry Size Targets by Others Sub-Cluster
+
+**File:** `analysis/figures/others_registry_by_cluster.png`
+
+![Others Registry by Cluster](analysis/figures/others_registry_by_cluster.png)
+
+**What it shows:** Grouped bar chart of minimum same-cluster registry size (10/10 matching) at 75/85/90/95% coverage for each of the 3 Others sub-clusters. The striking divergence between Cluster 1 (N* = 35,193 at 95%) and Cluster 2 (N* = 63,856) illustrates why treating Others as a single homogeneous pool underestimates requirements by up to 2×.
+
+---
+
+### Figure 13: Cross-Ethnic Sensitivity — Registry Targets by Ethnic Composition Scenario
+
+**File:** `analysis/figures/cross_ethnic_sensitivity.png`
+
+![Cross-Ethnic Sensitivity](analysis/figures/cross_ethnic_sensitivity.png)
+
+**What it shows:** Grouped bar chart comparing aggregate registry size targets (same-ethnicity weighted average, 10/10 match) across four population-weight scenarios at coverage thresholds 75–95%. Bar heights are nearly identical across scenarios, confirming the robustness of the 40,000–45,000 donor target at 95% coverage to assumptions about ethnic composition.
 
 ---
 

@@ -1,0 +1,5 @@
+ethnicity,n_patient,n_em,n_shared,pct_covered,spearman_r,p_value,rmse
+Chinese,109.0,140.0,33,45.1,0.6996,6e-06,0.009411
+Malay,30.0,137.0,11,36.7,,,0.028446
+Indian,,,1,,,,
+Others,20.0,123.0,4,20.0,,,0.041846
