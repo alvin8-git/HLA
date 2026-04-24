@@ -43,6 +43,7 @@
    - 6.6 [Ancestry Stratification of the "Others" Group](#66-ancestry-stratification-of-the-others-group)
    - 6.7 [Donor-Patient Match Rate Validation](#67-donor-patient-match-rate-validation)
    - 6.8 [Cross-Ethnic Sensitivity Analysis](#68-cross-ethnic-sensitivity-analysis)
+   - 6.9 [Statistical Confidence and Public Validity](#69-statistical-confidence-and-public-validity)
 7. [Key Findings](#7-key-findings)
 8. [Limitations and Future Directions](#8-limitations-and-future-directions)
 9. [Software and Reproducibility](#9-software-and-reproducibility)
@@ -871,6 +872,82 @@ Registry size predictions depend on assumed population composition (§6.1.4). We
 
 *Sensitivity of required registry size to patient population composition. Four scenarios (x-axis) yield near-identical combined N*, indicating low sensitivity. Individual per-group N* (colored bars) remain constant; variation arises only from weighting, which is small.*
 
+### 6.9 Statistical Confidence and Public Validity
+
+This section addresses whether the methodology is sufficiently validated for public dissemination, and documents the appropriate confidence level for each component of the analysis.
+
+#### 6.9.1 Sample Size Adequacy: 56k vs. 200k
+
+A natural question is whether a larger external dataset (e.g., 200k donors from the Singapore Genome Project) would materially improve the N* estimates.
+
+**Validation performed in this pipeline:**
+
+| Method | What it tests | Result |
+|---|---|---|
+| GENE[RATE] cross-validation | EM frequencies vs. global reference database | Spearman r = 0.91–0.99 across all CMIO groups |
+| Patient-donor holdout | Predicted vs. observed match rates against real patients | r = 0.700 (Chinese, 33 shared haplotypes only) |
+| Bootstrap CIs (1,000 Dirichlet resamples) | Uncertainty arising from finite sample size | CI width ±2–5% of N* at 95% target |
+| Demographic sensitivity analysis | 4 ethnic weight scenarios | N* varies <3% across all scenarios |
+
+**Why 56k is adequate for Chinese, Malay, and Indian:**
+
+Registry size N* depends on **frequency estimation accuracy**, not raw donor count. For a haplotype at frequency f_g, approximately 1/f_g observations are needed for reliable estimation. A haplotype at 1% frequency needs ~100 observations; at 0.1%, ~1,000. At the current cohort sizes (Chinese ~43k, Malay ~4.5k, Indian ~5k, Others ~3.5k), all haplotypes that contribute meaningfully to the 95% coverage target are well-sampled. The tight bootstrap CIs (±2–5%) confirm this directly — narrow CIs are the empirical signature of an adequately powered frequency estimate.
+
+**What a 200k dataset would add:**
+- Better resolution of the **Others subclusters** (n ≈ 3,500 currently — the weakest group by sample size)
+- Discovery of additional ultra-rare haplotypes (f < 0.01%) — but these do not affect the 95% N* calculation
+- Marginally tighter CIs — but not materially different point estimates for Chinese, Malay, or Indian
+
+For the three main CMIO groups, 56k is sufficient. For Others, more data would sharpen subcluster analysis but the existing CI width (~±1,500 donors) is already clinically acceptable.
+
+#### 6.9.2 Why 95% is the Practical Coverage Ceiling
+
+The residual 5% below 100% coverage is not a modelling failure — it reflects a biological property of HLA diversity that persists regardless of dataset size:
+
+1. **The rare haplotype long tail:** At 95% coverage, the remaining 5% consists of haplotypes with individual frequencies f < 0.05%, seen ≤25 times in a 50k dataset, and often only 1–3 times. These are the hundreds to thousands of rare haplotypes that individually contribute negligibly to coverage but collectively make up the residual tail.
+
+2. **EM phasing becomes unreliable at low counts:** Haplotypes seen ≤2 times cannot be reliably distinguished from phasing artefacts. No dataset of practical size resolves this — even 200k donors yields only ~20 sightings of a 0.01%-frequency haplotype, insufficient for stable EM phasing.
+
+3. **The 95% ceiling is internationally recognised:** Gragert et al. (NEJM 2014), the reference for this methodology, sets 75% and 90% as primary planning targets. 95% is already at the upper practical boundary used by the field.
+
+4. **Clinical irrelevance beyond 95%:** Patients in the residual 5% carry ultra-rare diplotypes for which no registry in the world has matched donors. This is not a Singapore-specific limitation; it reflects the global ceiling of HLA registry matching.
+
+5. **Exponential cost of the tail:** From §6.3.3, the incremental donor cost of moving from 90% → 95% is ~19,000 donors (82% increase). Moving from 95% → 98% would require orders of magnitude more, with diminishing clinical return.
+
+#### 6.9.3 Overall Confidence Assessment Before Public Release
+
+| Dimension | Confidence level | Basis |
+|---|---|---|
+| Mathematical framework | **High** | Beatty 1995, Gragert 2014 — established, peer-reviewed |
+| EM phasing accuracy | **High** | r = 0.91–0.99 vs. GENE[RATE] international reference |
+| Chinese N* estimate | **Moderate** | Only group with any powered patient holdout (r = 0.700, n = 33) |
+| Malay / Indian N* estimates | **Moderate** | GENE[RATE] validation applies; no patient holdout |
+| Others N* estimates | **Low-moderate** | Wide CI range (35k–64k); cluster ancestry unconfirmed |
+| Registration bias correction | **None** | No external random-sample comparator available |
+| Prospective validity | **Unknown** | No outcome data from built registries; inherent to all such work |
+
+**The most important gap:** The patient-donor holdout is severely underpowered for all groups except Chinese. Malay (11 shared haplotypes), Indian (1), and Others (4) do not have sufficient shared haplotypes for a meaningful rank correlation. These groups' N* estimates rest entirely on the GENE[RATE] cross-validation.
+
+**Registration bias is unquantified.** Volunteer registries systematically over-represent certain socioeconomic and geographic subgroups. Without a random population sample (e.g., Singapore Genome Project), we cannot confirm that the 56k BMDP/SCBB donors are representative of Singapore's full HLA diversity. This is a genuine threat to validity that cannot be corrected within the current dataset.
+
+#### 6.9.4 Recommended Public Framing
+
+Estimates should not be stated as definitive thresholds. The appropriate framing is:
+
+> *"Under the standard Beatty-Gragert framework applied to EM-phased haplotype frequencies from 56,000 Singapore donors, a registry of approximately X donors is estimated to achieve 95% same-ethnicity match coverage, with bootstrap 95% CI [lo, hi]. This estimate assumes random sampling from the donor-eligible population and the absence of systematic registration bias. Independent prospective validation — ideally against Singapore Genome Project population data — is recommended before these estimates are used as definitive recruitment targets."*
+
+This framing is consistent with Gragert NEJM 2014, which similarly qualifies its estimates as projections under stated model assumptions. A Limitations section in any publication should explicitly state: (1) volunteer registration bias is unquantified; (2) patient-donor holdout validation was powered only for Chinese; and (3) Others subcluster ancestry inference is hypothesis-generating pending genealogical confirmation.
+
+#### 6.9.5 Common Misstatement to Avoid
+
+When communicating these findings informally, a tempting shortcut is: *"56k vs. 200k won't matter because there are only a couple of rare haplotypes."* This reasoning is **factually incorrect** and should not be used.
+
+The correct argument is the opposite: there are potentially **hundreds to thousands** of rare haplotypes in the 5% residual tail. The reason more data does not help is not that there are few of them — it is that each one is individually so rare (f < 0.05%) that even 200k observations yields too few sightings per haplotype for reliable EM phasing. The 95% ceiling exists because the long tail of rare haplotypes is unresolvable regardless of dataset size.
+
+The complete accurate summary for non-technical audiences:
+
+> *"For Chinese, Malay, and Indian, 56k donors is sufficient to estimate registry sizes at the 95% coverage target — more data would primarily help the Others subgroup and would not materially change the main findings. The 95% target is the practical ceiling because the remaining 5% consists of hundreds of ultra-rare haplotypes that cannot be reliably characterised even with much larger datasets."*
+
 ---
 
 ## 7. Key Findings
@@ -915,7 +992,9 @@ Registry size predictions depend on assumed population composition (§6.1.4). We
 
 - **Others cluster labels unconfirmed:** PCA/clustering reveal 3 distinct sub-groups, but demographic annotation (e.g., Eurasian, South Asian, East Asian) is inferred from LD patterns only. Genetic ancestry markers or self-reported heritage would confirm identities.
 
-- **Patient dataset small for validation:** 28–406 haplotypes per ethnicity in Patient.txt; only 33 Chinese haplotypes matched to donors. Minority group validation is statistically underpowered.
+- **Patient dataset small for validation:** 28–406 haplotypes per ethnicity in Patient.txt; only 33 Chinese haplotypes matched to donors. Minority group validation is statistically underpowered — Malay (11 shared haplotypes), Indian (1), and Others (4) have too few shared haplotypes for rank correlation. N* estimates for these groups rely entirely on GENE[RATE] cross-validation with no prospective holdout confirmation.
+
+- **Registration bias unquantified:** The 56k BMDP/SCBB donors are volunteers. Volunteer registries systematically over-represent certain socioeconomic and geographic subgroups. Without an external random population sample (e.g., Singapore Genome Project), we cannot confirm that the registry is representative of Singapore's full ethnic HLA diversity. This is a genuine threat to external validity that cannot be corrected within the current dataset.
 
 - **Registry composition idealized:** Model assumes independent donor draws from population frequency distribution. Real registries exhibit age/gender skews, regional biases, and preferential recruitment of common genotypes.
 
@@ -987,6 +1066,6 @@ Executes all 35 unit tests across ingestion, allele frequency, HWE, and registry
 
 ---
 
-**Document Version:** 1.0 (April 2026)  
-**Last Updated:** 2026-04-21  
+**Document Version:** 1.1 (April 2026)  
+**Last Updated:** 2026-04-24  
 **Queries/Corrections:** Contact author at the reference above.
