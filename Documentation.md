@@ -472,6 +472,16 @@ The registry size model answers the central question: **How many donors are need
 
 ### 6.1 Mathematical Framework
 
+> **In plain language**
+>
+> **What we're doing:** We're calculating the minimum number of bone marrow donors a registry needs so that most patients — across all ethnic groups — can find a fully matched donor.
+>
+> **Why this approach:** Guessing a round number (e.g., "we need 50,000 donors") is not scientifically defensible. This formula, developed by Beatty (1988) and Gragert (2014), is the international standard used by the US National Marrow Donor Program and other registries worldwide. It gives a principled, evidence-based answer tailored to our specific Singapore population.
+>
+> **How it works:** Every HLA type (diplotype) in the population has a frequency — how common it is. Rare types are hard to match; common types are easy. The model calculates: if you recruit N random donors, what fraction of all patients (weighted by how common their HLA type is) will find at least one matching donor? We find the smallest N where that fraction crosses our target (e.g., 95%).
+>
+> **Simple example:** Imagine a patient whose HLA type is shared by 1 in 1,000 people (frequency = 0.1%). The chance that any single random donor matches them is 0.1%. To have a 63% chance of finding at least one match, you'd need about 1,000 donors screened. The full model does this calculation simultaneously for all patient types in the population and averages the result.
+
 #### 6.1.1 Diplotype frequencies under HWE
 
 Given $K$ haplotypes with frequencies $\{f_1, f_2, \ldots, f_K\}$, the probability of a diplotype (genotype) under HWE is:
@@ -563,6 +573,16 @@ We use 64-bit floating-point arithmetic (float64). For rare diplotypes with $f_g
 
 ### 6.2 Coverage Curves
 
+> **In plain language**
+>
+> **What we're doing:** Drawing a graph that shows, for each ethnic group, how the percentage of patients who can find a match rises as the donor registry grows.
+>
+> **Why this approach:** A single number ("you need 42,000 donors") doesn't capture the full picture. The curve shows the shape of the problem — in particular, the point of diminishing returns where adding more donors yields very little extra coverage. This helps decision-makers understand where recruiting effort pays off most.
+>
+> **How it works:** We calculate Coverage(N) for every value of N from 100 to 100,000 and plot the result. Two lines are shown for each group: same-ethnicity matching (blue — patient and donor from the same ethnic group) and cross-ethnic matching (orange — any Singapore donor, regardless of ethnicity).
+>
+> **Simple example:** For Chinese donors, the coverage curve rises steeply at first — 10,000 donors gets you to about 80% coverage. But the curve flattens: getting from 80% to 90% requires an additional ~13,000 donors, and from 90% to 95% requires yet another ~19,000. This "flattening" is the long tail of rare HLA types that are simply hard to match regardless of registry size.
+
 **Figure 3: 8/8 Coverage Curves**
 
 ![8/8 Coverage Curves](analysis/figures/coverage_curves_8of8.png)
@@ -583,6 +603,16 @@ We use 64-bit floating-point arithmetic (float64). For rare diplotypes with $f_g
 5. Malay and Indian cross-ethnic coverage plateaus near 70–75%, indicating that no registry size is sufficient for cross-ethnic matching alone.
 
 ### 6.3 Worked Examples from CMIO Data
+
+> **In plain language**
+>
+> **What we're doing:** Showing the actual numbers our model produces for Singapore's four ethnic groups, using real donor data from BMDP and SCBB.
+>
+> **Why this approach:** Abstract formulas need grounding in real data to be meaningful. These worked examples let clinicians and policymakers see exactly what the model predicts and why, rather than treating N* as a black-box output.
+>
+> **How it works:** We feed in the EM-estimated haplotype frequencies for each ethnic group and run the coverage formula. The result is a table of registry size targets at 75%, 85%, 90%, and 95% coverage.
+>
+> **Simple example:** The Chinese donor pool currently has ~44,400 people in BMDP. Our model says 42,871 donors are needed for 95% coverage — so the existing registry *just barely* meets the 95% target. However, getting from 90% to 95% required ~19,000 extra donors (82% more than what was needed at 90%). This non-linear cost of the last 5% is a key policy insight.
 
 #### 6.3.1 Chinese population — 10/10 same-ethnicity
 
@@ -676,6 +706,16 @@ The remaining **49.8% of patients** are spread across >9,000 rare diplotypes, ea
 **Script:** `analysis/06_partial_match_plots.py`  
 **Figures:** `analysis/figures/partial_match_10locus.png`, `analysis/figures/partial_match_8locus.png`
 
+> **In plain language**
+>
+> **What we're doing:** Calculating how many donors would be needed if we relax the matching standard — allowing 1 or 2 mismatches out of 10 HLA points, instead of requiring a perfect match.
+>
+> **Why this approach:** A perfect 10/10 match is the gold standard, but not always achievable — especially for patients from minority ethnic groups or those with rare HLA types. Clinicians sometimes proceed with a 9/10 or 8/10 match when no perfect match exists. Quantifying the registry size savings from relaxing the standard gives transplant physicians and registry managers a concrete trade-off to evaluate.
+>
+> **How it works:** For each patient HLA type, we calculate the probability that a random donor matches at 9 or more (out of 10) positions, rather than all 10. This increases the pool of acceptable donors for each patient, which reduces the registry size needed to achieve the same coverage level.
+>
+> **Simple example:** For Chinese patients, achieving 95% coverage requires ~42,871 donors at a strict 10/10 match. Relaxing to 9/10 (allowing one mismatch) cuts that to roughly ~20,000 donors — about half. The clinical trade-off is a slightly higher risk of graft-versus-host disease with the mismatched donor, which the transplant physician must weigh against the urgency of the patient's condition.
+
 In clinical practice, an **exact match is ideal but not always essential**. A donor with 1 or 2 HLA locus mismatches (9/10 or 8/10) may be acceptable, especially for patients with urgent need or rare genotypes.
 
 The partial match coverage model quantifies how much additional donor availability comes from relaxing the match requirement.
@@ -733,6 +773,16 @@ $$
 **Script:** `analysis/09_bootstrap_ci.py`  
 **Figure:** `analysis/figures/registry_ci_plot.png`
 
+> **In plain language**
+>
+> **What we're doing:** Instead of reporting a single number for the required registry size, we report a plausible range — e.g., "42,871 donors, with a 95% confidence interval of 40,199–42,177."
+>
+> **Why this approach:** Our 56,000 donors are a sample of Singapore's population, not the entire population. The true HLA frequencies in Singapore are unknown — we only have estimates. If we had a slightly different set of donors, we'd get slightly different frequency estimates, and therefore a slightly different N*. The confidence interval captures this uncertainty so policymakers know whether the answer is "roughly 40,000" or "somewhere between 30,000 and 55,000."
+>
+> **How it works:** We simulate 1,000 alternative versions of our dataset using a statistical technique called Dirichlet bootstrapping. Each simulated dataset produces its own N* estimate. The middle 95% of those 1,000 estimates forms the confidence interval.
+>
+> **Simple example:** Think of it like polling before an election. If you poll 1,000 voters and 60% favour Candidate A, the true support might be anywhere from 57% to 63% depending on which 1,000 people you happened to ask. Bootstrapping is our way of quantifying that polling uncertainty — applied to HLA frequencies rather than voting intentions. For Chinese donors, our CI is tight (±~2,000 out of 42,871), which tells us 56,000 donors is more than enough to get a reliable frequency estimate.
+
 The point estimates of N* (§6.3, 6.1.6) are subject to sampling uncertainty: with finite cohort sizes (44,400 Chinese, etc.), true haplotype frequencies are unknown. We estimate confidence intervals using **Dirichlet bootstrapping**.
 
 **Method:** Haplotype frequencies follow a multinomial distribution. Under Bayesian nonparametric statistics, the posterior distribution of frequency vectors is **Dirichlet** with concentration parameter $\alpha_k = n_{\text{eff}} \times \hat{f}_k$, where $\hat{f}_k$ is the observed frequency and $n_{\text{eff}}$ is an effective sample size.
@@ -768,6 +818,16 @@ For each ethnicity, we:
 
 **Script:** `analysis/11_others_stratification.py`  
 **Figures:** `analysis/figures/others_pca_scatter.png`, `analysis/figures/others_registry_by_cluster.png`
+
+> **In plain language**
+>
+> **What we're doing:** The "Others" category in Singapore includes Eurasians, Caucasians, Filipinos, Japanese, mixed-race individuals, and many others. We use genetics to find the hidden subgroups within "Others" and calculate separate registry size targets for each.
+>
+> **Why this approach:** Lumping all "Others" together gives a misleading answer. Imagine averaging the shoe sizes of adults and children — the average fits nobody well. Similarly, treating genetically distinct groups as one group produces a registry size estimate that is too low for the diverse subgroup and wasteful for the more homogeneous one. Splitting by genetic ancestry gives each subgroup a more accurate target.
+>
+> **How it works:** We look at which HLA alleles each "Others" donor carries and use a technique called PCA (principal component analysis) to reduce this to a simple map, then group donors into clusters based on genetic similarity using k-means clustering. Each cluster is then treated as its own population with its own registry size calculation.
+>
+> **Simple example:** Out of 3,947 "Others" donors, our algorithm found three distinct genetic clusters. One cluster (likely Filipino/SE Asian ancestry) needs ~64,000 donors for 95% coverage — nearly double the pooled "Others" estimate of 32,360. If we had only used the pooled figure, we would have significantly underestimated the recruitment needed to serve this subgroup. Think of it like discovering that what you thought was one species of bird is actually three, each with different habitat needs.
 
 The "Others" group (6.4% of registry) is deliberately heterogeneous: Eurasians, Caucasians, East Asians, and mixed-race individuals. Pooling these may mask sub-group structure and inflate apparent registry size requirements. We stratified Others using **unsupervised clustering**.
 
@@ -809,6 +869,16 @@ Cluster identities remain unconfirmed (no demographic linkage data available), b
 **Script:** `analysis/12_match_validation.py`  
 **Figure:** `analysis/figures/match_validation_scatter.png`
 
+> **In plain language**
+>
+> **What we're doing:** Checking whether our model's predictions match what actually happened in real donor-patient pairings — a real-world sanity check.
+>
+> **Why this approach:** A mathematically elegant model can still be wrong if its assumptions don't hold in practice. We have a dataset of 1,350 actual donor-patient match outcomes from BMDP/SCBB. By comparing our model's predicted match probabilities against whether those matches were actually successful, we can test whether the model is grounded in clinical reality.
+>
+> **How it works:** For each patient in our dataset, we use our model to predict the probability that a given donor will match them. We then compare that predicted probability against the actual recorded outcome (matched or not matched). If the model is well-calibrated, patients our model says are easy to match should have higher observed match rates, and vice versa.
+>
+> **Simple example:** Think of a weather forecast. If the model says "70% chance of rain" on 100 different days, it should actually have rained on about 70 of them. Our model says certain Chinese patients have a 2.75% chance of matching any given donor. Across 33 well-characterised Chinese patient haplotypes, our predicted rankings correlated with actual match outcomes at r = 0.70 — a meaningful but imperfect agreement, limited partly by the small number of shared haplotypes available for comparison.
+
 We validated predicted match probabilities against observed matches in the **DonorPatient.txt** dataset (1,350 matched pairs).
 
 **Data:** Patient haplotypes from Patient.txt (564 rows; ~362 missing DQB1); donor haplotypes inferred from BMDP+SCBB (59,235); 1,350 documented matches.
@@ -845,6 +915,16 @@ We validated predicted match probabilities against observed matches in the **Don
 **Script:** `analysis/13_cross_ethnic_sensitivity.py`  
 **Figure:** `analysis/figures/cross_ethnic_sensitivity.png`
 
+> **In plain language**
+>
+> **What we're doing:** Testing whether our registry size answer changes if the patient population turns out to be different from what we assumed.
+>
+> **Why this approach:** Our baseline model assumes the patient mix mirrors Singapore's census (77% Chinese, 8% Malay, 9% Indian, 6% Others). But real transplant patients may not follow the census — Malay and Indian patients are sometimes over-represented relative to population share, due to disease incidence patterns. We need to know: if the patient mix shifts, does our recommended registry size change significantly?
+>
+> **How it works:** We re-run the combined registry size calculation four times, each time using a different set of weights for the ethnic groups — ranging from the census baseline to an extreme hypothetical where Chinese patients are excluded entirely and minorities dominate.
+>
+> **Simple example:** Imagine a restaurant planning how much of each dish to prepare. They normally expect 77% of customers to order rice, but what if one day it's only 40%? If all dishes require roughly similar ingredient quantities, the total amount of food to prepare barely changes. That is exactly what we find: despite dramatic changes in the assumed patient ethnic mix, the total recommended registry size moves by less than 3% (41,129 to 42,332 donors). This robustness is reassuring — our recommendation does not depend critically on having the exact right demographic assumption.
+
 Registry size predictions depend on assumed population composition (§6.1.4). We tested sensitivity to different patient demographic assumptions.
 
 **Scenarios:**
@@ -873,6 +953,16 @@ Registry size predictions depend on assumed population composition (§6.1.4). We
 *Sensitivity of required registry size to patient population composition. Four scenarios (x-axis) yield near-identical combined N*, indicating low sensitivity. Individual per-group N* (colored bars) remain constant; variation arises only from weighting, which is small.*
 
 ### 6.9 Statistical Confidence and Public Validity
+
+> **In plain language**
+>
+> **What we're doing:** Giving an honest assessment of how confident we are in the results before they are published or used to set policy — and identifying where the evidence is stronger or weaker.
+>
+> **Why this approach:** Scientific publications can give a false sense of certainty. A methodology section that reads well does not mean the results are beyond question. Before this work enters the public domain — where it could influence national recruitment targets for bone marrow donors — we need to be transparent about what has been validated, what assumptions remain untested, and how findings should be framed.
+>
+> **How it works:** We assess each component of the analysis (the mathematical framework, EM phasing accuracy, per-ethnicity N* estimates, and so on) against the available validation evidence, and flag the main gaps — particularly the underpowered patient holdout for Malay, Indian, and Others groups, and the unquantified effect of volunteer registration bias.
+>
+> **Simple example:** A car speedometer is accurate to ±5 km/h — that's its stated uncertainty. We know this because it was calibrated against a reference. Our model is similar: for Chinese donors, we have good calibration evidence (GENE[RATE] cross-validation and a patient holdout). For Malay, Indian, and Others, we have the GENE[RATE] calibration but no patient holdout — like a speedometer calibrated in the lab but never tested on a real road. The results are likely correct, but a stated limitation is appropriate.
 
 This section addresses whether the methodology is sufficiently validated for public dissemination, and documents the appropriate confidence level for each component of the analysis.
 
