@@ -56,6 +56,16 @@ This section introduces the human leukocyte antigen system, explains how it vari
 
 ### 1.1 What is HLA?
 
+> **In plain language**
+>
+> **What we're doing:** Introducing the biological system at the centre of this entire project — the Human Leukocyte Antigen (HLA) system, which controls immune recognition.
+>
+> **Why this matters:** HLA is your immune system's "identity card." In bone marrow transplantation, donor and patient must hold nearly identical cards for the transplant to succeed — mismatched cards cause the donor's immune cells to attack the patient's body. This single biological fact drives everything else in this document.
+>
+> **How to think about it:** Each person inherits two copies of each HLA gene (one from mum, one from dad). Because HLA is the most variable region in the human genome — thousands of known variants — the chance of any two unrelated people matching exactly is small, which is why large donor registries are necessary.
+>
+> **Simple example:** Think of HLA as a lock-and-key system. Donor immune cells are the keys; the patient's body presents the locks. Matched HLA = keys fit perfectly, transplant succeeds. Mismatched HLA = keys jam or damage the lock, causing graft-versus-host disease (GvHD) or graft rejection.
+
 The Human Leukocyte Antigen (HLA) system, encoded within the Major Histocompatibility Complex (MHC) on chromosome 6p21, is the most polymorphic region of the human genome. HLA molecules are cell-surface glycoproteins that present peptide fragments to T lymphocytes, forming the molecular basis of immune self/non-self discrimination.
 
 There are two main classes:
@@ -74,6 +84,16 @@ This project analyzes the five loci most relevant to haematopoietic stem cell tr
 | HLA-DQB1 | II | Included in 10/10 (but not 8/8) matching |
 
 ### 1.2 HLA Nomenclature
+
+> **In plain language**
+>
+> **What we're doing:** Explaining the standardised naming code for HLA types so that codes like "HLA-A\*02:07" are readable throughout this document.
+>
+> **Why this matters:** HLA data is full of these codes. Without understanding the naming scheme, all the numbers are opaque. Once you know the system, you can immediately tell which gene, which protein group, and how finely typed a result is.
+>
+> **How to think about it:** The format is Gene\*BroadGroup:ProteinVariant. "HLA-A\*02:07" means: gene A, antigen group 02, protein variant 07. Two donors sharing "A\*02:07" have an identical protein sequence at that HLA-A position — the most clinically relevant level of matching.
+>
+> **Simple example:** Think of it like a postal address. "A\*02" is the city; "A\*02:07" is the street address. For transplant matching, knowing the street level ("2-field resolution") is usually sufficient — knowing the apartment number (4-field: A\*02:07:01:01) rarely changes the clinical outcome.
 
 HLA alleles are named using a hierarchical nomenclature system. The standard format is:
 
@@ -95,6 +115,16 @@ Example alleles from this dataset:
 
 ### 1.3 Why HLA Matching Matters for HSCT
 
+> **In plain language**
+>
+> **What we're doing:** Explaining why bone marrow transplants depend so critically on HLA compatibility — and what goes wrong when donor and patient don't match.
+>
+> **Why this matters:** HLA mismatches are the primary cause of transplant complications and death. This biological fact is why donor registries need to be large and ethnically diverse — and why a patient from a minority ethnic group often cannot find a suitable donor in a registry built mostly from a different ethnicity.
+>
+> **How to think about it:** When bone marrow is transplanted, the donor's immune system comes with it. If the donor's immune cells see the patient's tissues as "foreign" (due to HLA differences), they attack — this is graft-versus-host disease (GvHD). If the patient's remaining immune cells see the donor cells as foreign, they reject them — graft failure. Both can be fatal.
+>
+> **Simple example:** Think of borrowing someone's key to use on your lock. If the key shape is almost identical (matched HLA), it turns smoothly. If it's slightly different (mismatched HLA), it either jams (graft failure) or strips the lock (GvHD). Each additional mismatch increases the damage — which is why 10/10 (all five HLA genes matched) is the gold standard.
+
 In haematopoietic stem cell transplantation, donor and recipient HLA compatibility directly affects transplant success and complications:
 
 **Graft-versus-Host Disease (GvHD):** Donor T cells recognize mismatched recipient HLA as foreign and attack recipient tissues. Each HLA locus mismatch increases GvHD risk; 10/10 matches (all five loci identical at 2-field resolution) are gold standard, while 8/8 matches (omitting DQB1) represent acceptable minimum.
@@ -106,6 +136,16 @@ In haematopoietic stem cell transplantation, donor and recipient HLA compatibili
 Registry size is thus a proxy for transplant access: a larger, more diverse donor pool increases the probability of finding an acceptable match for any new patient.
 
 ### 1.4 HLA Diversity in Singapore's CMIO Population
+
+> **In plain language**
+>
+> **What we're doing:** Describing how HLA types differ between Singapore's Chinese, Malay, Indian, and Others communities — and why this forces each ethnic group to have its own recruitment target.
+>
+> **Why this matters:** HLA types are inherited and cluster by ancestry. Chinese patients carry HLA types that are rare in Malay or Indian donors, and vice versa. A registry built mainly from Chinese donors (as BMDP currently is) provides excellent coverage for Chinese patients but poor coverage for everyone else.
+>
+> **How to think about it:** Think of HLA types as regional dialects. A Chinese HLA type is like a Hokkien phrase — common among Chinese speakers but rarely encountered in a Tamil-speaking community. An Indian patient searching for a dialect match (HLA match) in a library of Hokkien books (Chinese donors) is unlikely to find what they need.
+>
+> **Simple example:** The allele HLA-B\*58:01 is carried by over 10% of Malay donors but is far rarer in Chinese donors. An Indian or Malay patient who needs a donor with B\*58:01 almost certainly cannot find one in a registry of predominantly Chinese donors — they need Malay or Indian donors specifically recruited.
 
 Singapore's population comprises four major ethnic groups (Chinese, Malay, Indian, Others), each with distinct HLA allele frequencies and haplotype structures:
 
@@ -124,6 +164,16 @@ This section describes the sources, size, and format of the HLA dataset used for
 
 ### 2.1 Data Sources
 
+> **In plain language**
+>
+> **What we're doing:** Describing the two donor registries we combined — BMDP (bone marrow donors) and SCBB (cord blood) — and explaining the smaller validation datasets used to test the model.
+>
+> **Why this matters:** The quality and representativeness of the input data determines the reliability of all downstream analysis. Knowing where the data came from, what was excluded and why, is essential for interpreting the results.
+>
+> **How to think about it:** We combined two registries like merging two library catalogues. BMDP is the larger catalogue (44,400 entries) but only lists four HLA genes per donor; SCBB is smaller (14,835 entries) but lists all five genes. Together they give us 59,235 donors — the foundation of all our calculations.
+>
+> **Simple example:** SCBB cord blood donors have DQB1 data because cord blood units are more comprehensively typed at collection. BMDP donors, registered years earlier, were typed to the 4-locus standard common at the time. This is why our 10/10 (5-locus) calculations draw on SCBB data for the fifth locus (DQB1).
+
 The dataset combines two major Singapore donor registries:
 
 | Source | File | N Donors | Typing Loci | Notes |
@@ -141,6 +191,14 @@ Additionally, two smaller datasets provide validation:
 
 ### 2.2 Cohort Breakdown
 
+> **In plain language**
+>
+> **What we're doing:** Showing how many donors come from each ethnic group so we can assess whether the data is sufficient for each group's registry size calculation.
+>
+> **Why this matters:** A registry size model is only as good as its input data. With very few donors from a particular group, haplotype frequency estimates for that group will be uncertain — reflected in wider confidence intervals. Knowing the cohort composition tells us where results are well-powered and where we should be cautious.
+>
+> **Simple example:** With 44,400 Chinese donors versus 3,767 Others donors, our Chinese estimates are roughly 12× more precisely powered. This is one reason Others confidence intervals are wider and Others sub-cluster analysis (§6.6) should be treated as preliminary pending larger data collection.
+
 The combined BMDP+SCBB dataset of 59,235 typed individuals is stratified by ethnicity:
 
 | Ethnicity | N | Percentage |
@@ -154,6 +212,16 @@ The combined BMDP+SCBB dataset of 59,235 typed individuals is stratified by ethn
 Individuals typed at all 5 loci (A, B, C, DRB1, DQB1): ~14,800 (from SCBB); typed at 4 loci (A, B, C, DRB1 only): ~44,400 (from BMDP). All analyses use complete cases per locus.
 
 ### 2.3 Data Format
+
+> **In plain language**
+>
+> **What we're doing:** Explaining the standardised "tidy" data structure we use to store all HLA typing data so that every analysis script reads the same consistent input.
+>
+> **Why this matters:** Raw registry exports come in dozens of different column name conventions and missing-value codes. Converting everything to one standard format reduces errors and makes the entire pipeline reproducible — any researcher can re-run the analysis from scratch on the same input file and get the same results.
+>
+> **How to think about it:** Instead of one wide row per donor (with columns A1, A2, B1, B2, C1, C2 ...), we use one row per donor-locus pair. A donor typed at 5 loci becomes 5 rows. This "long" format makes filtering, grouping, and analysis far simpler — like a spreadsheet where every cell holds exactly one piece of information.
+>
+> **Simple example:** Donor S001 typed at HLA-A and HLA-B becomes two rows: one showing A alleles, one showing B alleles. This makes it trivial to ask "show me all A alleles for Chinese donors" — a query that would be cumbersome in a wide format.
 
 All processed data is stored in tidy long format in `hla_clean.csv`:
 
@@ -179,6 +247,16 @@ Data processing normalizes raw registry exports into a consistent long format. T
 
 ### 3.1 Normalisation Steps
 
+> **In plain language**
+>
+> **What we're doing:** Cleaning raw registry data so every allele name is in a consistent format before any analysis begins.
+>
+> **Why this matters:** Raw HLA data from different registries and typing eras uses different conventions. "HLA-A\*02:01", "A\*02:01:01:01", and "A\*0201" all refer to the same allele — but a computer treats them as three different values. Without standardisation, frequency counts would be wrong and matches would fail silently.
+>
+> **How to think about it:** It's like standardising addresses before a mail merge — "St.", "Street", and "St" all mean the same thing, but software needs consistency. We strip the "HLA-" prefix, truncate to 2-field resolution, and remove expression suffix codes to create one canonical form per allele.
+>
+> **Simple example:** The raw allele "HLA-A\*02:01:01:01N" gets cleaned to "02:01". The "N" means the allele is non-expressed (a null allele) — clinically it doesn't count as a functioning HLA protein. We strip it and the extra fields, keeping only the clinically relevant 2-field designation.
+
 1. **Strip HLA prefix:** remove leading "HLA-" from allele names (e.g., "HLA-A*02:01" → "02:01").
 2. **Truncate to 2-field:** keep only the first two colon-separated fields (e.g., "02:01:01:01" → "02:01").
 3. **Remove suffix codes:** discard trailing annotations like "N" (null), "S" (secreted), "C" (cytoplasmic) that indicate allele expression status.
@@ -187,6 +265,14 @@ Data processing normalizes raw registry exports into a consistent long format. T
 
 ### 3.2 Column Detection
 
+> **In plain language**
+>
+> **What we're doing:** Automatically identifying which columns in a raw file contain HLA data — because different registries use different column names for the same thing.
+>
+> **Why this matters:** BMDP files might label columns "HLA_A_1" and "HLA_A_2"; SCBB files might use "A Allele 1" or just "A1". A rigid script expecting only one naming scheme would silently fail on the other registry. Flexible pattern matching handles all variants without any manual reformatting.
+>
+> **Simple example:** It's like a smart form reader that recognises "Date of Birth", "DOB", "Birth Date", and "D.O.B" as the same field. Our regex pattern finds the HLA locus regardless of how it's labelled, so no human intervention is needed when processing a new registry file.
+
 Column names in raw exports vary (e.g., "HLA_A_1", "HLA A Allele 1", "A"). Detection uses regex patterns that match common naming conventions:
 
 - Pattern: `r'(HLA[-_]?)?([A-Z]|DRB1[12]|DQB1)([-_]?(allele|1|2|first|second))?'`
@@ -194,6 +280,14 @@ Column names in raw exports vary (e.g., "HLA_A_1", "HLA A Allele 1", "A"). Detec
 - Allele order: first match = allele1, second match = allele2 (or vice versa for DRB1).
 
 ### 3.3 Output
+
+> **In plain language**
+>
+> **What we're doing:** Describing the final cleaned output file and the automated checks that confirm it is correct before it is passed to any downstream analysis.
+>
+> **Why this matters:** If the cleaned data file contains errors — duplicate records, malformed allele names, wrong ethnicity labels — every subsequent analysis will produce wrong results without any obvious warning. Explicit validation at this stage catches pipeline bugs early, before they propagate silently.
+>
+> **Simple example:** Think of this as the final proofreading step before printing a book. We confirm every donor appears exactly once per locus (no duplicates), every allele name is in the right format, and every ethnicity is one of the four valid categories. Any row that fails is flagged immediately rather than silently corrupting the analysis downstream.
 
 The output file `hla_clean.csv` (305,745 rows) is validated by:
 - Confirming no duplicate (sample_id, locus) pairs.
@@ -211,6 +305,16 @@ Allele frequency verification is a quality check: we compare observed allele fre
 
 ### 4.1 Method
 
+> **In plain language**
+>
+> **What we're doing:** Counting how often each HLA allele appears across our donor dataset to calculate its frequency — the most basic summary statistic of HLA diversity.
+>
+> **Why this matters:** Allele frequencies are the foundation of haplotype estimation, HWE testing, and ultimately registry size calculations. Getting them right — and cross-checking them against external sources — is the first line of quality control.
+>
+> **How to think about it:** If 1,000 Chinese donors each have two HLA-A alleles, there are 2,000 A-allele "slots" to count. If allele A\*02:07 appears 350 times, its frequency is 350 ÷ 2,000 = 17.5%. We do this for every allele at every locus for every ethnic group.
+>
+> **Simple example:** This is just a counting exercise: (times the allele appears) ÷ (total allele slots for that locus and ethnicity). It is also the maximum likelihood estimate under Hardy–Weinberg equilibrium, so the same formula serves both quality control and model input.
+
 For each (ethnicity, locus) pair, the **observed allele frequency** is computed as:
 
 $$
@@ -221,6 +325,16 @@ where $N_{\text{typed}}$ is the count of individuals with non-NaN values at that
 
 ### 4.2 Comparison with Published Values
 
+> **In plain language**
+>
+> **What we're doing:** Comparing our measured HLA frequencies against internationally published reference values to catch data quality problems before they affect results.
+>
+> **Why this matters:** If our frequency for a common allele (e.g., A\*02:07 in Chinese) differs substantially from what published studies report, it suggests a data problem — wrong ethnicity labels, batch effects from different typing labs, or a normalisation error. Catching this early prevents publishing wrong registry size estimates.
+>
+> **How to think about it:** It's like calibrating a set of scales. Before weighing anything important, you put a known reference weight on and check the reading. If it's off by more than 0.5%, you recalibrate. We do the same with allele frequencies — any discrepancy greater than 0.5% from published values triggers an investigation.
+>
+> **Simple example:** If published data shows HLA-C\*01:02 at 8% frequency in Chinese and our dataset shows 12%, something is wrong — likely a batch effect or contaminated ethnicity labels. The flag prompts investigation before the error propagates into haplotype estimation.
+
 Observed frequencies are compared against published reference values (e.g., IMGT/HLA, IPD frequency databases):
 
 $$
@@ -230,6 +344,14 @@ $$
 We flag alleles where $|\Delta f(a)| > 0.005$ (0.5%) as potential issues. This threshold accommodates sampling variation and genuine regional differences while alerting to major discrepancies.
 
 ### 4.3 Results
+
+> **In plain language**
+>
+> **What we're doing:** Summarising the outcome of the allele frequency check — essentially a data quality pass/fail report across 1,488 alleles.
+>
+> **Why this matters:** Zero flagged alleles out of 1,488 is the "all clear" signal confirming that our data is clean, normalisation worked correctly, and we can proceed with confidence to haplotype estimation and registry modelling.
+>
+> **Simple example:** Imagine inspecting 1,488 products on an assembly line and finding every single one within specification. That is strong evidence the production process is working correctly. Our maximum discrepancy of 0.27% (for HLA-C) is well within our 0.5% tolerance threshold, confirming data integrity across the entire dataset.
 
 Across all 1,488 observed alleles in the dataset:
 
@@ -255,6 +377,16 @@ Haplotype frequency estimation addresses the **phase problem**: given an individ
 
 ### 5.1 The Phase Problem
 
+> **In plain language**
+>
+> **What we're doing:** Explaining the central challenge of haplotype analysis — standard HLA typing tells us which alleles a person has at each gene, but not which alleles are physically on the same chromosome (inherited together from the same parent).
+>
+> **Why this matters:** Registry size calculations need haplotype frequencies (which alleles travel together on one chromosome) — not just individual allele frequencies. But standard HLA typing doesn't reveal this directly. We see two alleles at each gene but can't tell which came from mum and which from dad.
+>
+> **How to think about it:** Imagine you know a person has one red sock and one blue sock, and also one striped sock and one plain sock — but you don't know which socks are paired as a set. The phase problem is exactly this: the allele pairings across genes are unknown and must be inferred statistically from population patterns.
+>
+> **Simple example:** A donor typed as A\*02:01/A\*11:01 and B\*07:02/B\*40:01 could have two equally valid haplotype arrangements: either (A\*02:01 with B\*07:02) + (A\*11:01 with B\*40:01), or (A\*02:01 with B\*40:01) + (A\*11:01 with B\*07:02). We cannot tell which is correct from the typing data alone — the EM algorithm uses population-level patterns to infer the most probable assignment.
+
 Consider a heterozygous individual typed at two loci:
 - HLA-A: 02:01 / 11:01
 - HLA-B: 07:02 / 40:01
@@ -266,6 +398,16 @@ Two possible haplotype pairs explain this diplotype:
 Without sequencing-based phase data, we use EM to estimate the posterior probability of each pair based on haplotype frequencies in the population. With $k$ heterozygous loci, there are $2^{k-1}$ distinct phase configurations.
 
 ### 5.2 Hardy–Weinberg Equilibrium — Primer and Test
+
+> **In plain language**
+>
+> **What we're doing:** Testing whether the HLA genotype frequencies in each ethnic group follow the pattern expected from a randomly mating population — a key assumption underlying both the EM algorithm and the registry size model.
+>
+> **Why this matters:** The registry size model assumes people pair up randomly when producing children. Hardy–Weinberg Equilibrium (HWE) is the mathematical consequence of this assumption. If HWE fails for a group, it signals genetic sub-structure — different ancestry sub-groups mixing — which the model must account for separately.
+>
+> **How to think about it:** Under HWE, allele frequencies predict genotype frequencies mechanically. If 20% of people carry allele A and 5% carry allele B, then roughly 2% should be (A, B) heterozygotes — exactly what you'd expect from random pairing. If the observed proportion differs dramatically, something non-random is happening.
+>
+> **Simple example:** Imagine a bag containing 90% red and 10% blue marbles. If you draw pairs at random, about 18% of pairs should be mixed (one red, one blue). If only 5% of drawn pairs are mixed, the draws weren't random — there was a pairing preference. The HWE test is the statistical version of this, applied to HLA alleles across thousands of donors.
 
 **What is HWE?** Under Hardy–Weinberg equilibrium, a large randomly mating population (no selection, mutation, migration, or drift) maintains constant allele frequencies across generations. Diploid frequencies follow simple rules: if allele $a_i$ has frequency $f_i$, then:
 
@@ -302,6 +444,16 @@ $$
 We apply **Bonferroni correction** for multiple tests: with 5 loci and 4 ethnicities, we test $5 \times 4 = 20$ hypotheses. Corrected significance level: $\alpha_{\text{corrected}} = 0.05 / 20 = 0.0025$.
 
 ### 5.3 EM Algorithm — Full Multi-Locus Implementation
+
+> **In plain language**
+>
+> **What we're doing:** Using an iterative algorithm — the Expectation–Maximisation (EM) algorithm — to estimate haplotype frequencies from genotype data, solving the phase problem by statistical inference.
+>
+> **Why this matters:** Haplotype frequencies are the direct input to the registry size model. Without them, we cannot estimate how many donors are needed. EM is the international standard for this task (used by NMDP, DKMS, and all major registries), and produces far more accurate estimates than naive alternatives that ignore the linkage between genes.
+>
+> **How it works in two steps:** (1) **E-step (Expectation)** — given our current best guess of haplotype frequencies, calculate the most probable phase assignment for each donor. (2) **M-step (Maximisation)** — update the haplotype frequencies based on those phase assignments. Repeat until the frequencies stop changing (convergence). Each iteration makes the estimates slightly more accurate.
+>
+> **Simple example:** Imagine guessing which socks in a mixed drawer belong together as a pair, then re-sorting based on your guesses, then re-guessing with the re-sorted drawer. Each round gets closer to the true pairing. EM does this with HLA alleles — starting from equal initial frequencies and converging to a stable solution after 50–200 iterations. The key insight is that even imperfect initial guesses improve with each round, and the algorithm always converges.
 
 The EM algorithm iteratively solves the phase problem. Let $n$ index individuals, $c$ index phase configurations, and $h$ index haplotypes.
 
@@ -340,6 +492,14 @@ $$
 
 ### 5.4 HWE Results and Population Sub-structure
 
+> **In plain language**
+>
+> **What we're doing:** Reporting which ethnic groups passed or failed the HWE test — telling us which groups are genetically homogeneous and which contain hidden sub-populations that need special treatment.
+>
+> **Why this matters:** HWE failures don't invalidate the analysis — EM still works on mixed populations — but they tell us where extra care is needed. The Others group failing all five loci is precisely why we later perform sub-cluster analysis (§6.6): pooling genetically diverse people into one group produces misleading registry size estimates.
+>
+> **Simple example:** Chinese and Malay pass HWE because they are large, internally consistent ethnic communities with predominantly random mating within the group. "Others" fails strongly — not because the data is wrong, but because "Others" is a catch-all for Filipinos, Caucasians, Eurasians, and many others. Expecting HWE from this mix is like expecting a random playlist to have a consistent musical genre — the diversity itself is the signal.
+
 HWE test results (corrected $\alpha = 0.0025$):
 
 | Ethnicity | Locus | $H_{\text{obs}}$ | $H_{\text{exp}}$ | $\chi^2$ | p-value | Result |
@@ -359,6 +519,16 @@ HWE test results (corrected $\alpha = 0.0025$):
 Despite HWE violations in Indian and Others, EM remains valid because it models mixed populations. However, we note that rare diplotypes may be underestimated if sub-structure is unaccounted for (see §6.6 on stratification).
 
 ### 5.5 Validation Against Gene[RATE]
+
+> **In plain language**
+>
+> **What we're doing:** Checking our EM-estimated haplotype frequencies against an internationally curated database (Gene[RATE]) to confirm our results are consistent with the wider scientific literature.
+>
+> **Why this matters:** The EM algorithm could in theory produce frequencies that are mathematically stable but biologically wrong — artefacts from data quality issues or implementation bugs. Comparing against Gene[RATE], which aggregates many independent published studies globally, confirms that our frequencies are credible and not a local artefact of our specific dataset.
+>
+> **How to think about it:** It's like having your laboratory test results verified by a second independent lab. If both report similar values, you can be confident the result is real. Our rank correlation of r ≥ 0.91 across all four ethnic groups means our "league table" of common vs. rare haplotypes matches what the world literature shows.
+>
+> **Simple example:** The most common Chinese haplotype in our data (frequency 5.4%) is also the top haplotype in Gene[RATE] (5.97%). Our estimate is slightly lower — expected, because we applied a 0.1% frequency threshold that Gene[RATE] doesn't use — but the ranking and scale are clearly consistent across both sources.
 
 **Script:** `analysis/07_validate_em.py`
 
@@ -393,6 +563,16 @@ We validated our EM haplotype frequencies against an external reference: Gene[RA
 **Conclusion:** Our EM haplotype frequencies are valid and reproducible.
 
 ### 5.6 Linkage Disequilibrium Between HLA Loci
+
+> **In plain language**
+>
+> **What we're doing:** Measuring how strongly HLA alleles at different genes are "packaged" together — i.e., inherited as a unit rather than independently.
+>
+> **Why this matters:** Strong linkage disequilibrium (LD) between two genes (e.g., DRB1 and DQB1) means knowing one allele tells you a great deal about the other. This has a direct practical consequence: adding DQB1 to the matching criteria (going from 8/8 to 10/10) increases registry size by only ~6%, not the ~50% you'd expect if the genes were independent. Understanding LD explains why 10/10 matching is achievable without a dramatically larger registry.
+>
+> **How to think about it:** Imagine two coins that are glued together so they always land the same side up. High LD between DRB1 and DQB1 is like those glued coins — because they're almost always inherited together, knowing the DRB1 allele almost tells you the DQB1 allele. The "extra information" from typing DQB1 separately is much smaller than you'd get from a truly independent gene.
+>
+> **Simple example:** DRB1\*03:01 is almost always paired with DQB1\*02:01 in Chinese donors (D' ≈ 0.987). If a donor has DRB1\*03:01, there's a ~99% chance they also have DQB1\*02:01. This means finding a DRB1\*03:01 donor is almost sufficient — the DQB1 match comes nearly "for free," which is why adding DQB1 barely changes the registry size requirement.
 
 **Script:** `analysis/10_ld_report.py`  
 **Figures:** `analysis/figures/ld_heatmap_dprime.png`, `analysis/figures/ld_heatmap_r2.png`
@@ -1042,6 +1222,12 @@ The complete accurate summary for non-technical audiences:
 
 ## 7. Key Findings
 
+> **In plain language**
+>
+> **What we're doing:** Summarising the twelve most important results from the entire analysis in one place, so readers can grasp the overall picture without reading every technical section.
+>
+> **Why this matters:** The individual sections are necessarily detailed; this summary distils the policy-relevant conclusions. The headline finding is that all four CMIO groups need registries of ~40,000–45,000 same-ethnicity donors for 95% coverage — substantially more than Singapore currently has for all groups except Chinese.
+
 1. **Allele frequencies are high-quality:** 1,488 observed alleles, zero flagged for discrepancy; max difference from published values = 0.27% (HLA-C). No evidence of batch effects or major data quality issues.
 
 2. **Population structure shapes HWE:** Chinese and Malay (85% of registry) obey HWE across all loci. Indian shows mild violations (3 loci); Others show strong violations (all 5 loci), consistent with genetic sub-structure. EM remains valid under mixed populations.
@@ -1073,6 +1259,14 @@ The complete accurate summary for non-technical audiences:
 ---
 
 ## 8. Limitations and Future Directions
+
+> **In plain language**
+>
+> **What we're doing:** Honestly documenting what this analysis cannot tell us, where the evidence is weaker, and what follow-up work would strengthen confidence before these estimates are used to set national recruitment policy.
+>
+> **Why this matters:** Presenting results without limitations gives a false sense of certainty. The two most important gaps are: (1) volunteer registration bias — our 56,000 donors self-selected; they may not perfectly represent Singapore's full HLA diversity; and (2) the patient-donor validation is only well-powered for Chinese — Malay, Indian, and Others estimates rely on the Gene[RATE] cross-validation alone.
+>
+> **Simple example:** Think of this section as the "terms and conditions" of the analysis. The main results are sound, but policymakers should be aware of these caveats before treating any single number as a definitive, immovable recruitment target.
 
 **Limitations:**
 
@@ -1107,6 +1301,14 @@ The complete accurate summary for non-technical audiences:
 ---
 
 ## 9. Software and Reproducibility
+
+> **In plain language**
+>
+> **What we're doing:** Listing all the software dependencies and showing how to re-run the entire analysis from scratch — so that any researcher can independently reproduce every number in the paper.
+>
+> **Why this matters:** Reproducibility is a cornerstone of scientific credibility. If another team cannot re-run our analysis and get the same results, our findings cannot be independently verified or built upon. This section provides everything needed to do so.
+>
+> **Simple example:** Think of this as the recipe card for the analysis. Just as a recipe lists ingredients (packages and versions) and steps (scripts in order), this section tells you exactly which Python packages to install and which scripts to run, in which order, to reproduce the tables and figures from scratch.
 
 **Environment Requirements:**
 
