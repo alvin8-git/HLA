@@ -248,6 +248,22 @@ def add_figure(doc, fname, width=6.0, caption=''):
         add_caption(doc, caption)
 
 
+def add_corrected_para(doc, segments, size=10, space_after=6, left_indent=None):
+    """Paragraph with mixed-colour runs for tracked corrections.
+    segments = list of (text, is_red) tuples; is_red=True → red font."""
+    p = doc.add_paragraph()
+    p.paragraph_format.space_after = Pt(space_after)
+    p.paragraph_format.space_before = Pt(0)
+    if left_indent:
+        p.paragraph_format.left_indent = left_indent
+    for text, is_red in segments:
+        run = p.add_run(text)
+        run.font.size = Pt(size)
+        if is_red:
+            run.font.color.rgb = RGBColor(0xFF, 0x00, 0x00)
+    return p
+
+
 def style_table(tbl, header_color='1F4E79'):
     tbl.style = 'Table Grid'
     for i, row in enumerate(tbl.rows):
@@ -359,14 +375,17 @@ add_para(doc,
     'from 59,186 donors and cord blood units [1], we modelled the minimum registry '
     'size needed to achieve 75–95% population coverage at both 8/8 and 10/10 HLA '
     'match levels.')
-add_para(doc,
-    'Methods: Diplotype frequencies were derived under Hardy–Weinberg equilibrium '
-    'from EM-phased five-locus haplotypes using the HLA-net GENE[RATE] pipeline [3]. '
-    'Coverage was modelled as a function of registry size [2,5]. Bootstrap '
-    'resampling (1,000 iterations) provided 95% confidence intervals [18]. '
-    'Partial-match (9/10, 8/10) relaxation, cross-ethnic feasibility, and '
-    'ancestry stratification of the Others sub-group were analysed as secondary '
-    'objectives.')
+add_corrected_para(doc, [
+    ('Methods: Diplotype frequencies were derived under Hardy–Weinberg equilibrium '
+     'from EM-phased five-locus haplotypes ', False),
+    ('estimated using an in-house EM algorithm implemented in Python ' + cite(4) + '; '
+     'results were validated against the HLA-net GENE[RATE] database ' + cite(3) + '', True),
+    ('. Coverage was modelled as a function of registry size ' + cite(2, 5) + '. Bootstrap '
+     'resampling (1,000 iterations) provided 95% confidence intervals ' + cite(18) + '. '
+     'Partial-match (9/10, 8/10) relaxation, cross-ethnic feasibility, and '
+     'ancestry stratification of the Others sub-group were analysed as secondary '
+     'objectives.', False),
+])
 add_para(doc,
     'Results: For 10/10 HLA matching at 95% same-ethnicity coverage, EM-estimated '
     'minimum registry sizes are: Chinese 42,871, Malay 41,779, Indian 44,863. '
@@ -452,24 +471,31 @@ add_para(doc,
 # ── 2. METHODS ────────────────────────────────────────────────────────────────
 add_heading(doc, '2. Methods')
 add_heading(doc, '2.1 Dataset', level=2)
-add_para(doc,
-    'HLA typing data were obtained from 59,186 volunteer unrelated donors (VUDs) '
-    'from the Bone Marrow Donor Programme (BMDP) and cord blood units from the '
-    'Singapore Cord Blood Bank (SCBB), accrued between 2005 and 2020 ' + cite(1) + '. '
-    'Recipients and donors processed by the Health Sciences Authority (HSA) were '
-    'included for validation. Donors were typed at high resolution across five loci '
-    '(HLA-A, -B, -C, -DRB1, -DQB1). Full details of typing methodology and data '
-    'cleaning are reported in Ng et al. ' + cite(1) + '.')
+add_corrected_para(doc, [
+    ('HLA typing data were obtained from 59,186 ', False),
+    ('donors and cord blood units from the Bone Marrow Donor Programme (BMDP) '
+     'and Singapore Cord Blood Bank (SCBB)', True),
+    (', accrued between 2005 and 2020 ' + cite(1) + '. '
+     'Recipients and donors processed by the Health Sciences Authority (HSA) were '
+     'included for validation. ', False),
+    ('Samples', True),
+    (' were typed at high resolution across five loci '
+     '(HLA-A, -B, -C, -DRB1, -DQB1). Full details of typing methodology and data '
+     'cleaning are reported in Ng et al. ' + cite(1) + '.', False),
+])
 
 add_heading(doc, '2.2 Haplotype Frequency Estimation Using EM Phasing', level=2)
-add_para(doc,
-    'A key methodological advance in this analysis is the use of '
-    'expectation-maximisation (EM)-estimated phased haplotype frequencies, rather '
-    'than the simpler approach of multiplying individual allele frequencies at each '
-    'locus. Haplotype frequencies were estimated using the HLA-net GENE[RATE] '
-    'pipeline ' + cite(3) + ', which applies an EM algorithm under Hardy–Weinberg '
-    'equilibrium to infer the most probable phase assignments from unphased '
-    'diplotype data across all 59,186 individuals.')
+add_corrected_para(doc, [
+    ('A key methodological advance in this analysis is the use of '
+     'expectation-maximisation (EM)-estimated phased haplotype frequencies, rather '
+     'than the simpler approach of multiplying individual allele frequencies at each '
+     'locus. Haplotype frequencies were estimated using ', False),
+    ('an in-house EM algorithm implemented in Python ' + cite(4) + ', applying '
+     'Hardy–Weinberg equilibrium to infer the most probable phase assignments from '
+     'unphased diplotype data (capped at 5,000 individuals per ethnic group for '
+     'computational efficiency). Results were validated against the HLA-net '
+     'GENE[RATE] database ' + cite(3) + '.', True),
+])
 
 add_para(doc,
     'HLA loci are not independent — alleles at neighbouring loci are inherited '
@@ -507,11 +533,15 @@ add_para(doc,
     '    C(N) = Σₖ Fₖ · [1 − (1 − Fₖ)^N]   '
     '[k = 1 to m]',
     left_indent=Cm(1.5))
-add_para(doc,
-    'The minimum registry size N* to achieve target coverage θ (75%, 85%, '
-    '90%, or 95%) was found by binary search on a logarithmic scale (50 iterations; '
-    'precision < 1 donor for N ≤ 10⁷) ' + cite(2, 5) + '. '
-    'Same-ethnicity and cross-ethnic model variants were compared ' + cite(2) + '.')
+add_corrected_para(doc, [
+    ('The minimum registry size N* to achieve target coverage θ (75%, 85%, '
+     '90%, or 95%) was found by binary search on a logarithmic scale (50 iterations; '
+     'precision < 1 donor for N ≤ 10⁷) ' + cite(2, 5) + '. '
+     'Same-ethnicity and cross-ethnic model variants were compared ' + cite(2) + '. ', False),
+    ('The coverage-based framework — computing C(N) as the diplotype-frequency-weighted '
+     'sum of per-patient match probabilities — follows the approach pioneered by '
+     'Beatty et al. ' + cite(4) + '.', True),
+])
 
 add_heading(doc, '2.4 Bootstrap Confidence Intervals', level=2)
 add_para(doc,
@@ -537,12 +567,14 @@ add_para(doc,
     'around it. Tables 1 and 2 report both.')
 
 add_heading(doc, '2.5 Partial-Match Analysis', level=2)
-add_para(doc,
-    'Partial-match coverage curves were generated for match thresholds of 10/10, '
-    '9/10, and 8/10 (5-locus framework) and 8/8, 7/8, 6/8 (4-locus framework) '
-    + cite(14, 19) + '. A partial match is defined as sharing a specified minimum '
-    'number of alleles across the relevant loci. These analyses used EM-phased '
-    'haplotype pairs to correctly account for LD structure ' + cite(3) + '.')
+add_corrected_para(doc, [
+    ('Partial-match coverage curves were generated for match thresholds of 10/10, '
+     '9/10, and 8/10 (5-locus framework) and 8/8, 7/8, 6/8 (4-locus framework) ', False),
+    (cite(2, 19), True),
+    ('. A partial match is defined as sharing a specified minimum '
+     'number of alleles across the relevant loci. These analyses used EM-phased '
+     'haplotype pairs to correctly account for LD structure ' + cite(3) + '.', False),
+])
 
 add_heading(doc, '2.6 Others Group Stratification', level=2)
 add_para(doc,
@@ -830,17 +862,20 @@ add_caption(doc,
     'referenced against AFND [16] and published references [1,17].', fig=False)
 
 # Cluster narrative
-add_para(doc,
-    cite(1) + ' Cluster 1 (n=1,029; N* 35,193 at 95%) is dominated by '
-    'A*01:01~B*08:01~C*07:01~DRB1*03:01~DQB1*02:01 at 12.2% — the "8.1 ancestral '
-    'haplotype" (AH 8.1) that is pathognomonic for Northern European ancestry and '
-    'is found at 8–12% in UK and Irish populations ' + cite(17) + '. Secondary '
-    'haplotypes include South Asian (A*33:03~B*44:03~DRB1*07:01 at 10.2%) and '
-    'East Asian (A*33:03~B*58:01~C*03:02~DRB1*03:01 at 10.2%) signatures. '
-    'This cluster most likely represents Singaporean Eurasians with primarily '
-    'European heritage (British, Portuguese, Dutch descent) and Caucasian expat '
-    'residents. Its relatively lower registry requirement (35,193) reflects the '
-    'concentrated nature of common European haplotypes ' + cite(16, 17) + '.')
+add_corrected_para(doc, [
+    ('Cluster 1 (n=1,029; N* 35,193 at 95%) is dominated by '
+     'A*01:01~B*08:01~C*07:01~DRB1*03:01~DQB1*02:01 at 12.2% — the "8.1 ancestral '
+     'haplotype" (AH 8.1) that is pathognomonic for Northern European ancestry and '
+     'is found at 8–12% in UK and Irish populations ' + cite(17) + '. Secondary '
+     'haplotypes include South Asian (A*33:03~B*44:03~DRB1*07:01 at 10.2%) and '
+     'East Asian (A*33:03~B*58:01~C*03:02~DRB1*03:01 at 10.2%) signatures. '
+     'This cluster most likely represents Singaporean Eurasians with primarily '
+     'European heritage (British, Portuguese, Dutch descent) and Caucasian expat '
+     'residents', False),
+    (' ' + cite(1), True),   # citation moved from paragraph start to here
+    ('. Its relatively lower registry requirement (35,193) reflects the '
+     'concentrated nature of common European haplotypes ' + cite(16, 17) + '.', False),
+])
 
 add_para(doc,
     'Cluster 2 (n=1,257; N* 63,856 at 95%) is characterised by '
@@ -916,7 +951,7 @@ add_para(doc,
     'T-cell epitope group position — carries minimal additional survival impact '
     + cite(12, 15) + '. Programmes that formalise evidence-based partial-match '
     'protocols could effectively double their donor reach without recruiting a '
-    'single additional donor ' + cite(14, 19) + '.')
+    'single additional donor ' + cite(2, 19) + '.')
 
 add_figure(doc, 'partial_match_8locus.png', width=6.2,
     caption='Figure 4. Coverage curves for 8-locus (HLA-A, -B, -C, -DRB1) partial '
@@ -1063,7 +1098,7 @@ rec_items = [
     (
         'Adopt partial-match protocols to extend effective coverage.',
         'Relaxing from 10/10 to 9/10 matching roughly halves the effective '
-        'registry size requirement ' + cite(14) + '. In clinical contexts where '
+        'registry size requirement ' + cite(2) + '. In clinical contexts where '
         'survival outcomes are comparable between 10/10 and permissive 9/10 '
         'matches — particularly when the single mismatch is at a permissive '
         'DPB1 T-cell epitope group ' + cite(12, 15) + ' — formalising 9/10 as '
@@ -1145,21 +1180,23 @@ add_para(doc,
     'at 10/10 HLA matching — a target that cannot be met by cross-ethnic matching '
     'from any registry of realistic size ' + cite(2, 10) + '.')
 
-add_para(doc,
-    'Partial-match analysis demonstrates that 9/10 matching halves this requirement '
-    + cite(14, 19) + ', providing a practical and clinically justifiable path to '
-    'improving access in the near term ' + cite(12, 15) + '. The Others group '
-    'requires particular attention: three distinct ancestry sub-clusters — '
-    'European/Eurasian, Filipino/SE Asian, and Northeast Asian — have registry '
-    'requirements ranging from 35,000 to 64,000 donors, with the pooled estimate '
-    'masking the severe under-coverage of the highest-diversity sub-cluster '
-    + cite(16) + '.')
+add_corrected_para(doc, [
+    ('Partial-match analysis demonstrates that 9/10 matching halves this requirement ', False),
+    (cite(2, 19), True),
+    (', providing a practical and clinically justifiable path to '
+     'improving access in the near term ' + cite(12, 15) + '. The Others group '
+     'requires particular attention: three distinct ancestry sub-clusters — '
+     'European/Eurasian, Filipino/SE Asian, and Northeast Asian — have registry '
+     'requirements ranging from 35,000 to 64,000 donors, with the pooled estimate '
+     'masking the severe under-coverage of the highest-diversity sub-cluster '
+     + cite(16) + '.', False),
+])
 
 add_para(doc,
     'These findings support a three-pronged national strategy: (1) accelerated '
     'same-ethnicity donor recruitment with defined numerical targets for each '
     'CMIO group ' + cite(9) + '; (2) adoption of evidence-based partial-match '
-    'protocols to extend effective registry reach ' + cite(14, 15) + '; and '
+    'protocols to extend effective registry reach ' + cite(12, 15) + '; and '
     '(3) ancestry sub-group characterisation of Others donors to enable targeted '
     'recruitment and accurate match probability estimation ' + cite(16) + '. '
     'Together, these measures can substantially improve HSCT access equity for '
@@ -1189,7 +1226,7 @@ for i, (authors, title, journal, doi) in enumerate(REFS, 1):
     p.add_run(ref_text).font.size = Pt(9)
 
 # ── Save ─────────────────────────────────────────────────────────────────────
-out_path = os.path.join(HERE, 'HLA_Registry_Size_CMIO_v2.1.docx')
+out_path = os.path.join(HERE, 'HLA_Registry_Size_CMIO_v2.2.docx')
 doc.save(out_path)
 print(f'Saved: {out_path}')
 print(f'  Paragraphs: {len(doc.paragraphs)}')
