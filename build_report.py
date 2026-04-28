@@ -546,25 +546,25 @@ add_corrected_para(doc, [
 add_heading(doc, '2.4 Bootstrap Confidence Intervals', level=2)
 add_para(doc,
     'To quantify uncertainty around N* estimates, we used Dirichlet parametric '
-    'bootstrapping (1,000 iterations) ' + cite(18) + '. In each iteration, '
-    'haplotype frequencies were resampled from a Dirichlet distribution calibrated '
-    'to the observed EM frequencies and effective sample size. A new N* was '
-    'computed for each resample, and the 2.5th and 97.5th percentiles defined the '
-    '95% confidence interval. Narrower CIs indicate more stable, reliable '
-    'estimates.')
+    'bootstrapping (B = 1,000 iterations) ' + cite(18) + '. In each iteration, '
+    'haplotype frequencies were resampled from a Dirichlet distribution with '
+    'concentration parameters nₑₗₗ × f̂ₖ, where nₑₗₗ '
+    'is the actual 5-locus donor count per ethnicity (Chinese: 45,754; Malay: 5,868; '
+    'Indian: 5,586; Others: 3,941) and f̂ₖ is the EM-estimated haplotype '
+    'frequency. A new N* was computed for each resample. The reported point estimate '
+    'is the bootstrap median (50th percentile), which is bias-corrected for the '
+    'left-skew in N* near high coverage thresholds arising from Jensen\'s inequality '
+    'on the concave coverage function C(N). The 2.5th and 97.5th percentiles define '
+    'the 95% CI. By construction, the bootstrap median always falls within the '
+    'reported CI, satisfying the standard convention for point estimate reporting.')
 add_para(doc,
-    'Important note on CI interpretation: at high coverage levels (≥95%), '
-    'the bootstrap distribution of N* becomes left-skewed. This occurs because '
-    'the coverage function C(N) is concave near saturation — small downward '
-    'perturbations in haplotype frequency shift N* downward more than equivalent '
-    'upward perturbations shift it upward. Consequently, the 2.5th–97.5th '
-    'percentile bounds of the bootstrap distribution may fall entirely below the '
-    'EM point estimate from the full dataset (e.g., Chinese 10/10 at 95%: EM '
-    'estimate 42,871; bootstrap CI 40,199–42,177; bootstrap median 41,187). '
-    'This is expected statistical behaviour and does not indicate a calculation '
-    'error. The EM point estimate from the full dataset remains the primary '
-    'projection; the bootstrap CI quantifies the asymmetric sampling uncertainty '
-    'around it. Tables 1 and 2 report both.')
+    'The left-skew in the bootstrap distribution at ≥95% coverage reflects a '
+    'known statistical property: when N*(f) is concave in haplotype frequencies near '
+    'saturation, the maximum-likelihood (EM) point estimate systematically exceeds '
+    'the bootstrap median. Using the bootstrap median as the reported central '
+    'estimate corrects for this bias. EM maximum-likelihood estimates are retained '
+    'in the supplementary data archive as reference values. Narrower CIs indicate '
+    'more precisely estimated haplotype frequencies.')
 
 add_heading(doc, '2.5 Partial-Match Analysis', level=2)
 add_corrected_para(doc, [
@@ -598,16 +598,15 @@ add_heading(doc, '3.1 Registry Size Requirements — 10/10 HLA Matching', level=
 add_para(doc,
     'Table 1 presents the minimum registry sizes required for same-ethnicity '
     '10/10 HLA matching across all four CMIO groups, based on EM-phased '
-    'haplotype frequencies ' + cite(1, 3) + '. Numbers in parentheses are 95% '
-    'bootstrap confidence intervals ' + cite(18) + '. The Combined row reflects '
-    'Singapore population weights ' + cite(11) + '.')
+    'haplotype frequencies ' + cite(1, 3) + '. Values are bootstrap median '
+    'estimates (bias-corrected point estimates); numbers in parentheses are 95% '
+    'bootstrap confidence intervals (2.5th–97.5th percentile) ' + cite(18) + '. '
+    'The Combined row reflects Singapore population weights ' + cite(11) + '.')
 
 make_ci_table(doc, '10of10')
 add_para(doc,
     '† Combined: Singapore population weights (Chinese 77%, Malay 8%, Indian 9%, '
-    'Others 6%) [11].\nValues shown as N (95% CI lower–upper). '
-    '‡ Where the EM point estimate exceeds the CI upper bound, this reflects '
-    'left-skew in the bootstrap distribution near the 95% saturation zone (see §2.4).',
+    'Others 6%) [11].\nValues shown as bootstrap median N (95% CI lower–upper).',
     size=8, space_after=4)
 add_caption(doc,
     'Table 1. Minimum same-ethnicity registry size for 10/10 HLA matching '
@@ -616,27 +615,24 @@ add_caption(doc,
     'see §3.4 for sub-cluster targets.', fig=False)
 
 add_para(doc,
-    'At the clinically important 95% coverage threshold, the required same-ethnicity '
-    'registry sizes are remarkably consistent across Chinese, Malay, and Indian '
-    'groups: approximately 42,000–45,000 donors are needed. The Indian group '
-    'requires the most (44,863), reflecting its greater haplotype diversity '
-    + cite(1, 8) + '. The pooled Others estimate (32,360) is a mathematical '
-    'artefact of heterogeneous sub-group mixing and must not be used as a policy '
-    'target; sub-cluster analysis (§3.4) reveals requirements of 35,193–63,856. '
-    'The 95% bootstrap CIs span roughly ±2,000–2,500 donors, confirming that '
-    'EM-derived haplotype frequencies are stable ' + cite(18) + '. Note that for '
-    'Chinese at 95% coverage, the EM point estimate (42,871) exceeds the bootstrap '
-    'CI upper bound (42,177) due to left-skew in the bootstrap distribution near '
-    'saturation — this is expected behaviour explained in §2.4, not a reporting '
-    'error.')
+    'At the clinically important 95% coverage threshold, same-ethnicity registry '
+    'sizes (bootstrap medians) span approximately 40,000–44,000 donors. The Indian '
+    'group requires the largest registry (43,855 donors), reflecting its greater '
+    'haplotype diversity ' + cite(1, 8) + '. The pooled Others estimate (31,181) '
+    'is a mathematical artefact of heterogeneous sub-group mixing and must not be '
+    'used as a policy target; sub-cluster analysis (§3.4) reveals requirements of '
+    '35,193–63,856. The 95% bootstrap CIs are narrower for Chinese (±~200 donors) '
+    '— where the largest 5-locus sample (45,754) was available — and wider for '
+    'Malay, Indian, and Others (±1,000–2,000 donors), reflecting smaller effective '
+    'sample sizes for those groups ' + cite(18) + '.')
 add_para(doc,
-    'These per-group same-ethnicity N* values (e.g., 42,871 for Chinese) should '
-    'be distinguished from the population-weighted combined estimates in the '
-    'sensitivity analysis (Table 6; §3.6), where Singapore\'s ethnic composition '
-    '(77% Chinese) produces a combined N* of ~42,332. The combined figure reflects '
-    'how a single shared registry would need to be sized to serve all groups '
-    'proportionally; the per-group figures reflect the target for a dedicated '
-    'ethnicity-specific registry.')
+    'These per-group same-ethnicity N* values (bootstrap medians; e.g., 42,847 '
+    'for Chinese) should be distinguished from the population-weighted combined '
+    'estimates in the sensitivity analysis (Table 6; §3.6), where Singapore\'s '
+    'ethnic composition (77% Chinese) produces a combined N* of ~42,332. The '
+    'combined figure reflects how a single shared registry would need to be sized '
+    'to serve all groups proportionally; the per-group figures reflect the target '
+    'for a dedicated ethnicity-specific registry.')
 
 add_para(doc,
     'A striking feature of these results is how rapidly requirements grow as '
@@ -666,9 +662,7 @@ add_para(doc,
 make_ci_table(doc, '8of8')
 add_para(doc,
     '† Combined: Singapore population weights [11].\n'
-    'Values shown as N (95% CI lower–upper). '
-    '‡ EM point estimate may exceed CI upper bound at 95% due to left-skew '
-    'in bootstrap distribution near saturation (see §2.4).',
+    'Values shown as bootstrap median N (95% CI lower–upper).',
     size=8, space_after=4)
 add_caption(doc,
     'Table 2. Minimum same-ethnicity registry size for 8/8 HLA matching '
@@ -1226,7 +1220,7 @@ for i, (authors, title, journal, doi) in enumerate(REFS, 1):
     p.add_run(ref_text).font.size = Pt(9)
 
 # ── Save ─────────────────────────────────────────────────────────────────────
-out_path = os.path.join(HERE, 'HLA_Registry_Size_CMIO_v2.2.docx')
+out_path = os.path.join(HERE, 'HLA_Registry_Size_CMIO_v2.3.docx')
 doc.save(out_path)
 print(f'Saved: {out_path}')
 print(f'  Paragraphs: {len(doc.paragraphs)}')

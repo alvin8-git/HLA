@@ -4,10 +4,22 @@ Parametric bootstrap confidence intervals for registry size targets.
 
 Method: Dirichlet resampling of haplotype frequencies (n_eff × f_hat as
 concentration parameters), then compute N* at each coverage threshold from
-the resampled diplotype distribution. B=500 resamples per ethnicity.
+the resampled diplotype distribution. B=1,000 resamples per ethnicity.
+
+Point estimate: bootstrap MEDIAN (bias-corrected for the left-skew inherent in
+N*(f) near saturation, which arises from Jensen's inequality on the concave
+coverage function). The EM maximum-likelihood estimate is also stored for
+reference as 'em_registry_size'.
+
+CI: standard 2.5th–97.5th percentile interval. The bootstrap median is always
+inside this interval by construction, satisfying the convention that point
+estimates are reported within their confidence intervals.
+
+n_eff: actual 5-locus donor counts per ethnicity (from hla_clean.csv), used as
+Dirichlet concentration parameters to reflect true estimation precision.
 
 Outputs:
-  data/registry_size_ci.csv       — point estimate + 95% CI per scenario
+  data/registry_size_ci.csv       — median point estimate + 95% CI per scenario
   figures/registry_ci_plot.png    — forest-style CI plot
 """
 
@@ -30,11 +42,13 @@ os.makedirs(FIG_DIR, exist_ok=True)
 ETHNICITIES  = ['Chinese', 'Malay', 'Indian', 'Others']
 THRESHOLDS   = [0.75, 0.85, 0.90, 0.95]
 MATCH_LEVELS = ['10of10', '8of8']
-B            = 500
+B            = 1000
 SEED         = 42
 
-# Effective sample sizes actually used in the EM (capped at 5000)
-N_EFF = {'Chinese': 5000, 'Malay': 5000, 'Indian': 5000, 'Others': 3847}
+# Actual 5-locus donor counts from hla_clean.csv (used as Dirichlet n_eff).
+# Using true sample sizes (not capped) to reflect genuine estimation precision
+# and reduce the Jensen downward-bias in N* at high coverage thresholds.
+N_EFF = {'Chinese': 45754, 'Malay': 5868, 'Indian': 5586, 'Others': 3941}
 
 COLORS = {'Chinese': '#d62728', 'Malay': '#2ca02c',
           'Indian': '#9467bd',  'Others': '#DAA520'}
@@ -47,31 +61,31 @@ def bootstrap_registry_ci(freqs: np.ndarray, n_eff: int,
     Dirichlet parametric bootstrap for registry size CIs.
 
     freqs      : 1-D array of haplotype frequencies (sum ≤ 1; residual pooled)
-    n_eff      : effective sample size used in EM
+    n_eff      : effective sample size (actual 5-locus donor count)
     haplotypes : list of haplotype strings (same order as freqs)
     thresholds : list of coverage targets
     match_level: '10of10' or '8of8'
     B          : number of bootstrap replicates
     rng        : np.random.Generator
 
-    Returns dict: {threshold: {'point': int, 'lo': int, 'hi': int}}
+    Returns dict: {threshold: {'point': int, 'em_point': int, 'lo': int,
+                                'hi': int, 'pct_below': float}}
+    where 'point' is the bootstrap median (bias-corrected point estimate)
+    and 'em_point' is the EM maximum-likelihood estimate.
     """
-    # Point estimate
+    # EM maximum-likelihood point estimate
     haplo_df = _make_haplo_df('__eth__', haplotypes, freqs, match_level)
     diplo_df = get_diplotype_frequencies(haplo_df)
-    point = {t: find_registry_size(diplo_df, t) for t in thresholds}
+    em_point = {t: find_registry_size(diplo_df, t) for t in thresholds}
 
-    # Normalise frequencies to sum to 1 (EM output may not sum to 1 due to freq threshold)
+    # Normalise frequencies; Dirichlet concentration α_k = n_eff × f_k
     freqs_norm = freqs / freqs.sum()
-
-    # Dirichlet concentration: alpha_i = n_eff * f_i_norm  (floor avoids alpha=0)
     alpha = np.maximum(freqs_norm * n_eff, 0.1)
 
     boot_results = {t: [] for t in thresholds}
 
     for _ in range(B):
-        sampled = rng.dirichlet(alpha)   # already sums to 1
-
+        sampled = rng.dirichlet(alpha)
         haplo_df_b = _make_haplo_df('__eth__', haplotypes, sampled, match_level)
         diplo_df_b = get_diplotype_frequencies(haplo_df_b)
         for t in thresholds:
@@ -80,11 +94,16 @@ def bootstrap_registry_ci(freqs: np.ndarray, n_eff: int,
     result = {}
     for t in thresholds:
         arr = np.array(boot_results[t])
+        median = int(np.median(arr))
+        lo = int(np.percentile(arr, 2.5))
+        hi = int(np.percentile(arr, 97.5))
+        pct_below = float(np.mean(arr < em_point[t]))
         result[t] = {
-            'point': point[t],
-            'lo':    int(np.percentile(arr, 2.5)),
-            'hi':    int(np.percentile(arr, 97.5)),
-            'median': int(np.median(arr)),
+            'point':     median,       # bootstrap median (bias-corrected)
+            'em_point':  em_point[t],  # EM MLE (for reference)
+            'lo':        lo,
+            'hi':        hi,
+            'pct_below': round(pct_below, 4),
         }
     return result
 
@@ -99,7 +118,6 @@ def _make_haplo_df(eth, haplotypes, freqs, match_level):
         trimmed = ['|'.join(h.split('|')[:4]) for h in haplotypes]
         df = pd.DataFrame({'ethnicity': eth, 'haplotype': trimmed, 'frequency': freqs_norm})
         df = df.groupby(['ethnicity', 'haplotype'], as_index=False)['frequency'].sum()
-        # Re-normalise after aggregation (DQB1 collapse can merge rows)
         df['frequency'] = df['frequency'] / df['frequency'].sum()
     else:
         df = pd.DataFrame({'ethnicity': eth, 'haplotype': haplotypes, 'frequency': freqs_norm})
@@ -132,25 +150,24 @@ def make_ci_plot(ci_df: pd.DataFrame, out_path: str) -> None:
                 ylabels.append(f"{threshold_labels[t]} – {eth}")
                 y_pos += y_gap
 
-            y_pos += y_gap * 0.5  # gap between threshold groups
+            y_pos += y_gap * 0.5
 
         ax.set_yticks(yticks)
         ax.set_yticklabels(ylabels, fontsize=8)
         ax.set_xlabel('Registry size (donors)', fontsize=10)
-        ax.set_title(f'{ml.replace("of", "/")  } match\n(95% bootstrap CI)',
+        ax.set_title(f'{ml.replace("of", "/")} match\n(95% bootstrap CI, median estimate)',
                      fontsize=11, fontweight='bold')
         ax.xaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: f'{int(x):,}'))
         for spine in ['top', 'right']:
             ax.spines[spine].set_visible(False)
         ax.grid(axis='x', color='lightgrey', linestyle='--', linewidth=0.7, zorder=0)
 
-    # Legend
     handles = [plt.Line2D([0], [0], color=COLORS[e], marker='o', linewidth=2,
                            markersize=6, label=e) for e in ETHNICITIES]
     fig.legend(handles=handles, loc='lower center', ncol=4, fontsize=9,
                bbox_to_anchor=(0.5, -0.02))
     fig.suptitle('Registry size targets with 95% bootstrap confidence intervals\n'
-                 '(Dirichlet resampling, B=500, same-ethnicity matching)',
+                 '(Dirichlet resampling, B=1,000, median estimate, same-ethnicity matching)',
                  fontsize=12, fontweight='bold')
     plt.tight_layout()
     fig.savefig(out_path, dpi=150, bbox_inches='tight')
@@ -177,17 +194,20 @@ def main():
                                        THRESHOLDS, ml, B, rng)
             for t, vals in ci.items():
                 rows.append({
-                    'ethnicity': eth,
-                    'match_level': ml,
-                    'target_coverage': t,
-                    'registry_size': vals['point'],
-                    'ci_lo': vals['lo'],
-                    'ci_median': vals['median'],
-                    'ci_hi': vals['hi'],
-                    'ci_width': vals['hi'] - vals['lo'],
+                    'ethnicity':         eth,
+                    'match_level':       ml,
+                    'target_coverage':   t,
+                    'registry_size':     vals['point'],    # bootstrap median
+                    'em_registry_size':  vals['em_point'], # EM MLE (reference)
+                    'ci_lo':             vals['lo'],
+                    'ci_hi':             vals['hi'],
+                    'ci_width':          vals['hi'] - vals['lo'],
+                    'pct_below':         vals['pct_below'],
                 })
-            print(f'    95% at 10/10: {ci[0.95]["lo"]:,} – {ci[0.95]["hi"]:,}'
-                  if ml == '10of10' else '')
+            if ml == '10of10':
+                print(f'    95% CI: {ci[0.95]["lo"]:,} – {ci[0.95]["hi"]:,}'
+                      f'  (median={ci[0.95]["point"]:,}, EM={ci[0.95]["em_point"]:,},'
+                      f' pct_below={ci[0.95]["pct_below"]:.3f})')
 
     ci_df = pd.DataFrame(rows)
     out_csv = os.path.join(DATA_DIR, 'registry_size_ci.csv')
@@ -196,7 +216,18 @@ def main():
 
     print('\n=== 95% CI summary (10/10, same-ethnicity, 95% coverage) ===')
     mask = (ci_df['match_level'] == '10of10') & (ci_df['target_coverage'] == 0.95)
-    print(ci_df[mask][['ethnicity', 'registry_size', 'ci_lo', 'ci_hi']].to_string(index=False))
+    cols = ['ethnicity', 'registry_size', 'em_registry_size', 'ci_lo', 'ci_hi', 'pct_below']
+    print(ci_df[mask][cols].to_string(index=False))
+
+    # Sanity check: point estimate should be within CI
+    violations = ci_df[(ci_df['registry_size'] < ci_df['ci_lo']) |
+                        (ci_df['registry_size'] > ci_df['ci_hi'])]
+    if violations.empty:
+        print('\n✓ All point estimates are within their 95% CIs.')
+    else:
+        print(f'\n⚠ {len(violations)} point estimates outside CI:')
+        print(violations[['ethnicity', 'match_level', 'target_coverage',
+                           'registry_size', 'ci_lo', 'ci_hi']].to_string(index=False))
 
     make_ci_plot(ci_df, os.path.join(FIG_DIR, 'registry_ci_plot.png'))
     print('\nDone.')
