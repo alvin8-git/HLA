@@ -28,6 +28,11 @@ ETHNICITIES = ['Chinese', 'Malay', 'Indian', 'Others']
 SG_WEIGHTS = {'Chinese': 0.77, 'Malay': 0.08, 'Indian': 0.09, 'Others': 0.06}
 N_VALUES = np.logspace(0, 6, 300)
 
+# Current BMDP+SCBB donor counts (5-locus typed) — used as vertical benchmarks
+CURRENT_REGISTRY = {
+    'Chinese': 45754, 'Malay': 5868, 'Indian': 5586, 'Others': 3941, 'Overall': 61149,
+}
+
 
 # ---------------------------------------------------------------------------
 # Data loading helpers
@@ -206,6 +211,14 @@ def make_figure(eth_curves_dict, match_levels, framework_name, out_path):
         # Gridlines
         for y in range(10, 100, 10):
             ax.axhline(y, color='lightgrey', linestyle='--', linewidth=0.8, zorder=0)
+
+        # Current registry size benchmark
+        curr = CURRENT_REGISTRY.get(eth)
+        if curr is not None:
+            ax.axvline(curr, color='dimgrey', linestyle=':', linewidth=1.5,
+                       zorder=1, alpha=0.85)
+            ax.text(curr * 1.12, 3, f'Current\n~{curr // 1000}K',
+                    fontsize=7, color='dimgrey', va='bottom', ha='left')
 
         curves = eth_curves_dict.get(eth, {})
         for min_m, label, color in match_levels:

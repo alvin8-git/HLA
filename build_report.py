@@ -181,6 +181,17 @@ def cross_cell(match, eth, thr):
     return '>10,000,000' if val >= 10_000_000 else n(val)
 
 
+def add_equation(doc, equation_text, eq_num, size=10):
+    """Centered numbered equation for professional journal formatting."""
+    p = doc.add_paragraph()
+    p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    p.paragraph_format.space_before = Pt(3)
+    p.paragraph_format.space_after = Pt(3)
+    run = p.add_run(f'{equation_text}\t({eq_num})')
+    run.font.size = Pt(size)
+    return p
+
+
 def set_cell_bg(cell, hex_color):
     tc   = cell._tc
     tcPr = tc.get_or_add_tcPr()
@@ -387,11 +398,12 @@ add_corrected_para(doc, [
      'objectives.', False),
 ])
 add_para(doc,
-    'Results: For 10/10 HLA matching at 95% same-ethnicity coverage, EM-estimated '
-    'minimum registry sizes are: Chinese 42,871, Malay 41,779, Indian 44,863. '
-    'Bootstrap 95% confidence intervals (Dirichlet resampling, 1,000 iterations; '
-    'see §2.4) are 40,199–42,177, 38,730–40,852, and 42,767–44,754 respectively. '
-    'The pooled Others estimate of 32,360 is a statistical artefact of heterogeneous '
+    'Results: For 10/10 HLA matching at 95% same-ethnicity coverage of '
+    'ethnicity-specific registries, bootstrap median registry size estimates are: '
+    'Chinese 42,847, Malay 40,032, Indian 43,855. Bootstrap 95% confidence intervals '
+    '(Dirichlet resampling, B=1,000; see §2.4) are 42,649–43,058, 38,972–41,151, '
+    'and 42,963–44,577 respectively. '
+    'The pooled Others estimate of 31,181 is a statistical artefact of heterogeneous '
     'population mixing; ancestry sub-cluster analysis reveals three genetically '
     'distinct groups (European/Eurasian, Filipino/SE Asian, Northeast Asian) with '
     'markedly different requirements (35,193–63,856 at 95%), and 63,856 — the '
@@ -401,10 +413,10 @@ add_para(doc,
     'the required registry size [14]. Registry size estimates are robust across '
     'patient demographic scenarios (variation <3%) [2].')
 add_para(doc,
-    'Conclusions: A same-ethnicity registry of approximately 40,000–45,000 donors '
-    'per major CMIO group is needed for 95% 10/10 coverage. Targeted minority '
-    'recruitment, partial-match protocols, and recognition of Others sub-group '
-    'diversity are essential for equitable HSCT access in Singapore.',
+    'Conclusions: An ethnicity-specific same-ethnicity registry of approximately '
+    '40,000–44,000 donors per major CMIO group is needed for 95% 10/10 coverage. '
+    'Targeted minority recruitment, partial-match protocols, and recognition of '
+    'Others sub-group diversity are essential for equitable HSCT access in Singapore.',
     space_after=8)
 
 kw = doc.add_paragraph()
@@ -513,26 +525,17 @@ add_para(doc,
     'For each CMIO group, the EM algorithm produced a ranked list of K haplotypes '
     'with estimated frequencies f₁, f₂, ..., fᴊ. Diplotype (genotype '
     'pair) frequencies were derived under Hardy–Weinberg equilibrium:')
-add_para(doc,
-    '    F(hᵢ, hᵢ) = fᵢ²                              '
-    '[homozygous, i = j]\n'
-    '    F(hᵢ, hⱼ) = 2·fᵢ·fⱼ,   i ≠ j  '
-    '[heterozygous]',
-    left_indent=Cm(1.5))
+add_equation(doc, 'F(hᵢ, hᵢ) = fᵢ²   [homozygous, i = j]', 1)
+add_equation(doc, 'F(hᵢ, hⱼ) = 2·fᵢ·fⱼ,   i ≠ j   [heterozygous]', 2)
 add_para(doc,
     'The probability that a patient with diplotype dₖ finds at least one matched '
     'donor in a registry of N independently drawn donors is:')
-add_para(doc,
-    '    P(dₖ, N) = 1 − (1 − Fₖ)^N',
-    left_indent=Cm(1.5))
+add_equation(doc, 'P(dₖ, N) = 1 − (1 − Fₖ)^N', 3)
 add_para(doc,
     'Population coverage C(N) — the expected fraction of all patients who find '
     'at least one match — is the diplotype-frequency-weighted sum over all m '
     'diplotypes:')
-add_para(doc,
-    '    C(N) = Σₖ Fₖ · [1 − (1 − Fₖ)^N]   '
-    '[k = 1 to m]',
-    left_indent=Cm(1.5))
+add_equation(doc, 'C(N) = Σₖ Fₖ · [1 − (1 − Fₖ)^N],   k = 1, …, m', 4)
 add_corrected_para(doc, [
     ('The minimum registry size N* to achieve target coverage θ (75%, 85%, '
      '90%, or 95%) was found by binary search on a logarithmic scale (50 iterations; '
@@ -565,6 +568,11 @@ add_para(doc,
     'estimate corrects for this bias. EM maximum-likelihood estimates are retained '
     'in the supplementary data archive as reference values. Narrower CIs indicate '
     'more precisely estimated haplotype frequencies.')
+add_para(doc,
+    'For clinical planning purposes, the bootstrap median is the more conservative '
+    'and robust target: it is the registry size below which half of all plausible '
+    'sampling realisations would leave the stated coverage threshold unmet. '
+    'Planners may therefore use it as a well-grounded, real-world minimum.')
 
 add_heading(doc, '2.5 Partial-Match Analysis', level=2)
 add_corrected_para(doc, [
@@ -1220,7 +1228,7 @@ for i, (authors, title, journal, doi) in enumerate(REFS, 1):
     p.add_run(ref_text).font.size = Pt(9)
 
 # ── Save ─────────────────────────────────────────────────────────────────────
-out_path = os.path.join(HERE, 'HLA_Registry_Size_CMIO_v2.3.docx')
+out_path = os.path.join(HERE, 'HLA_Registry_Size_CMIO_v2.4.docx')
 doc.save(out_path)
 print(f'Saved: {out_path}')
 print(f'  Paragraphs: {len(doc.paragraphs)}')
