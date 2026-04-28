@@ -164,38 +164,25 @@ def compute_registry_targets(haplo_df: pd.DataFrame) -> dict:
 
 def plot_pca_scatter(pca_scores: np.ndarray, labels: np.ndarray,
                      sil_dict: dict, best_k: int, out_path: str) -> None:
-    fig, axes = plt.subplots(1, 2, figsize=(14, 5), facecolor='white')
-
-    # Panel A: PC1 vs PC2 coloured by cluster
-    ax = axes[0]
+    fig, ax = plt.subplots(figsize=(9, 6), facecolor='white')
     ax.set_facecolor('white')
+
+    ancestry_names = {0: 'Cluster 1 — European/Eurasian',
+                      1: 'Cluster 2 — Filipino/SE Asian',
+                      2: 'Cluster 3 — Northeast Asian/Mixed'}
     for k in range(best_k):
         mask = labels == k
         ax.scatter(pca_scores[mask, 0], pca_scores[mask, 1],
-                   c=CLUSTER_COLORS[k], s=8, alpha=0.5, label=f'Cluster {k+1}')
-    ax.set_xlabel('PC1', fontsize=11)
-    ax.set_ylabel('PC2', fontsize=11)
-    ax.set_title(f'PCA of Others group (PC1 vs PC2)\nK-means k={best_k} clusters',
-                 fontsize=11, fontweight='bold')
-    ax.legend(fontsize=9, markerscale=3)
+                   c=CLUSTER_COLORS[k], s=10, alpha=0.55,
+                   label=ancestry_names.get(k, f'Cluster {k+1}'))
+    ax.set_xlabel('PC1', fontsize=12)
+    ax.set_ylabel('PC2', fontsize=12)
+    ax.set_title(f'PCA of Others donors — K-means k={best_k} clusters '
+                 f'(silhouette={max(sil_dict.values()):.2f})',
+                 fontsize=12, fontweight='bold')
+    ax.legend(fontsize=10, markerscale=3, frameon=False)
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
-
-    # Panel B: Silhouette by k
-    ax2 = axes[1]
-    ax2.set_facecolor('white')
-    ks = sorted(sil_dict.keys())
-    sils = [sil_dict[k] for k in ks]
-    ax2.plot(ks, sils, 'o-', color='#2c7bb6', linewidth=2, markersize=8)
-    ax2.axvline(best_k, color='red', linestyle='--', linewidth=1.2,
-                label=f'Best k={best_k}')
-    ax2.set_xlabel('Number of clusters (k)', fontsize=11)
-    ax2.set_ylabel('Silhouette coefficient', fontsize=11)
-    ax2.set_title('K-means silhouette score by k', fontsize=11, fontweight='bold')
-    ax2.set_xticks(ks)
-    ax2.legend(fontsize=9)
-    ax2.spines['top'].set_visible(False)
-    ax2.spines['right'].set_visible(False)
 
     plt.tight_layout()
     fig.savefig(out_path, dpi=150, bbox_inches='tight')

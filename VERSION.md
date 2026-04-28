@@ -1,5 +1,20 @@
 # Version History
 
+## v1.8.0 — 2026-04-28
+
+### Changed
+- **Figure 1** (`analysis/11_others_stratification.py`): removed silhouette subplot;
+  single 9×6 panel with ancestry labels in legend; cluster colours unchanged.
+- **Table 5**: reduced to top-1 haplotype per cluster (was top-2); removed Rank column;
+  Population association column widened to 7.5 cm.
+- **Cluster 1 table colour**: changed from steel-blue `D6DCE4` → light-red `FFCCCC`
+  to match Figure 1 red scatter colour for Cluster 1 (European/Eurasian).
+
+### Generated
+- `HLA_Registry_Size_CMIO_v2.8.docx`
+
+---
+
 ## v1.7.0 — 2026-04-28
 
 ### Changed

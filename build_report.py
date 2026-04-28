@@ -752,7 +752,7 @@ ancestry_labels = {
     'Cluster_3': 'Northeast Asian / Mixed',
 }
 clust_colors = {
-    'Cluster_1': 'D6DCE4', 'Cluster_2': 'FCE4D6', 'Cluster_3': 'E2EFDA'
+    'Cluster_1': 'FFCCCC', 'Cluster_2': 'FCE4D6', 'Cluster_3': 'E2EFDA'
 }
 for cl in ['Cluster_1', 'Cluster_2', 'Cluster_3']:
     sub   = oc_reg[oc_reg.cluster == cl]
@@ -822,28 +822,32 @@ pop_annot = {
         'South Asian / mixed [16]',
 }
 
-# Table 5: top 2 haplotypes per cluster (ancestry validation)
-tbl5 = doc.add_table(rows=1, cols=len(hap_tbl_header))
-for i, h in enumerate(hap_tbl_header):
+# Table 5: top haplotype per cluster (ancestry validation) — no Rank column
+tbl5_header = ['Cluster', 'Top Haplotype (A~B~C~DRB1~DQB1)', 'Freq (%)', 'Population association']
+tbl5 = doc.add_table(rows=1, cols=len(tbl5_header))
+for i, h in enumerate(tbl5_header):
     tbl5.rows[0].cells[i].text = h
 
 for cl in ['Cluster_1', 'Cluster_2', 'Cluster_3']:
-    top2 = (oc_hap[oc_hap.cluster == cl]
+    top1 = (oc_hap[oc_hap.cluster == cl]
             .sort_values('frequency', ascending=False)
-            .head(2))
-    for rank, (_, hrow) in enumerate(top2.iterrows(), 1):
-        row = tbl5.add_row().cells
-        row[0].text = cl.replace('_', ' ') if rank == 1 else ''
-        row[1].text = str(rank)
-        row[2].text = hap_display(hrow['haplotype'])
-        row[3].text = f"{hrow['frequency']*100:.1f}"
-        row[4].text = pop_annot.get(hrow['haplotype'], '—')
-        if rank == 1:
-            set_cell_bg(row[0], clust_colors[cl])
+            .iloc[0])
+    row = tbl5.add_row().cells
+    row[0].text = cl.replace('_', ' ')
+    row[1].text = hap_display(top1['haplotype'])
+    row[2].text = f"{top1['frequency']*100:.1f}"
+    row[3].text = pop_annot.get(top1['haplotype'], '—')
+    set_cell_bg(row[0], clust_colors[cl])
 
 style_table(tbl5)
+# Widen Population association column (col 3) and narrow Cluster/Freq columns
+tbl5.autofit = False
+col_widths = [Cm(2.8), Cm(5.2), Cm(1.3), Cm(7.5)]
+for row in tbl5.rows:
+    for i, w in enumerate(col_widths):
+        row.cells[i].width = w
 add_caption(doc,
-    'Table 5. Top 2 haplotypes per Others sub-cluster confirming putative ancestry. '
+    'Table 5. Top haplotype per Others sub-cluster confirming putative ancestry. '
     'Frequencies are within-cluster. Population assignments cross-referenced '
     'against AFND [16] and published references [1,17].', fig=False)
 
@@ -1152,7 +1156,7 @@ for i, (authors, title, journal, doi) in enumerate(REFS, 1):
     p.add_run(ref_text).font.size = Pt(9)
 
 # ── Save ─────────────────────────────────────────────────────────────────────
-out_path = os.path.join(HERE, 'HLA_Registry_Size_CMIO_v2.7.docx')
+out_path = os.path.join(HERE, 'HLA_Registry_Size_CMIO_v2.8.docx')
 doc.save(out_path)
 print(f'Saved: {out_path}')
 print(f'  Paragraphs: {len(doc.paragraphs)}')
