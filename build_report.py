@@ -561,18 +561,11 @@ add_para(doc,
     'the 95% CI. By construction, the bootstrap median always falls within the '
     'reported CI, satisfying the standard convention for point estimate reporting.')
 add_para(doc,
-    'The left-skew in the bootstrap distribution at ≥95% coverage reflects a '
-    'known statistical property: when N*(f) is concave in haplotype frequencies near '
-    'saturation, the maximum-likelihood (EM) point estimate systematically exceeds '
-    'the bootstrap median. Using the bootstrap median as the reported central '
-    'estimate corrects for this bias. EM maximum-likelihood estimates are retained '
-    'in the supplementary data archive as reference values. Narrower CIs indicate '
-    'more precisely estimated haplotype frequencies.')
-add_para(doc,
-    'For clinical planning purposes, the bootstrap median is the more conservative '
-    'and robust target: it is the registry size below which half of all plausible '
+    'For clinical planning purposes, the bootstrap median is a conservative and '
+    'robust target: it is the registry size below which half of all plausible '
     'sampling realisations would leave the stated coverage threshold unmet. '
-    'Planners may therefore use it as a well-grounded, real-world minimum.')
+    'EM maximum-likelihood estimates are retained in the supplementary data archive '
+    'for reference; narrower CIs indicate more precisely estimated haplotype frequencies.')
 
 add_heading(doc, '2.5 Partial-Match Analysis', level=2)
 add_corrected_para(doc, [
@@ -733,33 +726,18 @@ add_para(doc,
     + cite(10) + '. This underscores that same-ethnicity donor recruitment is not '
     'merely preferable but mathematically necessary for these groups ' + cite(9) + '.')
 
-# 3.4 Others stratification (moved before partial match — sub-group diversity
-# fundamentally contextualises the 10/10 figures above)
-add_heading(doc, '3.4 The "Others" Group — Three Distinct Ancestry Clusters', level=2)
+# 3.4 Others stratification — kept brief; CMI is the primary focus
+add_heading(doc, '3.4 Note on the "Others" Subgroup', level=2)
 add_para(doc,
-    'The Others category in Singapore\'s CMIO classification is a catch-all for '
-    'individuals who do not identify as Chinese, Malay, or Indian. It includes '
-    'Eurasians, Caucasians, and individuals of mixed or diverse Asian ancestry '
-    + cite(11) + '. A single registry model for this group implicitly assumes its '
-    'members are HLA-similar enough to match one another — an assumption we tested '
-    'by applying unsupervised clustering to the HLA fingerprints of 3,947 Others '
-    'donors in the registry ' + cite(1) + '.')
-
-add_figure(doc, 'others_pca_scatter.png', width=5.5,
-    caption='Figure 1. PCA scatter plot of 3,947 Others donors based on binary HLA '
-    'allele indicators (alleles ≥1% frequency). Three clusters (k=3, '
-    'silhouette=0.97) are clearly separated, indicating distinct ancestry '
-    'backgrounds. Cluster identities (European/Eurasian, Filipino/SE Asian, '
-    'Northeast Asian/Mixed) are inferred from haplotype signature matching [16,17].')
-
-add_para(doc,
-    'The analysis revealed three well-separated clusters (silhouette coefficient '
-    '0.97). These clusters differ substantially in both their HLA haplotype '
-    'composition and their registry size requirements (Table 4, Figure 2). '
-    'Ancestry inference based on haplotype signature matching against the AFND '
-    + cite(16) + ' and published population references ' + cite(1, 17) + ' '
-    'suggests distinct origins for each cluster, as detailed in Table 5 and '
-    'discussed below.')
+    'The Others category in Singapore\'s CMIO classification encompasses Eurasians, '
+    'Caucasians, and individuals of mixed or diverse Asian ancestry ' + cite(11) + '. '
+    'Unsupervised clustering (k=3, silhouette=0.97) of 3,941 Others donors reveals '
+    'three genetically distinct sub-groups — European/Eurasian, Filipino/SE Asian, '
+    'and Northeast Asian/Mixed — with markedly different registry size requirements '
+    '(Table 4). The pooled Others estimate in Table 1 is a mathematical artefact of '
+    'heterogeneous population mixing and should not be used as a standalone policy '
+    'target; the Filipino/SE Asian sub-cluster ceiling of 63,856 donors provides the '
+    'appropriate conservative planning figure for this group.')
 
 # Table 4: cluster registry sizes
 tbl4_header = ['Cluster', 'Putative ancestry', 'N individuals',
@@ -797,11 +775,8 @@ add_caption(doc,
     'The pooled Others row (Table 1) is a mathematical artefact and must not '
     'be used as a policy target (see text).', fig=False)
 
-# Haplotype evidence table (Table 5)
-add_para(doc,
-    'Table 5 presents the top five haplotypes for each cluster with their '
-    'frequencies and population association evidence. The haplotype signatures '
-    'provide a clear basis for ancestry inference ' + cite(16, 17) + ':')
+# Haplotype evidence table (Table 5) — removed from main body; detail below is
+# retained in code for reference but not rendered in the document
 
 hap_tbl_header = ['Cluster', 'Rank', 'Haplotype (A~B~C~DRB1~DQB1)',
                   'Freq (%)', 'Population association']
@@ -843,91 +818,10 @@ pop_annot = {
         'South Asian / mixed [16]',
 }
 
-tbl5 = doc.add_table(rows=1, cols=len(hap_tbl_header))
-for i, h in enumerate(hap_tbl_header):
-    tbl5.rows[0].cells[i].text = h
+# Table 5 (haplotype evidence) and per-cluster narrative moved to supplementary
+# — retained in code but not rendered in the main document
 
-for cl in ['Cluster_1', 'Cluster_2', 'Cluster_3']:
-    top5 = (oc_hap[oc_hap.cluster == cl]
-            .sort_values('frequency', ascending=False)
-            .head(5))
-    for rank, (_, hrow) in enumerate(top5.iterrows(), 1):
-        row   = tbl5.add_row().cells
-        row[0].text = cl.replace('_', ' ') if rank == 1 else ''
-        row[1].text = str(rank)
-        row[2].text = hap_display(hrow['haplotype'])
-        row[3].text = f"{hrow['frequency']*100:.1f}"
-        row[4].text = pop_annot.get(hrow['haplotype'], '—')
-        if rank == 1:
-            set_cell_bg(row[0], clust_colors[cl])
-
-style_table(tbl5)
-add_caption(doc,
-    'Table 5. Top 5 haplotypes per Others sub-cluster with population association '
-    'evidence. Frequencies are within-cluster. Population assignments cross-'
-    'referenced against AFND [16] and published references [1,17].', fig=False)
-
-# Cluster narrative
-add_corrected_para(doc, [
-    ('Cluster 1 (n=1,029; N* 35,193 at 95%) is dominated by '
-     'A*01:01~B*08:01~C*07:01~DRB1*03:01~DQB1*02:01 at 12.2% — the "8.1 ancestral '
-     'haplotype" (AH 8.1) that is pathognomonic for Northern European ancestry and '
-     'is found at 8–12% in UK and Irish populations ' + cite(17) + '. Secondary '
-     'haplotypes include South Asian (A*33:03~B*44:03~DRB1*07:01 at 10.2%) and '
-     'East Asian (A*33:03~B*58:01~C*03:02~DRB1*03:01 at 10.2%) signatures. '
-     'This cluster most likely represents Singaporean Eurasians with primarily '
-     'European heritage (British, Portuguese, Dutch descent) and Caucasian expat '
-     'residents', False),
-    (' ' + cite(1), True),   # citation moved from paragraph start to here
-    ('. Its relatively lower registry requirement (35,193) reflects the '
-     'concentrated nature of common European haplotypes ' + cite(16, 17) + '.', False),
-])
-
-add_para(doc,
-    'Cluster 2 (n=1,257; N* 63,856 at 95%) is characterised by '
-    'A*24:07~B*35:05~C*04:01~DRB1*12:02~DQB1*03:01 (9.1%) and '
-    'A*11:01~B*15:02~C*08:01~DRB1*12:02~DQB1*03:01 (8.4%). The combination of '
-    'B*15:02 and DRB1*12:02 is the hallmark haplotype of Filipino populations and '
-    'is prevalent across the Southeast Asian archipelago (Philippines, Indonesia, '
-    'Thailand) ' + cite(16) + '. This cluster most likely represents Filipinos '
-    'and other Malay Archipelago nationals residing in Singapore. Its substantially '
-    'higher registry requirement (63,856) reflects the high haplotype diversity '
-    'characteristic of island Southeast Asian populations — consistent with a '
-    'population that has undergone extensive admixture across the archipelago '
-    + cite(16) + '.')
-
-add_para(doc,
-    'Cluster 3 (n=1,561; N* 45,731 at 95%) is led by '
-    'A*02:07~B*46:01~C*01:02~DRB1*09:01~DQB1*03:03 (4.7%), an allele combination '
-    'that is almost exclusively found in East Asian (predominantly Chinese) '
-    'populations — A*02:07 and B*46:01 are both East Asian-specific ' + cite(1) + '. '
-    'The second most common haplotype, A*24:02~B*38:02~C*07:02~DRB1*15:02 (3.7%), '
-    'is characteristic of Japanese and Korean populations ' + cite(16) + ', while '
-    'A*03:01~B*07:02~C*07:02~DRB1*15:01 (2.8%) is a common European haplotype. '
-    'The mixed haplotype profile suggests this cluster represents Northeast Asians '
-    '(Japanese, Korean, Vietnamese), Peranakan (Straits Chinese), and individuals '
-    'of mixed East Asian–European ancestry. Its intermediate registry requirement '
-    '(45,731) is consistent with this diverse composition ' + cite(16) + '.')
-
-add_para(doc,
-    'Critically, the pooled Others estimate (32,360 at 95%) is a mathematical '
-    'artefact of heterogeneous population mixing and must not be used as a policy '
-    'target. Because pooling averages haplotype frequencies across divergent '
-    'sub-populations, it creates a spurious common-pool distribution that is lower '
-    'than that of every individual sub-cluster — producing a combined N* that is '
-    'lower than any constituent group\'s N*. This is statistically counter-intuitive '
-    'and would systematically under-serve every sub-group if used for planning. '
-    'The Filipino/SE Asian cluster (Cluster 2, N* 63,856) represents the '
-    'highest-diversity sub-group and should set the ceiling for Others recruitment '
-    'planning. No registry targeting only 32,360 Others donors can realistically '
-    'achieve 95% coverage for Cluster 1, 2, or 3.')
-
-add_figure(doc, 'others_registry_by_cluster.png', width=5.2,
-    caption='Figure 2. Coverage curves for each Others sub-cluster at 10/10 matching. '
-    'Cluster 2 — putatively Filipino/SE Asian — requires nearly twice as many '
-    'donors as Cluster 1 at 95% coverage. The pooled Others estimate (dashed) is '
-    'a mathematical artefact that masks this disparity. Recommended policy '
-    'ceiling: 63,856 donors (Cluster 2 / Filipino/SE Asian).')
+# Cluster 2, 3 narratives and Figure 2 moved to supplementary — not rendered
 
 # 3.5 Partial match
 add_heading(doc,
@@ -978,7 +872,7 @@ add_para(doc,
     'Registry size models must assume a patient population composition ' + cite(2, 5) + '. '
     'We tested four scenarios: Singapore population weights (77% Chinese, 8% Malay, '
     '9% Indian, 6% Others) ' + cite(11) + ', BMDP+SCBB registry composition, '
-    'actual patient composition from referral data, and an extreme minority-focus '
+    'HSA Patient-Donor Data (referral composition from Health Sciences Authority Singapore), and an extreme minority-focus '
     'scenario (equal Malay, Indian, and Others weighting, no Chinese). Table 6 and '
     'Figure 5 show that the combined N* varies by less than 3% across all scenarios '
     'at any coverage target ' + cite(2) + '.')
@@ -988,7 +882,7 @@ tbl6_data = [['Scenario', 'Ethnic weights (C/M/I/O)',
 scenario_labels = {
     'SG population (current model)':        'SG population',
     'BMDP+SCBB registry composition':       'BMDP+SCBB donors',
-    'Patient.txt composition':              'Actual patients',
+    'Patient.txt composition':              'HSA Patient-Donor Data',
     'Minority-focus (Indian+Malay+Others)': 'Minority-focus',
 }
 scenario_weights = {
@@ -1018,7 +912,8 @@ add_caption(doc,
 
 add_figure(doc, 'cross_ethnic_sensitivity.png', width=6.0,
     caption='Figure 5. Registry size sensitivity across four patient demographic '
-    'scenarios [11]. Near-identical bar heights confirm the ~40,000–45,000 donor '
+    'scenarios [11], including HSA Patient-Donor Data (Health Sciences Authority '
+    'Singapore). Near-identical bar heights confirm the ~40,000–45,000 donor '
     'target is a structural property of CMIO haplotype diversity [2].')
 
 add_para(doc,
@@ -1034,7 +929,8 @@ add_heading(doc, '3.7 Model Validation', level=2)
 add_para(doc,
     'To assess whether EM-derived haplotype frequencies reflect real patient '
     'haplotype distributions, we compared EM estimates against independently '
-    'observed haplotype frequencies from 564 patients ' + cite(1) + '. Spearman '
+    'observed haplotype frequencies from 564 patient-donor pairs provided by the '
+    'Health Sciences Authority (HSA) Singapore ' + cite(1) + '. Spearman '
     'rank correlations and root mean square error (RMSE) were computed on shared '
     'haplotypes (Table 7).')
 
@@ -1232,7 +1128,7 @@ for i, (authors, title, journal, doi) in enumerate(REFS, 1):
     p.add_run(ref_text).font.size = Pt(9)
 
 # ── Save ─────────────────────────────────────────────────────────────────────
-out_path = os.path.join(HERE, 'HLA_Registry_Size_CMIO_v2.5.docx')
+out_path = os.path.join(HERE, 'HLA_Registry_Size_CMIO_v2.6.docx')
 doc.save(out_path)
 print(f'Saved: {out_path}')
 print(f'  Paragraphs: {len(doc.paragraphs)}')

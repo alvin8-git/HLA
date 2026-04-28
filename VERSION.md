@@ -1,5 +1,23 @@
 # Version History
 
+## v1.6.0 — 2026-04-28
+
+### Changed
+- **§2.4 Bootstrap CI**: removed redundant left-skew technical paragraph (Jensen's
+  inequality explanation); reasoning already stated in §2.4 para 1. Kept clinical
+  planning sentence.
+- **§3.4 "Others" subgroup**: condensed from full primary section (Table 4 + Table 5 +
+  Figure 1 + Figure 2 + 3 cluster narratives) to a single brief paragraph + Table 4 only.
+  Heading renamed to "Note on the 'Others' Subgroup". Cluster narratives and haplotype
+  evidence table retained in code for reference.
+- **Patient data source**: renamed "Actual patients" → "HSA Patient-Donor Data
+  (Health Sciences Authority Singapore)" throughout Table 6, Figure 5, and §3.7.
+
+### Generated
+- `HLA_Registry_Size_CMIO_v2.6.docx`
+
+---
+
 ## v1.5.0 — 2026-04-28
 
 ### Changed
