@@ -1,5 +1,20 @@
 # Version History
 
+## v1.7.0 — 2026-04-28
+
+### Changed
+- **§3.4 Others**: restored Figure 1 (PCA k-means scatter; knee plot omitted) and
+  a condensed Table 5 showing top 2 haplotypes per cluster (ancestry validation).
+  Removed the 5-row-per-cluster version and per-cluster narrative paragraphs.
+- **§5 Conclusions**: softened Others references — from "requires particular attention"
+  with alarming sub-cluster numbers to a brief parenthetical note (Table 4). Point (3)
+  reworded to "ancestry sub-group data collection as registry grows".
+
+### Generated
+- `HLA_Registry_Size_CMIO_v2.7.docx`
+
+---
+
 ## v1.6.0 — 2026-04-28
 
 ### Changed

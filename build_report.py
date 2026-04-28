@@ -775,9 +775,13 @@ add_caption(doc,
     'The pooled Others row (Table 1) is a mathematical artefact and must not '
     'be used as a policy target (see text).', fig=False)
 
-# Haplotype evidence table (Table 5) — removed from main body; detail below is
-# retained in code for reference but not rendered in the document
+add_figure(doc, 'others_pca_scatter.png', width=5.0,
+    caption='Figure 1. PCA scatter of 3,941 Others donors (binary HLA allele '
+    'indicators, alleles ≥1%). Three well-separated clusters (k=3, silhouette=0.97) '
+    'indicate distinct ancestry backgrounds. Cluster identities inferred from '
+    'haplotype signature matching [16,17].')
 
+# Mini haplotype validation table — top 2 haplotypes per cluster
 hap_tbl_header = ['Cluster', 'Rank', 'Haplotype (A~B~C~DRB1~DQB1)',
                   'Freq (%)', 'Population association']
 
@@ -818,10 +822,32 @@ pop_annot = {
         'South Asian / mixed [16]',
 }
 
-# Table 5 (haplotype evidence) and per-cluster narrative moved to supplementary
-# — retained in code but not rendered in the main document
+# Table 5: top 2 haplotypes per cluster (ancestry validation)
+tbl5 = doc.add_table(rows=1, cols=len(hap_tbl_header))
+for i, h in enumerate(hap_tbl_header):
+    tbl5.rows[0].cells[i].text = h
 
-# Cluster 2, 3 narratives and Figure 2 moved to supplementary — not rendered
+for cl in ['Cluster_1', 'Cluster_2', 'Cluster_3']:
+    top2 = (oc_hap[oc_hap.cluster == cl]
+            .sort_values('frequency', ascending=False)
+            .head(2))
+    for rank, (_, hrow) in enumerate(top2.iterrows(), 1):
+        row = tbl5.add_row().cells
+        row[0].text = cl.replace('_', ' ') if rank == 1 else ''
+        row[1].text = str(rank)
+        row[2].text = hap_display(hrow['haplotype'])
+        row[3].text = f"{hrow['frequency']*100:.1f}"
+        row[4].text = pop_annot.get(hrow['haplotype'], '—')
+        if rank == 1:
+            set_cell_bg(row[0], clust_colors[cl])
+
+style_table(tbl5)
+add_caption(doc,
+    'Table 5. Top 2 haplotypes per Others sub-cluster confirming putative ancestry. '
+    'Frequencies are within-cluster. Population assignments cross-referenced '
+    'against AFND [16] and published references [1,17].', fig=False)
+
+# Per-cluster narratives not rendered in main body
 
 # 3.5 Partial match
 add_heading(doc,
@@ -1086,12 +1112,10 @@ add_corrected_para(doc, [
     ('Partial-match analysis demonstrates that 9/10 matching halves this requirement ', False),
     (cite(2, 19), True),
     (', providing a practical and clinically justifiable path to '
-     'improving access in the near term ' + cite(12, 15) + '. The Others group '
-     'requires particular attention: three distinct ancestry sub-clusters — '
-     'European/Eurasian, Filipino/SE Asian, and Northeast Asian — have registry '
-     'requirements ranging from 35,000 to 64,000 donors, with the pooled estimate '
-     'masking the severe under-coverage of the highest-diversity sub-cluster '
-     + cite(16) + '.', False),
+     'improving access in the near term ' + cite(12, 15) + '. The Others subgroup '
+     'is ethnically heterogeneous; sub-cluster analysis identifies three distinct '
+     'ancestry groups with registry requirements ranging from 35,000 to 64,000 donors '
+     '(Table 4) ' + cite(16) + '.', False),
 ])
 
 add_para(doc,
@@ -1099,8 +1123,8 @@ add_para(doc,
     'same-ethnicity donor recruitment with defined numerical targets for each '
     'CMIO group ' + cite(9) + '; (2) adoption of evidence-based partial-match '
     'protocols to extend effective registry reach ' + cite(12, 15) + '; and '
-    '(3) ancestry sub-group characterisation of Others donors to enable targeted '
-    'recruitment and accurate match probability estimation ' + cite(16) + '. '
+    '(3) ancestry sub-group data collection for Others donors to support targeted '
+    'recruitment as registry size grows ' + cite(16) + '. '
     'Together, these measures can substantially improve HSCT access equity for '
     'all communities in Singapore.', space_after=12)
 
@@ -1128,7 +1152,7 @@ for i, (authors, title, journal, doi) in enumerate(REFS, 1):
     p.add_run(ref_text).font.size = Pt(9)
 
 # ── Save ─────────────────────────────────────────────────────────────────────
-out_path = os.path.join(HERE, 'HLA_Registry_Size_CMIO_v2.6.docx')
+out_path = os.path.join(HERE, 'HLA_Registry_Size_CMIO_v2.7.docx')
 doc.save(out_path)
 print(f'Saved: {out_path}')
 print(f'  Paragraphs: {len(doc.paragraphs)}')
