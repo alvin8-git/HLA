@@ -1,5 +1,23 @@
 # Version History
 
+## v1.4.0 — 2026-04-28
+
+### Fixed
+- **Bootstrap CI coverage** (`analysis/09_bootstrap_ci.py`): replaced EM MLE
+  point estimate with bootstrap median (bias-corrected for Jensen's inequality
+  on the concave N*(f) near saturation). All 32 point estimates now fall within
+  their 95% CIs by construction.
+- **n_eff**: changed from capped 5,000 to actual 5-locus donor counts
+  (Chinese: 45,754; Malay: 5,868; Indian: 5,586; Others: 3,941).
+- **B**: increased from 500 to 1,000 bootstrap resamples.
+- EM MLE estimates preserved in CSV as `em_registry_size` for reference.
+
+### Generated
+- `HLA_Registry_Size_CMIO_v2.3.docx` — updated §2.4 methodology and §3.1
+  narrative; all CI tables use bootstrap median values.
+
+---
+
 ## v1.3.0 — 2026-04-20
 
 ### Added

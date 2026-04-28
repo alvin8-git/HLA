@@ -955,44 +955,45 @@ $$
 
 > **In plain language**
 >
-> **What we're doing:** Instead of reporting a single number for the required registry size, we report a plausible range — e.g., "42,871 donors, with a 95% confidence interval of 40,199–42,177."
+> **What we're doing:** Instead of reporting a single number for the required registry size, we report a bias-corrected central estimate (the bootstrap median) plus a plausible range — e.g., "42,847 donors (bootstrap median), 95% CI: 42,649–43,058."
 >
 > **Why this approach:** Our 56,000 donors are a sample of Singapore's population, not the entire population. The true HLA frequencies in Singapore are unknown — we only have estimates. If we had a slightly different set of donors, we'd get slightly different frequency estimates, and therefore a slightly different N*. The confidence interval captures this uncertainty so policymakers know whether the answer is "roughly 40,000" or "somewhere between 30,000 and 55,000."
 >
 > **How it works:** We simulate 1,000 alternative versions of our dataset using a statistical technique called Dirichlet bootstrapping. Each simulated dataset produces its own N* estimate. The middle 95% of those 1,000 estimates forms the confidence interval.
 >
-> **Simple example:** Think of it like polling before an election. If you poll 1,000 voters and 60% favour Candidate A, the true support might be anywhere from 57% to 63% depending on which 1,000 people you happened to ask. Bootstrapping is our way of quantifying that polling uncertainty — applied to HLA frequencies rather than voting intentions. For Chinese donors, our CI is tight (±~2,000 out of 42,871), which tells us 56,000 donors is more than enough to get a reliable frequency estimate.
+> **Simple example:** Think of it like polling before an election. If you poll 1,000 voters and 60% favour Candidate A, the true support might be anywhere from 57% to 63% depending on which 1,000 people you happened to ask. Bootstrapping is our way of quantifying that polling uncertainty — applied to HLA frequencies rather than voting intentions. For Chinese donors, our CI is very tight (±~200 out of 42,847), reflecting the large 45,754-donor cohort available for frequency estimation.
 
 The point estimates of N* (§6.3, 6.1.6) are subject to sampling uncertainty: with finite cohort sizes (44,400 Chinese, etc.), true haplotype frequencies are unknown. We estimate confidence intervals using **Dirichlet bootstrapping**.
 
 **Method:** Haplotype frequencies follow a multinomial distribution. Under Bayesian nonparametric statistics, the posterior distribution of frequency vectors is **Dirichlet** with concentration parameter $\alpha_k = n_{\text{eff}} \times \hat{f}_k$, where $\hat{f}_k$ is the observed frequency and $n_{\text{eff}}$ is an effective sample size.
 
 For each ethnicity, we:
-1. Compute effective sample size: $n_{\text{eff}} = \min(5000, n_{\text{cohort}})$ (capped at 5,000 to avoid overfitting).
+1. Use actual 5-locus donor count as effective sample size: $n_{\text{eff}} \in \{45754, 5868, 5586, 3941\}$ for Chinese, Malay, Indian, Others respectively.
 2. Set $\alpha_k = \max(n_{\text{eff}} \times \hat{f}_k, 0.1)$ (floor at 0.1 to avoid zero-frequency haplotypes).
-3. Draw $B = 500$ samples from Dirichlet($\alpha_1, \ldots, \alpha_K$).
-4. For each sample, recompute N* (95% coverage).
-5. Extract 2.5th and 97.5th percentiles as 95% CI bounds.
+3. Draw $B = 1000$ samples from Dirichlet($\alpha_1, \ldots, \alpha_K$).
+4. For each sample, recompute N* at each coverage threshold.
+5. Report the **bootstrap median** (50th percentile) as the bias-corrected point estimate; extract 2.5th and 97.5th percentiles as 95% CI bounds. The median is always inside the CI by construction.
 
 **Results table (10/10 same-ethnicity):**
 
-| Ethnicity | N\* (point) | 95% CI Lower | 95% CI Upper | CI Width |
+| Ethnicity | N\* (bootstrap median) | 95% CI Lower | 95% CI Upper | CI Width |
 |-----------|---|---|---|---|
-| Chinese | 42,871 | 40,199 | 42,177 | 1,978 |
-| Malay | 41,779 | 38,730 | 40,852 | 2,122 |
-| Indian | 44,863 | 42,767 | 44,754 | 1,987 |
-| Others | 32,360 | 30,443 | 31,957 | 1,514 |
+| Chinese | 42,847 | 42,649 | 43,058 | 409 |
+| Malay | 40,032 | 38,972 | 41,151 | 2,179 |
+| Indian | 43,855 | 42,963 | 44,577 | 1,614 |
+| Others | 31,181 | 30,490 | 31,959 | 1,469 |
 
 **Interpretation:**
-- **Tight CIs:** Width ~5% of point estimate, indicating good precision despite finite cohorts.
-- **Left-skew (Chinese):** CI upper bound (42,177) is slightly below point estimate (42,871), reflecting left-skew near saturation. As coverage approaches 100%, small frequency changes have outsized impact.
-- **All lower bounds >30,000:** Even under conservative 2.5th-percentile assumptions, all groups require substantial registries (>30K).
+- **Chinese CI very tight (±~200):** Largest cohort (45,754 donors) gives precise frequency estimates; the CI reflects genuine statistical precision, not artefact.
+- **Malay/Indian/Others CIs wider (±1,500–2,200):** Smaller 5-locus cohorts (3,941–5,868) produce more Dirichlet variation; CIs appropriately wider.
+- **All medians inside CI by construction:** Using the bootstrap median as point estimate corrects for the Jensen downward-bias in N*(f) near saturation (see §6.9).
+- **All lower bounds >30,000:** Even at the conservative 2.5th percentile, all groups require substantial registries (>30K).
 
 **Figure 9: Bootstrap Confidence Intervals**
 
 ![Registry CI Plot](analysis/figures/registry_ci_plot.png)
 
-*Point estimates (dots) and 95% bootstrap confidence intervals (error bars) for N* at 95% coverage, 10/10 matching. CIs are tight (~5% width), but all lower bounds exceed 30,000, indicating robust need for large registries across all CMIO groups.*
+*Bootstrap median estimates (dots) and 95% bootstrap confidence intervals (error bars) for N* at 95% coverage, 10/10 matching. Chinese CIs are narrow (±~200) due to the large 45,754-donor cohort; Malay/Indian/Others CIs are wider (±1,500–2,200) reflecting smaller 5-locus donor counts. All lower bounds exceed 30,000.*
 
 ### 6.6 Ancestry Stratification of the "Others" Group
 

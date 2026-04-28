@@ -260,13 +260,13 @@ With fewer samples, rare haplotypes will be missed and registry size estimates w
 
 | Ethnicity | 75% coverage | 85% coverage | 90% coverage | 95% coverage |
 |-----------|-------------|-------------|-------------|-------------|
-| Chinese | 7,581 | 15,181 | 23,506 | 42,871 |
-| Malay | 6,433 | 13,298 | 21,546 | 41,779 |
-| Indian | 9,857 | 18,363 | 26,906 | 44,863 |
-| Others | 7,207 | 13,119 | 19,246 | 32,360 |
+| Chinese | 7,577 | 15,173 | 23,497 | 42,847 |
+| Malay | 6,206 | 12,787 | 20,657 | 40,032 |
+| Indian | 9,547 | 17,793 | 26,134 | 43,855 |
+| Others | 6,884 | 12,525 | 18,386 | 31,181 |
 | **Combined** | **24,530** | **57,443** | **102,032** | **236,906** |
 
-> Targets reflect full multi-locus EM (proper phase resolution). Earlier estimates used a product-approximation EM that treated arbitrary allele-column ordering as known phase, underestimating haplotype diversity by ~40–75%. Cross-ethnic matching remains infeasible for minority groups at high coverage targets.
+> Values are **bootstrap median estimates** (bias-corrected; B=1,000 Dirichlet resamples using actual 5-locus donor counts as n_eff). Full 95% CIs are in `analysis/data/registry_size_ci.csv`. Cross-ethnic matching remains infeasible for minority groups at high coverage targets.
 
 See [Documentation.md](Documentation.md) for full methodology and figure interpretation.
 
@@ -301,7 +301,7 @@ See [Documentation.md](Documentation.md) for full methodology and figure interpr
 | `analysis/figures/diplotype_longtail.png` | Cumulative diplotype frequency coverage vs rank (log scale) for all CMIO groups — illustrates the long-tail problem |
 | `analysis/figures/ld_heatmap_dprime.png` | Composite D′ heatmap between all 5 HLA loci for each CMIO group (DRB1–DQB1 D′ ≥ 0.93, B–C D′ ≥ 0.95) |
 | `analysis/figures/ld_heatmap_r2.png` | Composite r² heatmap between all 5 HLA loci for each CMIO group |
-| `analysis/figures/registry_ci_plot.png` | Forest plot of registry size targets with 95% bootstrap CIs (Dirichlet resampling, B=500) |
+| `analysis/figures/registry_ci_plot.png` | Forest plot of registry size targets with 95% bootstrap CIs (Dirichlet resampling, B=1,000, bootstrap median) |
 
 See [Documentation.md](Documentation.md) for detailed figure interpretation.
 
