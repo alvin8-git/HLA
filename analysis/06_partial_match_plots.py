@@ -201,11 +201,13 @@ def make_figure(eth_curves_dict, match_levels, framework_name, out_path):
     eth_curves_dict: {ethnicity: {min_matches: coverage_array}}
     match_levels: list of (min_matches, label, color), e.g. [(10,'10/10','blue'), ...]
                   ordered from highest to lowest
+    2×2 layout: Chinese (top-left), Malay (top-right), Indian (bottom-left), Others (bottom-right)
     """
-    panels = ETHNICITIES + ['Overall']
-    fig, axes = plt.subplots(1, 5, figsize=(25, 5), facecolor='white')
+    panels = ETHNICITIES  # Chinese, Malay, Indian, Others — no Overall
+    fig, axes = plt.subplots(2, 2, figsize=(14, 10), facecolor='white')
+    ax_flat = [axes[0, 0], axes[0, 1], axes[1, 0], axes[1, 1]]
 
-    for ax, eth in zip(axes, panels):
+    for ax, eth in zip(ax_flat, panels):
         ax.set_facecolor('white')
 
         # Gridlines
@@ -218,24 +220,24 @@ def make_figure(eth_curves_dict, match_levels, framework_name, out_path):
             ax.axvline(curr, color='dimgrey', linestyle=':', linewidth=1.5,
                        zorder=1, alpha=0.85)
             ax.text(curr * 1.12, 3, f'Current\n~{curr // 1000}K',
-                    fontsize=7, color='dimgrey', va='bottom', ha='left')
+                    fontsize=8, color='dimgrey', va='bottom', ha='left')
 
         curves = eth_curves_dict.get(eth, {})
         for min_m, label, color in match_levels:
             cov = curves.get(min_m, np.zeros(len(N_VALUES)))
-            ax.plot(N_VALUES, cov * 100, color=color, linewidth=2, label=label)
+            ax.plot(N_VALUES, cov * 100, color=color, linewidth=2.5, label=label)
 
         ax.set_xscale('log')
         ax.set_xlim(1, 1e6)
         ax.set_ylim(0, 100)
-        ax.set_xlabel('Number of donors in the registry', fontsize=10)
-        ax.set_ylabel('Percentage of patients with donors', fontsize=10)
-        ax.set_title(eth, fontsize=12, fontweight='bold')
-        ax.legend(fontsize=9, loc='upper left')
+        ax.set_xlabel('Number of donors in the registry', fontsize=11)
+        ax.set_ylabel('Percentage of patients with donors', fontsize=11)
+        ax.set_title(eth, fontsize=14, fontweight='bold')
+        ax.legend(fontsize=10, loc='upper left')
         ax.spines['top'].set_visible(False)
         ax.spines['right'].set_visible(False)
 
-    fig.suptitle(framework_name, fontsize=14, fontweight='bold', y=1.01)
+    fig.suptitle(framework_name, fontsize=15, fontweight='bold', y=1.01)
     plt.tight_layout()
     fig.savefig(out_path, dpi=150, bbox_inches='tight')
     plt.close(fig)

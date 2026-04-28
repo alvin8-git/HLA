@@ -1,5 +1,21 @@
 # Version History
 
+## v1.5.0 — 2026-04-28
+
+### Changed
+- **Figures 3 & 4** (`analysis/06_partial_match_plots.py`): removed "Overall" panel;
+  reformatted from 1×5 to 2×2 grid (Chinese+Malay top row, Indian+Others bottom row);
+  larger figure size (14×10 in) for readability.
+- **Tables 1 & 2**: renamed "Combined†" → "Weighted Average†" with explicit disclaimer
+  that the weighted average does not guarantee equitable access for minority groups.
+- **Cluster 3 name**: standardised to "Northeast Asian / Mixed" across Table 4 and
+  all §3.4 narrative text (was "NE Asian / mixed" in table vs "Northeast Asian" in text).
+
+### Generated
+- `HLA_Registry_Size_CMIO_v2.5.docx`
+
+---
+
 ## v1.4.0 — 2026-04-28
 
 ### Fixed

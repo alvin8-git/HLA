@@ -313,7 +313,7 @@ def make_ci_table(doc, match_level):
             row[j + 1].text = ci_cell(match_level, eth, thr)
     # Combined row
     row = tbl.add_row().cells
-    row[0].text = 'Combined†'
+    row[0].text = 'Weighted Average†'
     set_cell_bg(row[0], 'E8E8E8')
     for j, thr in enumerate(THRESHOLDS):
         v = tgts[(tgts.match_level == match_level) & (tgts.ethnicity == 'Combined') &
@@ -609,12 +609,15 @@ add_para(doc,
     'haplotype frequencies ' + cite(1, 3) + '. Values are bootstrap median '
     'estimates (bias-corrected point estimates); numbers in parentheses are 95% '
     'bootstrap confidence intervals (2.5th–97.5th percentile) ' + cite(18) + '. '
-    'The Combined row reflects Singapore population weights ' + cite(11) + '.')
+    'The Weighted Average row reflects Singapore population weights ' + cite(11) + '; '
+    'it does not guarantee equitable access for minority ethnic groups.')
 
 make_ci_table(doc, '10of10')
 add_para(doc,
-    '† Combined: Singapore population weights (Chinese 77%, Malay 8%, Indian 9%, '
-    'Others 6%) [11].\nValues shown as bootstrap median N (95% CI lower–upper).',
+    '† Weighted Average: Singapore population weights (Chinese 77%, Malay 8%, Indian 9%, '
+    'Others 6%) [11]. This weighted average does not guarantee equitable access for '
+    'minority ethnic groups; see same-ethnicity targets above.\n'
+    'Values shown as bootstrap median N (95% CI lower–upper).',
     size=8, space_after=4)
 add_caption(doc,
     'Table 1. Minimum same-ethnicity registry size for 10/10 HLA matching '
@@ -669,8 +672,9 @@ add_para(doc,
 
 make_ci_table(doc, '8of8')
 add_para(doc,
-    '† Combined: Singapore population weights [11].\n'
-    'Values shown as bootstrap median N (95% CI lower–upper).',
+    '† Weighted Average: Singapore population weights [11]. This weighted average does '
+    'not guarantee equitable access for minority ethnic groups; see same-ethnicity '
+    'targets above.\nValues shown as bootstrap median N (95% CI lower–upper).',
     size=8, space_after=4)
 add_caption(doc,
     'Table 2. Minimum same-ethnicity registry size for 8/8 HLA matching '
@@ -746,7 +750,7 @@ add_figure(doc, 'others_pca_scatter.png', width=5.5,
     'allele indicators (alleles ≥1% frequency). Three clusters (k=3, '
     'silhouette=0.97) are clearly separated, indicating distinct ancestry '
     'backgrounds. Cluster identities (European/Eurasian, Filipino/SE Asian, '
-    'NE Asian/Mixed) are inferred from haplotype signature matching [16,17].')
+    'Northeast Asian/Mixed) are inferred from haplotype signature matching [16,17].')
 
 add_para(doc,
     'The analysis revealed three well-separated clusters (silhouette coefficient '
@@ -767,7 +771,7 @@ for i, h in enumerate(tbl4_header):
 ancestry_labels = {
     'Cluster_1': 'European / Eurasian',
     'Cluster_2': 'Filipino / SE Asian',
-    'Cluster_3': 'NE Asian / mixed',
+    'Cluster_3': 'Northeast Asian / Mixed',
 }
 clust_colors = {
     'Cluster_1': 'D6DCE4', 'Cluster_2': 'FCE4D6', 'Cluster_3': 'E2EFDA'
@@ -1228,7 +1232,7 @@ for i, (authors, title, journal, doi) in enumerate(REFS, 1):
     p.add_run(ref_text).font.size = Pt(9)
 
 # ── Save ─────────────────────────────────────────────────────────────────────
-out_path = os.path.join(HERE, 'HLA_Registry_Size_CMIO_v2.4.docx')
+out_path = os.path.join(HERE, 'HLA_Registry_Size_CMIO_v2.5.docx')
 doc.save(out_path)
 print(f'Saved: {out_path}')
 print(f'  Paragraphs: {len(doc.paragraphs)}')
