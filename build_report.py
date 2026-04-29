@@ -482,6 +482,11 @@ add_para(doc,
 
 # ── 2. METHODS ────────────────────────────────────────────────────────────────
 add_heading(doc, '2. Methods')
+add_figure(doc, 'pipeline_flowchart.png', width=6.5,
+    caption='Figure 0. Analysis pipeline overview: from raw HLA typing data to '
+    'registry size estimates with bootstrap confidence intervals. '
+    'Shading: blue = input data; green = core model steps; '
+    'yellow = optimisation; red = uncertainty quantification.')
 add_heading(doc, '2.1 Dataset', level=2)
 add_corrected_para(doc, [
     ('HLA typing data were obtained from 59,186 ', False),
@@ -536,6 +541,15 @@ add_para(doc,
     'at least one match — is the diplotype-frequency-weighted sum over all m '
     'diplotypes:')
 add_equation(doc, 'C(N) = Σₖ Fₖ · [1 − (1 − Fₖ)^N],   k = 1, …, m', 4)
+add_para(doc,
+    'Equation (4) aggregates across all diplotype classes. For a patient whose '
+    'diplotype dₖ occurs at population frequency Fₖ, the probability that at '
+    'least one of N randomly drawn registry donors carries that same diplotype '
+    'is [1 − (1 − Fₖ)^N] — the complement of all N donors lacking it. '
+    'Multiplying by Fₖ weights this probability by the fraction of patients '
+    'who carry diplotype dₖ; summing over all m diplotypes gives the overall '
+    'population coverage C(N). As N grows, each term approaches Fₖ and C(N) '
+    'approaches 1, but the convergence is slow for rare diplotypes.')
 add_corrected_para(doc, [
     ('The minimum registry size N* to achieve target coverage θ (75%, 85%, '
      '90%, or 95%) was found by binary search on a logarithmic scale (50 iterations; '
@@ -595,6 +609,14 @@ add_para(doc,
 
 # ── 3. RESULTS ────────────────────────────────────────────────────────────────
 add_heading(doc, '3. Results')
+add_para(doc,
+    'Section 3.1 presents the primary finding: same-ethnicity registry size '
+    'requirements at 10/10 matching. Section 3.2 shows that 8/8 targets are '
+    'marginally lower. Section 3.3 demonstrates that cross-ethnic matching '
+    'cannot substitute for same-ethnicity donors. Sections 3.4–3.5 present '
+    'secondary analyses (partial-match and sensitivity). Section 3.6 reports '
+    'model validation. Section 3.7 is explicitly exploratory: ancestry '
+    'stratification of the heterogeneous "Others" subgroup.')
 
 # 3.1 Registry size 10/10
 add_heading(doc, '3.1 Registry Size Requirements — 10/10 HLA Matching', level=2)
@@ -610,15 +632,19 @@ add_para(doc,
 make_ci_table(doc, '10of10')
 add_para(doc,
     '† Weighted Average: Singapore population weights (Chinese 77%, Malay 8%, Indian 9%, '
-    'Others 6%) [11]. This weighted average does not guarantee equitable access for '
-    'minority ethnic groups; see same-ethnicity targets above.\n'
+    'Others 6%) [11]. This row is a mathematical convenience, not a policy target: '
+    'it describes how a single shared registry would need to be sized to serve all '
+    'groups proportionally under those weights, but it cannot substitute for '
+    'ethnicity-specific recruitment because donors are not interchangeable across '
+    'groups. The per-group same-ethnicity N* values above are the operative planning '
+    'targets for each community.\n'
     'Values shown as bootstrap median N (95% CI lower–upper).',
     size=8, space_after=4)
 add_caption(doc,
     'Table 1. Minimum same-ethnicity registry size for 10/10 HLA matching '
     'by coverage target. Bootstrap 95% CIs (Dirichlet resampling, 1,000 '
     'iterations) [18]. The pooled Others row is a mathematical artefact; '
-    'see §3.4 for sub-cluster targets.', fig=False)
+    'see §3.7 for sub-cluster targets.', fig=False)
 
 add_para(doc,
     'At the clinically important 95% coverage threshold, same-ethnicity registry '
@@ -626,7 +652,7 @@ add_para(doc,
     'group requires the largest registry (43,855 donors), reflecting its greater '
     'haplotype diversity ' + cite(1, 8) + '. The pooled Others estimate (31,181) '
     'is a mathematical artefact of heterogeneous sub-group mixing and must not be '
-    'used as a policy target; sub-cluster analysis (§3.4) reveals requirements of '
+    'used as a policy target; sub-cluster analysis (§3.7) reveals requirements of '
     '35,193–63,856. The 95% bootstrap CIs are narrower for Chinese (±~200 donors) '
     '— where the largest 5-locus sample (45,754) was available — and wider for '
     'Malay, Indian, and Others (±1,000–2,000 donors), reflecting smaller effective '
@@ -634,7 +660,7 @@ add_para(doc,
 add_para(doc,
     'These per-group same-ethnicity N* values (bootstrap medians; e.g., 42,847 '
     'for Chinese) should be distinguished from the population-weighted combined '
-    'estimates in the sensitivity analysis (Table 6; §3.6), where Singapore\'s '
+    'estimates in the sensitivity analysis (Table 6; §3.5), where Singapore\'s '
     'ethnic composition (77% Chinese) produces a combined N* of ~42,332. The '
     'combined figure reflects how a single shared registry would need to be sized '
     'to serve all groups proportionally; the per-group figures reflect the target '
@@ -728,8 +754,157 @@ add_para(doc,
     + cite(10) + '. This underscores that same-ethnicity donor recruitment is not '
     'merely preferable but mathematically necessary for these groups ' + cite(9) + '.')
 
-# 3.4 Others stratification — kept brief; CMI is the primary focus
-add_heading(doc, '3.4 Note on the "Others" Subgroup', level=2)
+# 3.4 Partial match
+add_heading(doc,
+    '3.4 Partial-Match Coverage — The Clinical Benefit of Relaxing Match Criteria',
+    level=2)
+add_para(doc,
+    'While exact 10/10 or 8/8 matching is the preferred clinical standard '
+    + cite(7, 19) + ', some centres accept partial matches — particularly when '
+    'no fully matched donor exists or when time is critical ' + cite(14) + '. '
+    'Figures 3 and 4 show coverage curves for progressive relaxation of match '
+    'criteria in the 10-locus and 8-locus frameworks.')
+
+add_figure(doc, 'partial_match_10locus.png', width=6.2,
+    caption='Figure 3. Coverage curves for 10-locus (HLA-A, -B, -C, -DRB1, -DQB1) '
+    'partial matching across CMIO groups. Green: 10/10 exact match; Blue: ≥9/10; '
+    'Red: ≥8/10. Dashed lines: cross-ethnic model. Note the sharp threshold '
+    'effect at the 9/10 boundary for all groups.')
+
+add_para(doc,
+    'The most important finding is the dramatic threshold effect at the 9/10 '
+    'boundary. Relaxing from 10/10 to 9/10 matching roughly halves the required '
+    'registry size for all CMIO groups. For Chinese patients, the 9/10 registry '
+    'requirement at 95% coverage is approximately 20,000–22,000 donors, compared '
+    'with 42,871 at 10/10. This is clinically significant because several large '
+    'multi-centre trials have demonstrated that a single allele mismatch at certain '
+    'loci — particularly at HLA-DPB1 when the mismatch is at a permissive '
+    'T-cell epitope group position — carries minimal additional survival impact '
+    + cite(12, 15) + '. Programmes that formalise evidence-based partial-match '
+    'protocols could effectively double their donor reach without recruiting a '
+    'single additional donor ' + cite(2, 19) + '.')
+
+add_figure(doc, 'partial_match_8locus.png', width=6.2,
+    caption='Figure 4. Coverage curves for 8-locus (HLA-A, -B, -C, -DRB1) partial '
+    'matching. Green: 8/8; Blue: ≥7/8; Red: ≥6/8. Cross-ethnic '
+    'shown with dashed lines.')
+
+add_para(doc,
+    'In the 8-locus framework (Figure 4), the same pattern holds. The cross-ethnic '
+    'curves (dashed) plateau for Malay, Indian, and Others groups regardless of '
+    'relaxation level — confirming that partial matching cannot substitute for '
+    'same-ethnicity donors when fundamental haplotype diversity differs markedly '
+    'between donor and patient populations ' + cite(2, 10) + '.')
+
+# 3.5 Sensitivity
+add_heading(doc,
+    '3.5 Registry Size Is Robust to Patient Demographic Assumptions', level=2)
+add_para(doc,
+    'Registry size models must assume a patient population composition ' + cite(2, 5) + '. '
+    'We tested four scenarios: Singapore population weights (77% Chinese, 8% Malay, '
+    '9% Indian, 6% Others) ' + cite(11) + ', BMDP+SCBB registry composition, '
+    'HSA Patient-Donor Data (referral composition from Health Sciences Authority Singapore), and an extreme minority-focus '
+    'scenario (equal Malay, Indian, and Others weighting, no Chinese). Table 6 and '
+    'Figure 5 show that the combined N* varies by less than 3% across all scenarios '
+    'at any coverage target ' + cite(2) + '.')
+
+tbl6_data = [['Scenario', 'Ethnic weights (C/M/I/O)',
+              '75%', '85%', '90%', '95%']]
+scenario_labels = {
+    'SG population (current model)':        'SG population',
+    'BMDP+SCBB registry composition':       'BMDP+SCBB donors',
+    'Patient.txt composition':              'HSA Patient-Donor Data',
+    'Minority-focus (Indian+Malay+Others)': 'Minority-focus',
+}
+scenario_weights = {
+    'SG population (current model)':        '77/8/9/6',
+    'BMDP+SCBB registry composition':       '75/9/9/6',
+    'Patient.txt composition':              '72/15/5/8',
+    'Minority-focus (Indian+Malay+Others)': '0/40/40/20',
+}
+for sk in ['SG population (current model)', 'BMDP+SCBB registry composition',
+           'Patient.txt composition', 'Minority-focus (Indian+Malay+Others)']:
+    sub = sens[sens.scenario == sk]
+    row = [scenario_labels[sk], scenario_weights[sk]]
+    for thr in THRESHOLDS:
+        v = sub[sub.target_coverage == thr]['registry_size']
+        row.append(n(v.iloc[0]) if not v.empty else '—')
+    tbl6_data.append(row)
+
+tbl6 = doc.add_table(rows=len(tbl6_data), cols=6)
+for i, row_data in enumerate(tbl6_data):
+    for j, val in enumerate(row_data):
+        tbl6.rows[i].cells[j].text = val
+style_table(tbl6)
+add_caption(doc,
+    'Table 6. Sensitivity of combined registry size to patient ethnic composition '
+    'scenario [11]. C/M/I/O = Chinese/Malay/Indian/Others percentage weights.',
+    fig=False)
+
+add_figure(doc, 'cross_ethnic_sensitivity.png', width=6.0,
+    caption='Figure 5. Registry size sensitivity across four patient demographic '
+    'scenarios [11], including HSA Patient-Donor Data (Health Sciences Authority '
+    'Singapore). Near-identical bar heights confirm the ~40,000–45,000 donor '
+    'target is a structural property of CMIO haplotype diversity [2].')
+
+add_para(doc,
+    'This stability arises because per-group N* values are all in the same order '
+    'of magnitude (~32,000–45,000 at 95%). Reweighting the groups changes the '
+    'combined N* only marginally ' + cite(2) + '. This structural robustness '
+    'gives decision-makers confidence that the ~40,000–45,000 donor target per '
+    'ethnicity will remain valid even as Singapore\'s demographic composition '
+    'evolves ' + cite(11) + '.')
+
+# 3.6 Model validation
+add_heading(doc, '3.6 Model Validation', level=2)
+add_para(doc,
+    'To assess whether EM-derived haplotype frequencies reflect real patient '
+    'haplotype distributions, we compared EM estimates against independently '
+    'observed haplotype frequencies from 564 patient-donor pairs provided by the '
+    'Health Sciences Authority (HSA) Singapore ' + cite(1) + '. Spearman '
+    'rank correlations and root mean square error (RMSE) were computed on shared '
+    'haplotypes (Table 7).')
+
+tbl7_header = ['Ethnicity', 'Patient haplotypes', 'Shared with EM',
+               '% frequency covered', 'Spearman r', 'RMSE']
+tbl7 = doc.add_table(rows=1, cols=6)
+for i, h in enumerate(tbl7_header):
+    tbl7.rows[0].cells[i].text = h
+for _, mvrow in mv.iterrows():
+    eth = mvrow['ethnicity']
+    row = tbl7.add_row().cells
+    row[0].text = eth
+    row[1].text = str(int(mvrow['n_patient'])) if pd.notna(mvrow['n_patient']) else '—'
+    row[2].text = str(int(mvrow['n_shared']))   if pd.notna(mvrow['n_shared'])  else '—'
+    row[3].text = f"{mvrow['pct_covered']:.1f}%" if pd.notna(mvrow['pct_covered']) else '—'
+    row[4].text = f"{mvrow['spearman_r']:.3f}"   if pd.notna(mvrow['spearman_r'])  else 'n/a*'
+    row[5].text = f"{mvrow['rmse']:.4f}"          if pd.notna(mvrow['rmse'])        else '—'
+    set_cell_bg(row[0], ETH_COLORS.get(eth, 'FFFFFF'))
+style_table(tbl7)
+add_para(doc, '* Insufficient shared haplotypes for rank correlation (n < 3).',
+    size=8, space_after=4)
+add_caption(doc,
+    'Table 7. Validation of EM-estimated haplotype frequencies [3] against '
+    'independently observed patient haplotypes.', fig=False)
+
+add_figure(doc, 'match_validation_scatter.png', width=5.5,
+    caption='Figure 6. Observed (patient) vs EM-estimated haplotype frequencies '
+    'per ethnicity. Dashed line = perfect agreement. Chinese: Spearman r=0.70 '
+    '(p<0.001, n=33 shared haplotypes).')
+
+add_para(doc,
+    'For Chinese patients, the EM estimates show good rank agreement with observed '
+    'patient frequencies (Spearman r = 0.70, p < 0.001), with RMSE = 0.0094; '
+    'this is the primary validation result. For Malay (11 shared haplotypes) and '
+    'Others (4 shared haplotypes), sample sizes are insufficient for reliable rank '
+    'correlation. For Indian patients only one shared haplotype was observed, '
+    'precluding any meaningful validation ' + cite(1) + '. Registry size estimates '
+    'for Malay, Indian, and Others should therefore be regarded as model-derived '
+    'projections; the Chinese estimates are the most robustly validated. These '
+    'results highlight the need for larger patient cohorts in minority groups.')
+
+# 3.7 Others stratification — Exploratory; CMI is the primary focus
+add_heading(doc, '3.7 Exploratory Analysis — Note on the \"Others\" Subgroup', level=2)
 add_para(doc,
     'The Others category in Singapore\'s CMIO classification encompasses Eurasians, '
     'Caucasians, and individuals of mixed or diverse Asian ancestry ' + cite(11) + '. '
@@ -858,155 +1033,6 @@ add_caption(doc,
 
 # Per-cluster narratives not rendered in main body
 
-# 3.5 Partial match
-add_heading(doc,
-    '3.5 Partial-Match Coverage — The Clinical Benefit of Relaxing Match Criteria',
-    level=2)
-add_para(doc,
-    'While exact 10/10 or 8/8 matching is the preferred clinical standard '
-    + cite(7, 19) + ', some centres accept partial matches — particularly when '
-    'no fully matched donor exists or when time is critical ' + cite(14) + '. '
-    'Figures 3 and 4 show coverage curves for progressive relaxation of match '
-    'criteria in the 10-locus and 8-locus frameworks.')
-
-add_figure(doc, 'partial_match_10locus.png', width=6.2,
-    caption='Figure 3. Coverage curves for 10-locus (HLA-A, -B, -C, -DRB1, -DQB1) '
-    'partial matching across CMIO groups. Green: 10/10 exact match; Blue: ≥9/10; '
-    'Red: ≥8/10. Dashed lines: cross-ethnic model. Note the sharp threshold '
-    'effect at the 9/10 boundary for all groups.')
-
-add_para(doc,
-    'The most important finding is the dramatic threshold effect at the 9/10 '
-    'boundary. Relaxing from 10/10 to 9/10 matching roughly halves the required '
-    'registry size for all CMIO groups. For Chinese patients, the 9/10 registry '
-    'requirement at 95% coverage is approximately 20,000–22,000 donors, compared '
-    'with 42,871 at 10/10. This is clinically significant because several large '
-    'multi-centre trials have demonstrated that a single allele mismatch at certain '
-    'loci — particularly at HLA-DPB1 when the mismatch is at a permissive '
-    'T-cell epitope group position — carries minimal additional survival impact '
-    + cite(12, 15) + '. Programmes that formalise evidence-based partial-match '
-    'protocols could effectively double their donor reach without recruiting a '
-    'single additional donor ' + cite(2, 19) + '.')
-
-add_figure(doc, 'partial_match_8locus.png', width=6.2,
-    caption='Figure 4. Coverage curves for 8-locus (HLA-A, -B, -C, -DRB1) partial '
-    'matching. Green: 8/8; Blue: ≥7/8; Red: ≥6/8. Cross-ethnic '
-    'shown with dashed lines.')
-
-add_para(doc,
-    'In the 8-locus framework (Figure 4), the same pattern holds. The cross-ethnic '
-    'curves (dashed) plateau for Malay, Indian, and Others groups regardless of '
-    'relaxation level — confirming that partial matching cannot substitute for '
-    'same-ethnicity donors when fundamental haplotype diversity differs markedly '
-    'between donor and patient populations ' + cite(2, 10) + '.')
-
-# 3.6 Sensitivity
-add_heading(doc,
-    '3.6 Registry Size Is Robust to Patient Demographic Assumptions', level=2)
-add_para(doc,
-    'Registry size models must assume a patient population composition ' + cite(2, 5) + '. '
-    'We tested four scenarios: Singapore population weights (77% Chinese, 8% Malay, '
-    '9% Indian, 6% Others) ' + cite(11) + ', BMDP+SCBB registry composition, '
-    'HSA Patient-Donor Data (referral composition from Health Sciences Authority Singapore), and an extreme minority-focus '
-    'scenario (equal Malay, Indian, and Others weighting, no Chinese). Table 6 and '
-    'Figure 5 show that the combined N* varies by less than 3% across all scenarios '
-    'at any coverage target ' + cite(2) + '.')
-
-tbl6_data = [['Scenario', 'Ethnic weights (C/M/I/O)',
-              '75%', '85%', '90%', '95%']]
-scenario_labels = {
-    'SG population (current model)':        'SG population',
-    'BMDP+SCBB registry composition':       'BMDP+SCBB donors',
-    'Patient.txt composition':              'HSA Patient-Donor Data',
-    'Minority-focus (Indian+Malay+Others)': 'Minority-focus',
-}
-scenario_weights = {
-    'SG population (current model)':        '77/8/9/6',
-    'BMDP+SCBB registry composition':       '75/9/9/6',
-    'Patient.txt composition':              '72/15/5/8',
-    'Minority-focus (Indian+Malay+Others)': '0/40/40/20',
-}
-for sk in ['SG population (current model)', 'BMDP+SCBB registry composition',
-           'Patient.txt composition', 'Minority-focus (Indian+Malay+Others)']:
-    sub = sens[sens.scenario == sk]
-    row = [scenario_labels[sk], scenario_weights[sk]]
-    for thr in THRESHOLDS:
-        v = sub[sub.target_coverage == thr]['registry_size']
-        row.append(n(v.iloc[0]) if not v.empty else '—')
-    tbl6_data.append(row)
-
-tbl6 = doc.add_table(rows=len(tbl6_data), cols=6)
-for i, row_data in enumerate(tbl6_data):
-    for j, val in enumerate(row_data):
-        tbl6.rows[i].cells[j].text = val
-style_table(tbl6)
-add_caption(doc,
-    'Table 6. Sensitivity of combined registry size to patient ethnic composition '
-    'scenario [11]. C/M/I/O = Chinese/Malay/Indian/Others percentage weights.',
-    fig=False)
-
-add_figure(doc, 'cross_ethnic_sensitivity.png', width=6.0,
-    caption='Figure 5. Registry size sensitivity across four patient demographic '
-    'scenarios [11], including HSA Patient-Donor Data (Health Sciences Authority '
-    'Singapore). Near-identical bar heights confirm the ~40,000–45,000 donor '
-    'target is a structural property of CMIO haplotype diversity [2].')
-
-add_para(doc,
-    'This stability arises because per-group N* values are all in the same order '
-    'of magnitude (~32,000–45,000 at 95%). Reweighting the groups changes the '
-    'combined N* only marginally ' + cite(2) + '. This structural robustness '
-    'gives decision-makers confidence that the ~40,000–45,000 donor target per '
-    'ethnicity will remain valid even as Singapore\'s demographic composition '
-    'evolves ' + cite(11) + '.')
-
-# 3.7 Model validation
-add_heading(doc, '3.7 Model Validation', level=2)
-add_para(doc,
-    'To assess whether EM-derived haplotype frequencies reflect real patient '
-    'haplotype distributions, we compared EM estimates against independently '
-    'observed haplotype frequencies from 564 patient-donor pairs provided by the '
-    'Health Sciences Authority (HSA) Singapore ' + cite(1) + '. Spearman '
-    'rank correlations and root mean square error (RMSE) were computed on shared '
-    'haplotypes (Table 7).')
-
-tbl7_header = ['Ethnicity', 'Patient haplotypes', 'Shared with EM',
-               '% frequency covered', 'Spearman r', 'RMSE']
-tbl7 = doc.add_table(rows=1, cols=6)
-for i, h in enumerate(tbl7_header):
-    tbl7.rows[0].cells[i].text = h
-for _, mvrow in mv.iterrows():
-    eth = mvrow['ethnicity']
-    row = tbl7.add_row().cells
-    row[0].text = eth
-    row[1].text = str(int(mvrow['n_patient'])) if pd.notna(mvrow['n_patient']) else '—'
-    row[2].text = str(int(mvrow['n_shared']))   if pd.notna(mvrow['n_shared'])  else '—'
-    row[3].text = f"{mvrow['pct_covered']:.1f}%" if pd.notna(mvrow['pct_covered']) else '—'
-    row[4].text = f"{mvrow['spearman_r']:.3f}"   if pd.notna(mvrow['spearman_r'])  else 'n/a*'
-    row[5].text = f"{mvrow['rmse']:.4f}"          if pd.notna(mvrow['rmse'])        else '—'
-    set_cell_bg(row[0], ETH_COLORS.get(eth, 'FFFFFF'))
-style_table(tbl7)
-add_para(doc, '* Insufficient shared haplotypes for rank correlation (n < 3).',
-    size=8, space_after=4)
-add_caption(doc,
-    'Table 7. Validation of EM-estimated haplotype frequencies [3] against '
-    'independently observed patient haplotypes.', fig=False)
-
-add_figure(doc, 'match_validation_scatter.png', width=5.5,
-    caption='Figure 6. Observed (patient) vs EM-estimated haplotype frequencies '
-    'per ethnicity. Dashed line = perfect agreement. Chinese: Spearman r=0.70 '
-    '(p<0.001, n=33 shared haplotypes).')
-
-add_para(doc,
-    'For Chinese patients, the EM estimates show good rank agreement with observed '
-    'patient frequencies (Spearman r = 0.70, p < 0.001), with RMSE = 0.0094; '
-    'this is the primary validation result. For Malay (11 shared haplotypes) and '
-    'Others (4 shared haplotypes), sample sizes are insufficient for reliable rank '
-    'correlation. For Indian patients only one shared haplotype was observed, '
-    'precluding any meaningful validation ' + cite(1) + '. Registry size estimates '
-    'for Malay, Indian, and Others should therefore be regarded as model-derived '
-    'projections; the Chinese estimates are the most robustly validated. These '
-    'results highlight the need for larger patient cohorts in minority groups.')
-
 # ── 4. DISCUSSION AND RECOMMENDATIONS ────────────────────────────────────────
 add_heading(doc, '4. Discussion and Recommendations')
 
@@ -1048,7 +1074,7 @@ rec_items = [
     (
         'Plan Others recruitment to 63,856 donors and collect ancestry sub-group data.',
         'The pooled Others estimate of 32,360 is a statistical artefact of '
-        'heterogeneous pooling and must not be used as a policy target (see §3.4). '
+        'heterogeneous pooling and must not be used as a policy target (see §3.7). '
         'The three ancestry clusters have markedly different requirements '
         '(35,193–63,856 at 95%); planning to any figure below the highest '
         'sub-cluster ceiling will guarantee under-service for the most '
@@ -1119,7 +1145,7 @@ add_para(doc,
     '(0.97) reflect strong HLA–ancestry signal but independent confirmation '
     'would strengthen these findings. Sixth, validation of EM frequencies against '
     'patient haplotypes was limited by small patient sample sizes in Malay, Indian, '
-    'and Others groups ' + cite(1) + ' (see §3.7). Finally, the registry model '
+    'and Others groups ' + cite(1) + ' (see §3.6). Finally, the registry model '
     'assumes random donor sampling; demographic biases in recruitment (age, sex, '
     'region) may affect effective coverage in practice.')
 
@@ -1154,6 +1180,38 @@ add_para(doc,
     'Together, these measures can substantially improve HSCT access equity for '
     'all communities in Singapore.', space_after=12)
 
+# ── GLOSSARY ─────────────────────────────────────────────────────────────────
+add_heading(doc, 'Abbreviations', level=2)
+glossary = [
+    ('AFND',  'Allele Frequency Net Database'),
+    ('BMDP',  'Bone Marrow Donor Programme (Singapore)'),
+    ('CI',    'Confidence Interval'),
+    ('CMIO',  'Chinese–Malay–Indian–Others (Singapore ethnic classification)'),
+    ('EM',    'Expectation–Maximisation (algorithm for haplotype phasing)'),
+    ('HSCT',  'Haematopoietic Stem Cell Transplantation'),
+    ('HLA',   'Human Leukocyte Antigen'),
+    ('HSA',   'Health Sciences Authority (Singapore)'),
+    ('HWE',   'Hardy–Weinberg Equilibrium'),
+    ('LD',    'Linkage Disequilibrium'),
+    ('MLE',   'Maximum Likelihood Estimate'),
+    ('N*',    'Minimum registry size achieving a specified coverage target'),
+    ('PCA',   'Principal Component Analysis'),
+    ('RMSE',  'Root Mean Square Error'),
+    ('SCBB',  'Singapore Cord Blood Bank'),
+]
+gtbl = doc.add_table(rows=1, cols=2)
+gtbl.rows[0].cells[0].text = 'Abbreviation'
+gtbl.rows[0].cells[1].text = 'Definition'
+for abbr, defn in glossary:
+    row = gtbl.add_row().cells
+    row[0].text = abbr
+    row[1].text = defn
+style_table(gtbl)
+gtbl.autofit = False
+for row in gtbl.rows:
+    row.cells[0].width = Cm(2.2)
+    row.cells[1].width = Cm(13.5)
+
 # ── DECLARATIONS ─────────────────────────────────────────────────────────────
 add_heading(doc, 'Declarations', level=2)
 add_para(doc, 'Conflict of interest: The author declares no conflict of interest.', size=9)
@@ -1178,7 +1236,7 @@ for i, (authors, title, journal, doi) in enumerate(REFS, 1):
     p.add_run(ref_text).font.size = Pt(9)
 
 # ── Save ─────────────────────────────────────────────────────────────────────
-out_path = os.path.join(HERE, 'HLA_Registry_Size_CMIO_v2.10.docx')
+out_path = os.path.join(HERE, 'HLA_Registry_Size_CMIO_v2.11.docx')
 doc.save(out_path)
 print(f'Saved: {out_path}')
 print(f'  Paragraphs: {len(doc.paragraphs)}')

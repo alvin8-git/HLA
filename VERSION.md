@@ -1,5 +1,27 @@
 # Version History
 
+## v2.1.0 — 2026-04-29
+
+### Changed — flow and comprehension improvements
+- **Figure 0** (new): Methods pipeline flowchart (`analysis/14_pipeline_flowchart.py`)
+  showing data → EM → HWE → C(N) → N* → bootstrap CI.
+- **§2.3 Eq(4)**: Added verbal explanation paragraph — what C(N) means intuitively
+  and why rare diplotypes make convergence slow.
+- **§3 Results intro**: Added 7-line reading guide orienting the reader to which
+  sections are primary, secondary, robustness, and exploratory.
+- **§3 section order**: Reordered §3.4–3.7 — Partial Match (§3.4), Sensitivity (§3.5),
+  Validation (§3.6), Others Exploratory (§3.7). Others clearly labelled as exploratory.
+- **Table 1 footnote**: Weighted Average row explained as a mathematical convenience,
+  not a policy target; per-group targets are the operative planning figures.
+- **Glossary** (new table): 15 abbreviations defined (AFND, BMDP, CI, CMIO, EM,
+  HSCT, HLA, HSA, HWE, LD, MLE, N*, PCA, RMSE, SCBB).
+- All §3.x cross-references updated to match new numbering.
+
+### Generated
+- `HLA_Registry_Size_CMIO_v2.11.docx`
+
+---
+
 ## v2.0.0 — 2026-04-29
 
 ### Changed — reviewer response (text-only, no recomputation)
