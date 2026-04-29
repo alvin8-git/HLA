@@ -558,8 +558,10 @@ add_para(doc,
     'is the bootstrap median (50th percentile), which is bias-corrected for the '
     'left-skew in N* near high coverage thresholds arising from Jensen\'s inequality '
     'on the concave coverage function C(N). The 2.5th and 97.5th percentiles define '
-    'the 95% CI. By construction, the bootstrap median always falls within the '
-    'reported CI, satisfying the standard convention for point estimate reporting.')
+    'the 95% CI. These intervals quantify sampling variability in haplotype '
+    'frequencies given the observed donor counts; they do not propagate uncertainty '
+    'from the EM phasing step or from HWE model assumptions. Total uncertainty '
+    'across the full estimation pipeline is therefore wider than the reported CIs.')
 add_para(doc,
     'For clinical planning purposes, the bootstrap median is a conservative and '
     'robust target: it is the registry size below which half of all plausible '
@@ -996,11 +998,14 @@ add_figure(doc, 'match_validation_scatter.png', width=5.5,
 
 add_para(doc,
     'For Chinese patients, the EM estimates show good rank agreement with observed '
-    'patient frequencies (Spearman r = 0.70, p < 0.001), with RMSE = 0.0094. '
-    'For Malay and Others, sample sizes are insufficient for reliable rank '
-    'correlation ' + cite(1) + '. These results support the use of EM-phased '
-    'frequencies as the basis for registry size projections, while highlighting '
-    'the need for larger patient cohorts in minority groups.')
+    'patient frequencies (Spearman r = 0.70, p < 0.001), with RMSE = 0.0094; '
+    'this is the primary validation result. For Malay (11 shared haplotypes) and '
+    'Others (4 shared haplotypes), sample sizes are insufficient for reliable rank '
+    'correlation. For Indian patients only one shared haplotype was observed, '
+    'precluding any meaningful validation ' + cite(1) + '. Registry size estimates '
+    'for Malay, Indian, and Others should therefore be regarded as model-derived '
+    'projections; the Chinese estimates are the most robustly validated. These '
+    'results highlight the need for larger patient cohorts in minority groups.')
 
 # ── 4. DISCUSSION AND RECOMMENDATIONS ────────────────────────────────────────
 add_heading(doc, '4. Discussion and Recommendations')
@@ -1089,20 +1094,34 @@ for i, (heading, body) in enumerate(rec_items):
 
 add_heading(doc, '4.1 Limitations', level=2)
 add_para(doc,
-    'Several limitations should be noted. First, the analysis assumes '
-    'Hardy–Weinberg equilibrium for diplotype frequency calculation. HWE '
-    'departures were detected in Indian and Others groups at several loci, '
-    'likely reflecting population sub-structure ' + cite(1) + ', which may '
-    'cause modest underestimation of rare diplotype frequencies. Second, the '
-    'EM algorithm was capped at 5,000 samples per ethnicity for computational '
-    'efficiency. Third, the Others cluster ancestry assignments are inferred '
-    'from haplotype signatures ' + cite(16, 17) + ' without confirmed '
-    'self-reported ancestry data — the cluster labels are indicative. Fourth, '
-    'validation of EM frequencies against patient haplotypes was limited by '
-    'small patient sample sizes in Malay, Indian, and Others groups ' + cite(1) + '. '
-    'Finally, the registry model assumes random donor sampling; demographic '
-    'biases in recruitment (age, sex, region) may affect effective coverage '
-    'in practice.')
+    'Several limitations should be noted. First, diplotype frequencies are '
+    'derived under Hardy–Weinberg equilibrium. HWE departures were detected '
+    'in Indian and Others groups at several loci ' + cite(1) + '. The direction '
+    'and magnitude of bias are uncertain and depend on the nature of the '
+    'sub-structure; registry size estimates for Indian and Others should be '
+    'treated as exploratory, while Chinese and Malay estimates are on firmer '
+    'ground. Second, the EM algorithm was capped at 5,000 individuals per '
+    'ethnic group; this cap binds materially only for Chinese (5,000 of 45,754 '
+    'donors), where haplotype frequencies above the 0.1% inclusion threshold '
+    'are reliably estimated at this sample size, but the cap may modestly '
+    'underrepresent the rarest Chinese haplotypes. Third, the reported N* '
+    'values represent biologically matched donors required by the coverage model; '
+    'real-world donor attrition (unreachability, refusal, medical deferral — '
+    'typically 30–50% in established registries) means signed-up recruitment '
+    'targets must exceed N* by a corresponding factor. Fourth, N* estimates '
+    'are lower bounds: haplotypes not observed in the donor sample are assigned '
+    'zero frequency, so rare patient haplotypes outside the observed set are '
+    'unaccounted for; the effect is most pronounced at the 95% coverage threshold. '
+    'Fifth, the Others cluster ancestry assignments are inferred from haplotype '
+    'signatures ' + cite(16, 17) + ' without confirmed self-reported ancestry '
+    'data, and cluster stability was not independently validated via bootstrap '
+    'resampling of individuals — the labels and the high silhouette score '
+    '(0.97) reflect strong HLA–ancestry signal but independent confirmation '
+    'would strengthen these findings. Sixth, validation of EM frequencies against '
+    'patient haplotypes was limited by small patient sample sizes in Malay, Indian, '
+    'and Others groups ' + cite(1) + ' (see §3.7). Finally, the registry model '
+    'assumes random donor sampling; demographic biases in recruitment (age, sex, '
+    'region) may affect effective coverage in practice.')
 
 # ── 5. CONCLUSIONS ───────────────────────────────────────────────────────────
 add_heading(doc, '5. Conclusions')
@@ -1159,7 +1178,7 @@ for i, (authors, title, journal, doi) in enumerate(REFS, 1):
     p.add_run(ref_text).font.size = Pt(9)
 
 # ── Save ─────────────────────────────────────────────────────────────────────
-out_path = os.path.join(HERE, 'HLA_Registry_Size_CMIO_v2.9.docx')
+out_path = os.path.join(HERE, 'HLA_Registry_Size_CMIO_v2.10.docx')
 doc.save(out_path)
 print(f'Saved: {out_path}')
 print(f'  Paragraphs: {len(doc.paragraphs)}')

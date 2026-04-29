@@ -1,5 +1,29 @@
 # Version History
 
+## v2.0.0 — 2026-04-29
+
+### Changed — reviewer response (text-only, no recomputation)
+- **§2.4 Bootstrap CI**: removed trivial "by construction" sentence; replaced with
+  explicit scope statement — CIs capture donor-count sampling variability only, not
+  EM phasing or HWE model uncertainty.
+- **§3.7 Validation**: explicitly flagged Indian (1 shared haplotype = no validation)
+  and stated that Malay/Indian/Others estimates are model-derived projections;
+  Chinese is the primary validated result.
+- **§4.1 Limitations**: expanded from 5 to 7 substantive points —
+  (1) HWE bias direction uncertain; Indian/Others flagged as exploratory;
+  (2) 5,000 cap binds materially only for Chinese — common haplotypes robust at 5k;
+  (3) NEW: donor attrition — N* is biologically matched minimum; signed-up targets
+      must exceed N* by 30–50% to account for real-world attrition;
+  (4) NEW: N* is a lower bound — unobserved haplotypes assigned zero frequency,
+      most material at 95% coverage threshold;
+  (5) Others cluster: added note that silhouette reflects strong HLA–ancestry signal
+      but cluster stability was not bootstrap-validated.
+
+### Generated
+- `HLA_Registry_Size_CMIO_v2.10.docx`
+
+---
+
 ## v1.9.0 — 2026-04-29
 
 ### Changed
