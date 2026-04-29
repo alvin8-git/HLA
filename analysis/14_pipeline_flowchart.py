@@ -1,82 +1,111 @@
 """
 14_pipeline_flowchart.py
-Generates a methods pipeline flowchart for the HLA registry size report.
+Generates the methods pipeline flowchart for the HLA registry size report.
 Output: figures/pipeline_flowchart.png
 """
 import os
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
-import matplotlib.patches as mpatches
-from matplotlib.patches import FancyBboxPatch, FancyArrowPatch
+from matplotlib.patches import FancyBboxPatch
 
 HERE    = os.path.dirname(os.path.abspath(__file__))
 FIG_DIR = os.path.join(HERE, 'figures')
 os.makedirs(FIG_DIR, exist_ok=True)
 
+# --- Layout constants ---------------------------------------------------------
+BOX_W  = 7.0    # box width in data units
+BOX_H  = 0.70   # box height in data units
+GAP    = 0.40   # gap between boxes
+STEP   = BOX_H + GAP   # y distance per step
+BOX_X  = 0.5   # left edge of boxes
+CX     = BOX_X + BOX_W / 2   # horizontal centre
+
 STEPS = [
-    ('Raw HLA typing data\n(BMDP 53,297 + SCBB 5,889 + HSA 564\ndonors & cord blood units)',
-     '#D6EAF8'),
-    ('EM haplotype phasing\n(5-locus: A·B·C·DRB1·DQB1)\nOutput: haplotype frequencies {f̂ₖ}',
-     '#D5F5E3'),
-    ('Hardy–Weinberg expansion\nDiplotype frequencies:\nF(hᵢ,hᵢ) = fᵢ²;  F(hᵢ,hⱼ) = 2fᵢfⱼ',
-     '#D5F5E3'),
-    ('Coverage function C(N)\nC(N) = Σₖ Fₖ·[1−(1−Fₖ)ᴺ]\n(Beatty et al. 1995 framework)',
-     '#D5F5E3'),
-    ('Binary search for N*\nMinimum N satisfying C(N) ≥ θ\n(θ = 75%, 85%, 90%, 95%)',
-     '#FCF3CF'),
-    ('Dirichlet bootstrap (B=1,000)\n95% CI on N*\nConcentration: nₑff × f̂ₖ',
-     '#FADBD8'),
+    ('Raw HLA typing data\n'
+     'BMDP 53,297 + SCBB 5,889 donors + HSA 564 patient-donor pairs\n'
+     'Five loci typed: HLA-A, -B, -C, -DRB1, -DQB1',
+     '#D6EAF8', None),
+    ('EM haplotype phasing (in-house Python algorithm)\n'
+     'Input: unphased diplotypes per ethnicity\n'
+     'Output: ranked haplotype frequencies  {f̂ₖ}',
+     '#D5F5E3',
+     'Validated vs GENE[RATE]\n(max discrepancy 0.27%)'),
+    ('Hardy–Weinberg expansion to diplotype frequencies\n'
+     'F(hᵢ, hᵢ) = f̂ᵢ²     [homozygous]\n'
+     'F(hᵢ, hⱼ) = 2·f̂ᵢ·f̂ⱼ   [heterozygous, i ≠ j]',
+     '#D5F5E3', None),
+    ('Coverage function  C(N) = Σₖ Fₖ · [1 − (1 − Fₖ)ᴺ]\n'
+     'Expected fraction of patients finding ≥1 matched donor in N draws\n'
+     'Computed for same-ethnicity and cross-ethnic donor pools',
+     '#D5F5E3',
+     'Same-ethnicity &\ncross-ethnic variants'),
+    ('Binary search for N*  (50 iterations, precision < 1 donor)\n'
+     'Minimum N such that C(N) ≥ θ\n'
+     'θ ∈ {75%, 85%, 90%, 95%} coverage targets',
+     '#FCF3CF', None),
+    ('Dirichlet parametric bootstrap  (B = 1,000 resamples)\n'
+     'Resample {f̂ₖ} with concentration nₑff × f̂ₖ per ethnicity\n'
+     'Report: bootstrap median N* ± 95% CI (2.5th–97.5th percentile)',
+     '#FADBD8',
+     'Bias-corrected via\nbootstrap median'),
 ]
 
-SIDE_NOTES = {
-    1: 'GENE[RATE] validation\n(max discrepancy 0.27%)',
-    3: 'Same-ethnicity &\ncross-ethnic variants',
-    5: 'Bias-corrected via\nbootstrap median',
-}
-
-fig, ax = plt.subplots(figsize=(9, 7), facecolor='white')
-ax.set_xlim(0, 10)
-ax.set_ylim(0, len(STEPS) + 0.5)
+N = len(STEPS)
+fig_h = N * STEP + GAP + 0.6   # total height
+fig, ax = plt.subplots(figsize=(9, fig_h), facecolor='white')
+ax.set_facecolor('white')
+ax.set_xlim(0, BOX_X + BOX_W + 2.8)
+ax.set_ylim(-GAP / 2, N * STEP + 0.5)
 ax.axis('off')
 
-box_w, box_h = 6.5, 0.72
-box_x = 1.75
+for i, (label, color, note) in enumerate(STEPS):
+    # y coordinate of box bottom (step 0 at top)
+    y_bot = (N - 1 - i) * STEP
 
-for i, (label, color) in enumerate(STEPS):
-    y = len(STEPS) - 1 - i
-    box = FancyBboxPatch((box_x, y + 0.05), box_w, box_h,
-                         boxstyle='round,pad=0.04',
-                         facecolor=color, edgecolor='#555555', linewidth=1.0)
+    # Draw box
+    box = FancyBboxPatch((BOX_X, y_bot), BOX_W, BOX_H,
+                         boxstyle='round,pad=0.06',
+                         facecolor=color, edgecolor='#444444', linewidth=1.2)
     ax.add_patch(box)
-    ax.text(box_x + box_w / 2, y + box_h / 2 + 0.05, label,
-            ha='center', va='center', fontsize=8.5, multialignment='center',
-            fontfamily='monospace')
 
-    # Arrow between steps
-    if i < len(STEPS) - 1:
-        ax.annotate('', xy=(box_x + box_w / 2, y + 0.05),
-                    xytext=(box_x + box_w / 2, y + 0.9),
-                    arrowprops=dict(arrowstyle='->', color='#333333', lw=1.5))
+    # Label inside box
+    ax.text(CX, y_bot + BOX_H / 2, label,
+            ha='center', va='center', fontsize=8,
+            multialignment='center', linespacing=1.45)
 
-    # Side notes
-    if i in SIDE_NOTES:
-        note_x = box_x + box_w + 0.25
-        note_y = y + box_h / 2 + 0.05
-        ax.annotate(SIDE_NOTES[i],
-                    xy=(box_x + box_w, note_y),
-                    xytext=(note_x + 0.1, note_y),
-                    fontsize=7.5, color='#555555', va='center',
-                    arrowprops=dict(arrowstyle='-', color='#999999', lw=0.8))
+    # Arrow FROM bottom of this box TO top of next box
+    if i < N - 1:
+        y_arrow_top    = y_bot                         # bottom of current box
+        y_arrow_bottom = y_bot - GAP                   # top of next box = y_bot - GAP
+        ax.annotate(
+            '',
+            xy=(CX, y_arrow_bottom),           # arrowhead at top of next box
+            xytext=(CX, y_arrow_top),           # tail at bottom of current box
+            arrowprops=dict(
+                arrowstyle='->', color='#222222',
+                lw=1.6, mutation_scale=14,
+            ),
+        )
 
-ax.set_title('Analysis pipeline', fontsize=11, fontweight='bold', pad=6)
+    # Side note
+    if note:
+        note_x  = BOX_X + BOX_W + 0.15
+        note_y  = y_bot + BOX_H / 2
+        ax.annotate(
+            note,
+            xy=(BOX_X + BOX_W, note_y),
+            xytext=(note_x + 0.08, note_y),
+            fontsize=7.5, color='#444444', va='center',
+            arrowprops=dict(arrowstyle='-', color='#888888', lw=0.9),
+        )
 
-plt.tight_layout()
+ax.set_title('Figure 1. Analysis pipeline — from raw HLA typing data to '
+             'registry size estimates with bootstrap CIs',
+             fontsize=10, fontweight='bold', pad=8, loc='left')
+
+plt.tight_layout(pad=0.5)
 out = os.path.join(FIG_DIR, 'pipeline_flowchart.png')
 fig.savefig(out, dpi=150, bbox_inches='tight')
 plt.close(fig)
 print(f'Saved: {out}')
-
-
-if __name__ == '__main__':
-    pass

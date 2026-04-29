@@ -1,5 +1,20 @@
 # Version History
 
+## v2.2.0 — 2026-04-29
+
+### Changed
+- **Figure 1 flowchart**: fixed arrow alignment — arrows now run between boxes
+  (bottom of one box to top of the next) rather than inside boxes.
+- **Figure numbering**: renumbered sequentially in document order —
+  Fig 1 pipeline, Fig 2 CI bar chart (was unlabelled), Fig 3 10-locus partial match,
+  Fig 4 8-locus partial match, Fig 5 sensitivity, Fig 6 validation scatter,
+  Fig 7 Others PCA scatter (was Fig 1).
+
+### Generated
+- `HLA_Registry_Size_CMIO_v2.12.docx`
+
+---
+
 ## v2.1.0 — 2026-04-29
 
 ### Changed — flow and comprehension improvements

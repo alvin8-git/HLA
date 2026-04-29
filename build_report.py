@@ -483,7 +483,7 @@ add_para(doc,
 # ── 2. METHODS ────────────────────────────────────────────────────────────────
 add_heading(doc, '2. Methods')
 add_figure(doc, 'pipeline_flowchart.png', width=6.5,
-    caption='Figure 0. Analysis pipeline overview: from raw HLA typing data to '
+    caption='Figure 1. Analysis pipeline overview: from raw HLA typing data to '
     'registry size estimates with bootstrap confidence intervals. '
     'Shading: blue = input data; green = core model steps; '
     'yellow = optimisation; red = uncertainty quantification.')
@@ -675,8 +675,8 @@ add_para(doc,
     'disproportionately larger registries to cover ' + cite(2) + '.')
 
 add_figure(doc, 'registry_ci_plot.png', width=5.5,
-    caption='Bootstrap 95% confidence intervals for minimum registry size at 95% '
-    'coverage (10/10 matching) by CMIO group. Error bars show the 2.5th–97.5th '
+    caption='Figure 2. Bootstrap 95% confidence intervals for minimum registry size '
+    'at 95% coverage (10/10 matching) by CMIO group. Error bars show the 2.5th–97.5th '
     'percentile range across 1,000 Dirichlet bootstrap resamples [18].')
 
 # 3.2 Registry size 8/8
@@ -929,7 +929,7 @@ ancestry_labels = {
     'Cluster_3': 'Northeast Asian / Mixed',
 }
 clust_colors = {
-    # Light tints of Figure 1 scatter colours (#e41a1c, #377eb8, #4daf4a)
+    # Light tints of Figure 7 scatter colours (#e41a1c, #377eb8, #4daf4a)
     'Cluster_1': 'FFCCCC',  # light red   → #e41a1c
     'Cluster_2': 'CCE0F5',  # light blue  → #377eb8
     'Cluster_3': 'CBF0CB',  # light green → #4daf4a
@@ -956,7 +956,7 @@ add_caption(doc,
     'be used as a policy target (see text).', fig=False)
 
 add_figure(doc, 'others_pca_scatter.png', width=5.0,
-    caption='Figure 1. PCA scatter of 3,941 Others donors (binary HLA allele '
+    caption='Figure 7. PCA scatter of 3,941 Others donors (binary HLA allele '
     'indicators, alleles ≥1%). Three well-separated clusters (k=3, silhouette=0.97) '
     'indicate distinct ancestry backgrounds. Cluster identities inferred from '
     'haplotype signature matching [16,17].')
@@ -1236,7 +1236,7 @@ for i, (authors, title, journal, doi) in enumerate(REFS, 1):
     p.add_run(ref_text).font.size = Pt(9)
 
 # ── Save ─────────────────────────────────────────────────────────────────────
-out_path = os.path.join(HERE, 'HLA_Registry_Size_CMIO_v2.11.docx')
+out_path = os.path.join(HERE, 'HLA_Registry_Size_CMIO_v2.12.docx')
 doc.save(out_path)
 print(f'Saved: {out_path}')
 print(f'  Paragraphs: {len(doc.paragraphs)}')
