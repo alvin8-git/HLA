@@ -752,7 +752,10 @@ ancestry_labels = {
     'Cluster_3': 'Northeast Asian / Mixed',
 }
 clust_colors = {
-    'Cluster_1': 'FFCCCC', 'Cluster_2': 'FCE4D6', 'Cluster_3': 'E2EFDA'
+    # Light tints of Figure 1 scatter colours (#e41a1c, #377eb8, #4daf4a)
+    'Cluster_1': 'FFCCCC',  # light red   → #e41a1c
+    'Cluster_2': 'CCE0F5',  # light blue  → #377eb8
+    'Cluster_3': 'CBF0CB',  # light green → #4daf4a
 }
 for cl in ['Cluster_1', 'Cluster_2', 'Cluster_3']:
     sub   = oc_reg[oc_reg.cluster == cl]
@@ -1156,7 +1159,7 @@ for i, (authors, title, journal, doi) in enumerate(REFS, 1):
     p.add_run(ref_text).font.size = Pt(9)
 
 # ── Save ─────────────────────────────────────────────────────────────────────
-out_path = os.path.join(HERE, 'HLA_Registry_Size_CMIO_v2.8.docx')
+out_path = os.path.join(HERE, 'HLA_Registry_Size_CMIO_v2.9.docx')
 doc.save(out_path)
 print(f'Saved: {out_path}')
 print(f'  Paragraphs: {len(doc.paragraphs)}')

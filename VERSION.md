@@ -1,5 +1,17 @@
 # Version History
 
+## v1.9.0 — 2026-04-29
+
+### Changed
+- **Table 4 & Table 5 cluster colours**: updated Cluster 2 and Cluster 3 cell backgrounds
+  to match Figure 1 scatter colours exactly — light-blue `CCE0F5` (→ #377eb8) and
+  light-green `CBF0CB` (→ #4daf4a). All three cluster colours now correspond to Figure 1.
+
+### Generated
+- `HLA_Registry_Size_CMIO_v2.9.docx`
+
+---
+
 ## v1.8.0 — 2026-04-28
 
 ### Changed
