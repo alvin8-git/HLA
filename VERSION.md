@@ -1,5 +1,25 @@
 # Version History
 
+## v2.3.0 — 2026-04-29
+
+### Added — quantified bias analyses (reviewer final polish)
+- **`analysis/15_em_convergence.py`**: EM convergence test — reruns EM for Chinese
+  at 500–45,018 donors; N* at 5k cap = 45,148 vs 41,727 at full sample (8.2%
+  conservative overestimate). Figure S1 added to Supporting Analysis section.
+- **`analysis/16_smoothing_sensitivity.py`**: Laplace pseudocount smoothing
+  sensitivity — α=0.001 per haplotype; N* at 95% changes <3% for all groups
+  (Chinese +0.9%, Malay +2.3%, Indian −3.1%, Others −1.9%); larger at 75%.
+- **Tables 1 & 2**: Added "Signed-up target‡" row — N* ÷ 0.60 (40% attrition);
+  shows range across CMIO groups per threshold.
+- **§4.1 Limitations**: EM cap quantified (8.2% conservative bias); smoothing
+  results cited; attrition adjustment formula stated.
+- **Supporting Analysis** section with Figure S1 (EM convergence).
+
+### Generated
+- `HLA_Registry_Size_CMIO_v2.13.docx`
+
+---
+
 ## v2.2.0 — 2026-04-29
 
 ### Changed

@@ -311,7 +311,7 @@ def make_ci_table(doc, match_level):
         set_cell_bg(row[0], ETH_COLORS[eth])
         for j, thr in enumerate(THRESHOLDS):
             row[j + 1].text = ci_cell(match_level, eth, thr)
-    # Combined row
+    # Weighted average row
     row = tbl.add_row().cells
     row[0].text = 'Weighted Average†'
     set_cell_bg(row[0], 'E8E8E8')
@@ -320,6 +320,24 @@ def make_ci_table(doc, match_level):
                  (tgts.model_variant == 'same_ethnicity') &
                  (tgts.target_coverage == thr)]['registry_size']
         row[j + 1].text = n(v.iloc[0]) if not v.empty else '—'
+    # Attrition-adjusted signed-up targets (40% attrition → ×1.667)
+    ATTRITION = 0.40
+    row = tbl.add_row().cells
+    row[0].text = 'Signed-up target‡\n(40% attrition)'
+    set_cell_bg(row[0], 'FEF9E7')
+    for j, thr in enumerate(THRESHOLDS):
+        # Use per-ethnicity bootstrap medians (Chinese shown; row spans all CMIO)
+        # Show range across the four CMIO groups
+        vals = []
+        for eth in ETHS:
+            r = ci[(ci.ethnicity == eth) & (ci.match_level == match_level) &
+                   (ci.target_coverage == thr)]
+            if not r.empty:
+                vals.append(int(r.iloc[0].registry_size / (1 - ATTRITION)))
+        if vals:
+            row[j + 1].text = f'{min(vals):,}–{max(vals):,}'
+        else:
+            row[j + 1].text = '—'
     style_table(tbl)
     return tbl
 
@@ -644,7 +662,10 @@ add_caption(doc,
     'Table 1. Minimum same-ethnicity registry size for 10/10 HLA matching '
     'by coverage target. Bootstrap 95% CIs (Dirichlet resampling, 1,000 '
     'iterations) [18]. The pooled Others row is a mathematical artefact; '
-    'see §3.7 for sub-cluster targets.', fig=False)
+    'see §3.7 for sub-cluster targets. '
+    '‡ Signed-up target assumes 40% real-world donor attrition '
+    '(unreachability, refusal, or medical deferral); shows range across CMIO '
+    'groups at each threshold.', fig=False)
 
 add_para(doc,
     'At the clinically important 95% coverage threshold, same-ethnicity registry '
@@ -695,12 +716,15 @@ make_ci_table(doc, '8of8')
 add_para(doc,
     '† Weighted Average: Singapore population weights [11]. This weighted average does '
     'not guarantee equitable access for minority ethnic groups; see same-ethnicity '
-    'targets above.\nValues shown as bootstrap median N (95% CI lower–upper).',
+    'targets above.\n'
+    '‡ Signed-up target assumes 40% real-world donor attrition; shows range across CMIO groups.\n'
+    'Values shown as bootstrap median N (95% CI lower–upper).',
     size=8, space_after=4)
 add_caption(doc,
     'Table 2. Minimum same-ethnicity registry size for 8/8 HLA matching '
     'by coverage target. Bootstrap 95% CIs (Dirichlet resampling, 1,000 '
-    'iterations) [18].', fig=False)
+    'iterations) [18]. '
+    '‡ Signed-up target assumes 40% attrition; shows range across CMIO groups.', fig=False)
 
 add_para(doc,
     'This finding has an important practical implication: the strong DRB1–DQB1 '
@@ -1127,17 +1151,24 @@ add_para(doc,
     'sub-structure; registry size estimates for Indian and Others should be '
     'treated as exploratory, while Chinese and Malay estimates are on firmer '
     'ground. Second, the EM algorithm was capped at 5,000 individuals per '
-    'ethnic group; this cap binds materially only for Chinese (5,000 of 45,754 '
-    'donors), where haplotype frequencies above the 0.1% inclusion threshold '
-    'are reliably estimated at this sample size, but the cap may modestly '
-    'underrepresent the rarest Chinese haplotypes. Third, the reported N* '
-    'values represent biologically matched donors required by the coverage model; '
-    'real-world donor attrition (unreachability, refusal, medical deferral — '
-    'typically 30–50% in established registries) means signed-up recruitment '
-    'targets must exceed N* by a corresponding factor. Fourth, N* estimates '
-    'are lower bounds: haplotypes not observed in the donor sample are assigned '
-    'zero frequency, so rare patient haplotypes outside the observed set are '
-    'unaccounted for; the effect is most pronounced at the 95% coverage threshold. '
+    'ethnic group; this cap binds materially only for Chinese (5,000 of 45,018 '
+    'five-locus-typed donors). A convergence test rerunning the EM at sample '
+    'sizes from 500 to 45,018 (Supporting Figure S1) shows N* stabilising near '
+    '42,000 donors above ~20,000 samples; at 5,000 the estimate is 45,148 versus '
+    '41,727 at the full sample — a conservative 8.2% overestimate, which is a '
+    'safe direction of bias for planning. Third, the reported N* values represent '
+    'biologically matched donors; real-world donor attrition (unreachability, '
+    'refusal, medical deferral — typically 30–50% in established registries) '
+    'means signed-up recruitment targets must exceed N* by a corresponding '
+    'factor. At 40% attrition, signed-up targets are N* ÷ 0.60 ≈ '
+    'N* × 1.67; per-threshold ranges across CMIO groups are shown in the '
+    '"Signed-up target" rows of Tables 1 and 2. Fourth, N* estimates are lower '
+    'bounds for unobserved haplotypes. Sensitivity analysis with Laplace '
+    'pseudocount smoothing (α = 0.001 per haplotype) changes N* at the 95% '
+    'threshold by +0.9% (Chinese), +2.3% (Malay), −3.1% (Indian), and '
+    '−1.9% (Others) — confirming robustness at the primary planning threshold. '
+    'Effects are larger at 75% (+11–24%), indicating that lower-coverage '
+    'targets are more sensitive to rare-haplotype treatment. '
     'Fifth, the Others cluster ancestry assignments are inferred from haplotype '
     'signatures ' + cite(16, 17) + ' without confirmed self-reported ancestry '
     'data, and cluster stability was not independently validated via bootstrap '
@@ -1179,6 +1210,27 @@ add_para(doc,
     'recruitment as registry size grows ' + cite(16) + '. '
     'Together, these measures can substantially improve HSCT access equity for '
     'all communities in Singapore.', space_after=12)
+
+# ── SUPPORTING ANALYSIS ──────────────────────────────────────────────────────
+add_heading(doc, 'Supporting Analysis')
+add_heading(doc, 'S1. EM Convergence: N* Stability vs Sample Size (Chinese)', level=2)
+add_para(doc,
+    'To assess whether the 5,000-sample EM cap introduces material bias for '
+    'the Chinese group, the EM was rerun at sample sizes ranging from 500 to '
+    '45,018 (full dataset). Figure S1 shows N* at 95% coverage (10/10 matching) '
+    'as a function of input sample size.')
+add_figure(doc, 'em_convergence.png', width=6.0,
+    caption='Figure S1. N* at 95% coverage (10/10 matching) for Chinese donors '
+    'as a function of EM input sample size. The red dashed line marks the 5,000 '
+    'cap used in the main analysis (N*=45,148); N* at the full 45,018-donor '
+    'sample is 41,727 — an 8.2% overestimate at the cap, in the conservative '
+    '(safe) direction. Convergence is near-complete above ~20,000 samples.')
+add_para(doc,
+    'The 8.2% overestimate at the cap means the reported N* values for Chinese '
+    'are conservative by approximately 3,400 donors — equivalent to slightly '
+    'less than one year of typical registry recruitment. For Malay, Indian, and '
+    'Others, all donors were used (sample sizes ≤ 5,868); the cap does not '
+    'affect those estimates.')
 
 # ── GLOSSARY ─────────────────────────────────────────────────────────────────
 add_heading(doc, 'Abbreviations', level=2)
@@ -1236,7 +1288,7 @@ for i, (authors, title, journal, doi) in enumerate(REFS, 1):
     p.add_run(ref_text).font.size = Pt(9)
 
 # ── Save ─────────────────────────────────────────────────────────────────────
-out_path = os.path.join(HERE, 'HLA_Registry_Size_CMIO_v2.12.docx')
+out_path = os.path.join(HERE, 'HLA_Registry_Size_CMIO_v2.13.docx')
 doc.save(out_path)
 print(f'Saved: {out_path}')
 print(f'  Paragraphs: {len(doc.paragraphs)}')
