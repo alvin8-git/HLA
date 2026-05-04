@@ -1,6 +1,6 @@
 # HLA Registry Analysis — Singapore CMIO Population
 
-[![Version](https://img.shields.io/badge/version-1.3.0-informational)](VERSION.md)
+[![Version](https://img.shields.io/badge/version-2.3.0-informational)](VERSION.md)
 [![Python](https://img.shields.io/badge/python-3.10%2B-blue?logo=python&logoColor=white)](https://www.python.org/)
 [![Tests](https://img.shields.io/badge/tests-35%20passing-brightgreen?logo=pytest&logoColor=white)](tests/)
 [![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
@@ -70,20 +70,35 @@ HLA Data.cleaned.xlsx (BMDP + SCBB)
     ▼ 01_ingest.py
     analysis/data/hla_clean.csv (305,745 rows)
     │
-    ├──▶ 02_allele_freq.py ──▶ allele_freq_comparison.csv
-    │                          allele_freq_heatmap.png
+    ├──▶ 02_allele_freq.py ──▶ allele_freq_comparison.csv  allele_freq_heatmap.png
     │
-    ├──▶ 03_hwe_test.py ───▶ haplo_freqs_em.csv
-    │                         allele_freqs_per_locus.csv
-    │                         hwe_results.csv
+    ├──▶ 03_hwe_test.py ───▶ haplo_freqs_em.csv  allele_freqs_per_locus.csv  hwe_results.csv
     │
     ├──▶ 04_registry_model.py + plot_coverage.py
-    │         ──▶ coverage_curves.csv
-    │             registry_size_targets.csv
-    │             coverage_curves_8of8.png
-    │             coverage_curves_10of10.png
+    │         ──▶ coverage_curves.csv  registry_size_targets.csv
+    │             coverage_curves_8of8.png  coverage_curves_10of10.png
     │
-    └──▶ 05_report.py ──▶ verification_summary.md
+    ├──▶ 06_partial_match_plots.py ──▶ partial_match_10locus.png  partial_match_8locus.png
+    │
+    ├──▶ 07_validate_em.py ──▶ em_validation.csv  em_validation_summary.csv
+    │
+    ├──▶ 09_bootstrap_ci.py ──▶ registry_size_ci.csv  registry_ci_plot.png
+    │
+    ├──▶ 10_ld_report.py ──▶ ld_report.csv  ld_heatmap_dprime.png  ld_heatmap_r2.png
+    │
+    ├──▶ 11_others_stratification.py ──▶ others_pca_scatter.png  others_registry_by_cluster.png
+    │
+    ├──▶ 12_match_validation.py ──▶ match_validation_scatter.png
+    │
+    ├──▶ 13_cross_ethnic_sensitivity.py ──▶ cross_ethnic_sensitivity.csv  cross_ethnic_sensitivity.png
+    │
+    ├──▶ 14_pipeline_flowchart.py ──▶ pipeline_flowchart.png
+    │
+    ├──▶ 15_em_convergence.py ──▶ em_convergence.csv  em_convergence.png
+    │
+    ├──▶ 16_smoothing_sensitivity.py ──▶ smoothing_sensitivity.csv
+    │
+    └──▶ build_report.py ──▶ HLA_Registry_Size_CMIO_v*.docx
 ```
 
 ---
@@ -116,11 +131,21 @@ Expected: **29 tests passing**
 
 ```bash
 cd analysis/
-python 02_allele_freq.py      # allele frequency verification
-python 03_hwe_test.py         # EM haplotypes + HWE tests
-python 04_registry_model.py   # registry size model
-python plot_coverage.py       # generate coverage curve figures
-python 05_report.py           # assemble verification_summary.md
+python 02_allele_freq.py           # allele frequency verification
+python 03_hwe_test.py              # EM haplotypes + HWE tests
+python 04_registry_model.py        # registry size model
+python plot_coverage.py            # generate coverage curve figures
+python 06_partial_match_plots.py   # partial match coverage curves (8/8, 10/10)
+python 07_validate_em.py           # validate EM against Gene[RATE]
+python 09_bootstrap_ci.py          # bootstrap confidence intervals on N*
+python 10_ld_report.py             # linkage disequilibrium heatmaps
+python 11_others_stratification.py # Others PCA/clustering
+python 12_match_validation.py      # donor-patient match rate validation
+python 13_cross_ethnic_sensitivity.py # cross-ethnic sensitivity analysis
+python 14_pipeline_flowchart.py    # methods pipeline flowchart figure
+python 15_em_convergence.py        # EM cap convergence / bias test
+python 16_smoothing_sensitivity.py # rare-haplotype smoothing sensitivity
+python 05_report.py                # assemble verification_summary.md
 ```
 
 ---
@@ -268,6 +293,8 @@ With fewer samples, rare haplotypes will be missed and registry size estimates w
 
 > Values are **bootstrap median estimates** (bias-corrected; B=1,000 Dirichlet resamples using actual 5-locus donor counts as n_eff). Full 95% CIs are in `analysis/data/registry_size_ci.csv`. Cross-ethnic matching remains infeasible for minority groups at high coverage targets.
 
+> **Donor attrition:** N* is the biologically matched minimum (active registered donors). To account for ~40% real-world volunteer attrition, the recommended signed-up recruitment target is **N* ÷ 0.60** (≈ N* × 1.67). For Chinese at 95% coverage: ~71,400 recruited to maintain 42,847 registered.
+
 See [Documentation.md](Documentation.md) for full methodology and figure interpretation.
 
 ---
@@ -284,6 +311,9 @@ See [Documentation.md](Documentation.md) for full methodology and figure interpr
 | `analysis/data/hwe_results.csv` | HWE chi-squared test results (20 tests: 5 loci × 4 ethnicities) |
 | `analysis/data/coverage_curves.csv` | Coverage(N) for N = 1,000–10,000,000 across all scenarios |
 | `analysis/data/registry_size_targets.csv` | Minimum registry N per (match level × ethnicity × variant × threshold) |
+| `analysis/data/registry_size_ci.csv` | Bootstrap median N* and 95% CIs (B=1,000 Dirichlet resamples) |
+| `analysis/data/em_convergence.csv` | N* at 95% vs. EM input sample size (Chinese); 5k cap = 8.2% conservative overestimate |
+| `analysis/data/smoothing_sensitivity.csv` | Laplace smoothing sensitivity (α=0.001); N* change at 95% < 3% for all CMIO groups |
 | `analysis/verification_summary.md` | Full narrative verification report |
 
 ---
@@ -302,6 +332,8 @@ See [Documentation.md](Documentation.md) for full methodology and figure interpr
 | `analysis/figures/ld_heatmap_dprime.png` | Composite D′ heatmap between all 5 HLA loci for each CMIO group (DRB1–DQB1 D′ ≥ 0.93, B–C D′ ≥ 0.95) |
 | `analysis/figures/ld_heatmap_r2.png` | Composite r² heatmap between all 5 HLA loci for each CMIO group |
 | `analysis/figures/registry_ci_plot.png` | Forest plot of registry size targets with 95% bootstrap CIs (Dirichlet resampling, B=1,000, bootstrap median) |
+| `analysis/figures/pipeline_flowchart.png` | Methods pipeline flowchart — 6 steps from raw HLA typing data to bootstrap CI; annotated with validation notes |
+| `analysis/figures/em_convergence.png` | EM convergence test: N* at 95% vs. Chinese sample size (500–45,018); marks 5,000 cap (8.2% conservative overestimate) |
 
 See [Documentation.md](Documentation.md) for detailed figure interpretation.
 
@@ -312,18 +344,28 @@ See [Documentation.md](Documentation.md) for detailed figure interpretation.
 ```
 HLA/
 ├── analysis/
-│   ├── 01_ingest.py           # Data ingestion & normalisation
-│   ├── 02_allele_freq.py      # Allele frequency computation & comparison
-│   ├── 03_hwe_test.py         # EM haplotype estimation + HWE tests
-│   ├── 04_registry_model.py   # Registry size coverage model (runner)
-│   ├── 05_report.py           # Summary report assembly
-│   ├── hwe_test.py            # HWE library module
-│   ├── registry_model.py      # Registry model library module
-│   ├── plot_coverage.py       # Coverage curve figure generator
-│   ├── run_all.sh             # Sequential pipeline driver
-│   ├── requirements.txt       # Python dependencies
-│   ├── data/                  # Intermediate & final CSV outputs
-│   └── figures/               # Output PNG figures
+│   ├── 01_ingest.py                  # Data ingestion & normalisation
+│   ├── 02_allele_freq.py             # Allele frequency computation & comparison
+│   ├── 03_hwe_test.py                # EM haplotype estimation + HWE tests
+│   ├── 04_registry_model.py          # Registry size coverage model (runner)
+│   ├── 05_report.py                  # Summary report assembly
+│   ├── 06_partial_match_plots.py     # Partial match coverage curves (8/8, 10/10)
+│   ├── 07_validate_em.py             # EM validation against Gene[RATE]
+│   ├── 09_bootstrap_ci.py            # Dirichlet bootstrap CIs on N*
+│   ├── 10_ld_report.py               # Linkage disequilibrium analysis
+│   ├── 11_others_stratification.py   # Others PCA / k-means clustering
+│   ├── 12_match_validation.py        # Donor-patient match rate validation
+│   ├── 13_cross_ethnic_sensitivity.py # Cross-ethnic sensitivity analysis
+│   ├── 14_pipeline_flowchart.py      # Methods pipeline flowchart figure
+│   ├── 15_em_convergence.py          # EM cap convergence / bias test
+│   ├── 16_smoothing_sensitivity.py   # Rare-haplotype smoothing sensitivity
+│   ├── hwe_test.py                   # HWE library module
+│   ├── registry_model.py             # Registry model library module
+│   ├── plot_coverage.py              # Coverage curve figure generator
+│   ├── run_all.sh                    # Sequential pipeline driver
+│   ├── requirements.txt              # Python dependencies
+│   ├── data/                         # Intermediate & final CSV outputs
+│   └── figures/                      # Output PNG figures
 ├── tests/
 │   ├── test_ingest.py         # 13 tests
 │   ├── test_allele_freq.py    # 5 tests
