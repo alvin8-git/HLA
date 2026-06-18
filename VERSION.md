@@ -1,5 +1,32 @@
 # Version History
 
+## v2.4.0 — 2026-06-18
+
+### Fixed — peer-review correctness pass (text-only, no recomputation)
+- **C1 number drift**: removed EM-MLE values that leaked into prose where the
+  bootstrap median is the reported estimate — §3.4 Chinese 42,871→42,847;
+  Rec 4 Others 32,360→31,181; §3.5 per-group range ~32,000–45,000→~31,000–44,000.
+  All in-text registry figures now agree with `registry_size_ci.csv` (Table 1/2).
+- **C2 overclaim**: abstract and Recommendations 1–2 now flag Malay/Indian/Others
+  N* as model projections pending validation; only Chinese is empirically validated
+  (Spearman r=0.70, §3.6). "Mathematically necessary" softened in Rec 1 and §3.3.
+- **C3 CI honesty**: bootstrap-CI lower-bound caveat (sampling variability only;
+  excludes EM phasing and HWE model error) promoted from §2.4 into the abstract
+  and Table 1/2 captions.
+- **C5 EM citation/method**: replaced miscited Beatty [4] for EM phasing with
+  Excoffier & Slatkin 1995 [20]; method now correctly described as full multi-locus
+  phase-enumeration EM (matches `hwe_test._em_full_phase`), haplotypes retained ≥0.1%.
+- `python-docx>=1.1` added to `analysis/requirements.txt` (report pipeline dep).
+
+### Deferred (scope decision pending)
+- C4 rare-haplotype cutoff sensitivity; broader patient validation for minority
+  groups; Others cluster-stability bootstrap; external face-validity paragraph.
+
+### Generated
+- `HLA_Registry_Size_CMIO_v2.14.docx`
+
+---
+
 ## v2.3.0 — 2026-04-29
 
 ### Added — quantified bias analyses (reviewer final polish)

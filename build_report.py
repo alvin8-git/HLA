@@ -148,6 +148,12 @@ REFS = [
      'graft-versus-host disease.',
      'Blood. 2013;122(11):1863–1872.',
      ''),
+    # 20
+    ('Excoffier L, Slatkin M.',
+     'Maximum-likelihood estimation of molecular haplotype frequencies in a '
+     'diploid population.',
+     'Mol Biol Evol. 1995;12(5):921–927.',
+     ''),
 ]
 
 
@@ -407,7 +413,8 @@ add_para(doc,
 add_corrected_para(doc, [
     ('Methods: Diplotype frequencies were derived under Hardy–Weinberg equilibrium '
      'from EM-phased five-locus haplotypes ', False),
-    ('estimated using an in-house EM algorithm implemented in Python ' + cite(4) + '; '
+    ('estimated using an expectation–maximisation algorithm with full phase '
+     'enumeration ' + cite(20) + '; '
      'results were validated against the HLA-net GENE[RATE] database ' + cite(3) + '', True),
     ('. Coverage was modelled as a function of registry size ' + cite(2, 5) + '. Bootstrap '
      'resampling (1,000 iterations) provided 95% confidence intervals ' + cite(18) + '. '
@@ -420,7 +427,11 @@ add_para(doc,
     'ethnicity-specific registries, bootstrap median registry size estimates are: '
     'Chinese 42,847, Malay 40,032, Indian 43,855. Bootstrap 95% confidence intervals '
     '(Dirichlet resampling, B=1,000; see §2.4) are 42,649–43,058, 38,972–41,151, '
-    'and 42,963–44,577 respectively. '
+    'and 42,963–44,577 respectively; these intervals capture haplotype-frequency '
+    'sampling variability only and are a lower bound on total uncertainty. '
+    'Only the Chinese estimate is empirically validated against observed patient '
+    'haplotypes (Spearman r=0.70; §3.6); the Malay, Indian, and Others figures are '
+    'model projections pending validation. '
     'The pooled Others estimate of 31,181 is a statistical artefact of heterogeneous '
     'population mixing; ancestry sub-cluster analysis reveals three genetically '
     'distinct groups (European/Eurasian, Filipino/SE Asian, Northeast Asian) with '
@@ -525,10 +536,12 @@ add_corrected_para(doc, [
      'expectation-maximisation (EM)-estimated phased haplotype frequencies, rather '
      'than the simpler approach of multiplying individual allele frequencies at each '
      'locus. Haplotype frequencies were estimated using ', False),
-    ('an in-house EM algorithm implemented in Python ' + cite(4) + ', applying '
-     'Hardy–Weinberg equilibrium to infer the most probable phase assignments from '
-     'unphased diplotype data (capped at 5,000 individuals per ethnic group for '
-     'computational efficiency). Results were validated against the HLA-net '
+    ('an expectation–maximisation algorithm with full multi-locus phase '
+     'enumeration (Excoffier–Slatkin formulation ' + cite(20) + '), implemented '
+     'in Python, applying Hardy–Weinberg equilibrium to infer the most probable '
+     'phase assignments from unphased diplotype data (capped at 5,000 individuals '
+     'per ethnic group for computational efficiency; haplotypes retained at '
+     'frequency ≥ 0.1%). Results were validated against the HLA-net '
      'GENE[RATE] database ' + cite(3) + '.', True),
 ])
 
@@ -661,8 +674,9 @@ add_para(doc,
 add_caption(doc,
     'Table 1. Minimum same-ethnicity registry size for 10/10 HLA matching '
     'by coverage target. Bootstrap 95% CIs (Dirichlet resampling, 1,000 '
-    'iterations) [18]. The pooled Others row is a mathematical artefact; '
-    'see §3.7 for sub-cluster targets. '
+    'iterations) [18] reflect haplotype-frequency sampling variability only '
+    'and are a lower bound on total uncertainty. The pooled Others row is a '
+    'mathematical artefact; see §3.7 for sub-cluster targets. '
     '‡ Signed-up target assumes 40% real-world donor attrition '
     '(unreachability, refusal, or medical deferral); shows range across CMIO '
     'groups at each threshold.', fig=False)
@@ -723,7 +737,8 @@ add_para(doc,
 add_caption(doc,
     'Table 2. Minimum same-ethnicity registry size for 8/8 HLA matching '
     'by coverage target. Bootstrap 95% CIs (Dirichlet resampling, 1,000 '
-    'iterations) [18]. '
+    'iterations) [18]; CIs reflect haplotype-frequency sampling variability '
+    'only (lower bound on total uncertainty). '
     '‡ Signed-up target assumes 40% attrition; shows range across CMIO groups.', fig=False)
 
 add_para(doc,
@@ -776,7 +791,8 @@ add_para(doc,
     'impossible: no registry of realistic size achieves adequate coverage, because '
     'their distinctive haplotype combinations are not represented in the donor pool '
     + cite(10) + '. This underscores that same-ethnicity donor recruitment is not '
-    'merely preferable but mathematically necessary for these groups ' + cite(9) + '.')
+    'merely preferable but, on these results, the only viable strategy for these '
+    'groups ' + cite(9) + '.')
 
 # 3.4 Partial match
 add_heading(doc,
@@ -800,7 +816,7 @@ add_para(doc,
     'boundary. Relaxing from 10/10 to 9/10 matching roughly halves the required '
     'registry size for all CMIO groups. For Chinese patients, the 9/10 registry '
     'requirement at 95% coverage is approximately 20,000–22,000 donors, compared '
-    'with 42,871 at 10/10. This is clinically significant because several large '
+    'with 42,847 at 10/10. This is clinically significant because several large '
     'multi-centre trials have demonstrated that a single allele mismatch at certain '
     'loci — particularly at HLA-DPB1 when the mismatch is at a permissive '
     'T-cell epitope group position — carries minimal additional survival impact '
@@ -873,7 +889,7 @@ add_figure(doc, 'cross_ethnic_sensitivity.png', width=6.0,
 
 add_para(doc,
     'This stability arises because per-group N* values are all in the same order '
-    'of magnitude (~32,000–45,000 at 95%). Reweighting the groups changes the '
+    'of magnitude (~31,000–44,000 at 95%). Reweighting the groups changes the '
     'combined N* only marginally ' + cite(2) + '. This structural robustness '
     'gives decision-makers confidence that the ~40,000–45,000 donor target per '
     'ethnicity will remain valid even as Singapore\'s demographic composition '
@@ -1074,15 +1090,17 @@ rec_items = [
         'and Others patients ' + cite(10) + '. The current BMDP registry '
         '(predominantly Chinese) provides good coverage for Chinese patients '
         'but leaves other groups critically under-served. Ethnicity-specific '
-        'recruitment campaigns are not merely desirable — they are '
-        'mathematically necessary ' + cite(9) + '.'
+        'recruitment campaigns are strongly indicated by these results: the '
+        'model shows no realistic shared-registry alternative for these groups '
+        + cite(9) + '.'
     ),
     (
         'Prioritise Malay and Indian donor recruitment urgently.',
         'Both the Malay and Indian communities are under-represented in existing '
         'registries relative to their HSCT need ' + cite(8, 9) + '. At 95% '
         'coverage, both groups require registries of ~40,000 same-ethnicity '
-        'donors — comparable in scale to the entire current BMDP. Targeted '
+        'donors (model projections pending validation; see §3.6 and §4.1) — '
+        'comparable in scale to the entire current BMDP. Targeted '
         'outreach, community partnerships, and incentive programmes are required.'
     ),
     (
@@ -1097,7 +1115,7 @@ rec_items = [
     ),
     (
         'Plan Others recruitment to 63,856 donors and collect ancestry sub-group data.',
-        'The pooled Others estimate of 32,360 is a statistical artefact of '
+        'The pooled Others estimate of 31,181 is a statistical artefact of '
         'heterogeneous pooling and must not be used as a policy target (see §3.7). '
         'The three ancestry clusters have markedly different requirements '
         '(35,193–63,856 at 95%); planning to any figure below the highest '
@@ -1288,7 +1306,7 @@ for i, (authors, title, journal, doi) in enumerate(REFS, 1):
     p.add_run(ref_text).font.size = Pt(9)
 
 # ── Save ─────────────────────────────────────────────────────────────────────
-out_path = os.path.join(HERE, 'HLA_Registry_Size_CMIO_v2.13.docx')
+out_path = os.path.join(HERE, 'HLA_Registry_Size_CMIO_v2.14.docx')
 doc.save(out_path)
 print(f'Saved: {out_path}')
 print(f'  Paragraphs: {len(doc.paragraphs)}')
