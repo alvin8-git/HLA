@@ -85,7 +85,15 @@ intervals**, and §2.4 states plainly that uncertainty is real but unquantified.
 Figure 2 is now the coverage curve rather than the CI forest plot. Restoring
 intervals needs a resampling scheme that preserves rare-tail structure, or
 analytic propagation through C(N); neither is attempted here. The bootstrap was
-also impractical at this floor — 1 of 8 combinations in 9 hours (~72h projected).
+also impractical at this floor — 1 of 8 combinations in 9 hours (~72h projected),
+killed (exit 137) on the second.
+
+Post-mortem of the killed run also caught a bug in the parallelised
+`_boot_one` (introduced 2026-08-20): it ignored `match_level`, so 8of8
+replicates would have been computed on uncollapsed 5-locus haplotypes (log
+signature: K=9574 for both levels). Fixed 2026-08-21 via a 4-locus
+`collapse_idx` + `np.bincount`, verified identical to the serial path; no 8of8
+CI was ever published from the broken path.
 
 ### Final v2.16 figures (10/10, same-ethnicity, EM point estimates)
 

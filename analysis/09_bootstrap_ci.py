@@ -60,8 +60,18 @@ COLORS = {'Chinese': '#d62728', 'Malay': '#2ca02c',
           'Indian': '#9467bd',  'Others': '#DAA520'}
 
 
-def _boot_one(sampled, thresholds):
-    """Evaluate one bootstrap replicate. Module-level so it is picklable."""
+def _boot_one(sampled, thresholds, collapse_idx=None):
+    """Evaluate one bootstrap replicate. Module-level so it is picklable.
+
+    collapse_idx maps each 5-locus haplotype to its 4-locus group for 8of8
+    resamples. The first parallel version dropped this collapse entirely and
+    computed "8of8" replicates on uncollapsed 5-locus haplotypes (the log
+    signature was K=9574 for both match levels); caught 2026-08-21 before any
+    8of8 CI was published. CIs are withdrawn (see build_report 2.4) so this
+    path is no longer in the release pipeline, but the code should be correct.
+    """
+    if collapse_idx is not None:
+        sampled = np.bincount(collapse_idx, weights=sampled)
     vec = diplotype_freq_vector(sampled)
     return {t: find_registry_size_vec(vec, t) for t in thresholds}
 
@@ -100,10 +110,17 @@ def bootstrap_registry_ci(freqs: np.ndarray, n_eff: int,
     # expands to millions of diplotypes, so serial evaluation would take days.
     samples = [rng.dirichlet(alpha) for _ in range(B)]
 
-    n_proc = max(1, min(cpu_count() - 2, 32))
-    with Pool(n_proc) as pool:
+    if match_level == '8of8':
+        trimmed = np.array(['|'.join(h.split('|')[:4]) for h in haplotypes])
+        _, collapse_idx = np.unique(trimmed, return_inverse=True)
+    else:
+        collapse_idx = None
+
+    n_proc = max(1, min(cpu_count() - 2, 16))
+    with Pool(n_proc, maxtasksperchild=50) as pool:
         per_replicate = pool.map(
-            partial(_boot_one, thresholds=thresholds), samples, chunksize=4)
+            partial(_boot_one, thresholds=thresholds, collapse_idx=collapse_idx),
+            samples, chunksize=4)
 
     boot_results = {t: [r[t] for r in per_replicate] for t in thresholds}
 
