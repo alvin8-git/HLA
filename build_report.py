@@ -948,7 +948,8 @@ add_heading(doc, '3.7 Exploratory Analysis — Note on the \"Others\" Subgroup',
 add_para(doc,
     'The Others category in Singapore\'s CMIO classification encompasses Eurasians, '
     'Caucasians, and individuals of mixed or diverse Asian ancestry ' + cite(11) + '. '
-    'Unsupervised clustering (k=3, silhouette=0.97) of 3,941 Others donors reveals '
+    'Unsupervised clustering (optimal k=3 by silhouette coefficient; s=0.24 in the '
+    'five-component PCA space used for clustering) of the 3,847 fully five-locus-typed Others donors reveals '
     'three genetically distinct sub-groups — European/Eurasian, Filipino/SE Asian, '
     'and Northeast Asian/Mixed — with markedly different registry size requirements '
     '(Table 4). The pooled Others estimate in Table 1 is a mathematical artefact of '
@@ -996,9 +997,10 @@ add_caption(doc,
     'be used as a policy target (see text).', fig=False)
 
 add_figure(doc, 'others_pca_scatter.png', width=5.0,
-    caption='Figure 7. PCA scatter of 3,941 Others donors (binary HLA allele '
-    'indicators, alleles ≥1%). Three well-separated clusters (k=3, silhouette=0.97) '
-    'indicate distinct ancestry backgrounds. Cluster identities inferred from '
+    caption='Figure 7. PCA scatter of 3,847 fully five-locus-typed Others donors (binary HLA allele '
+    'indicators, alleles ≥1%). Three distinct clusters (optimal k=3 by silhouette '
+    'coefficient, s=0.24 in the five-PC clustering space; 0.43 in the PC1–PC2 '
+    'projection shown) indicate different ancestry backgrounds. Cluster identities inferred from '
     'haplotype signature matching [16,17].')
 
 # Mini haplotype validation table — top 2 haplotypes per cluster
@@ -1190,8 +1192,10 @@ add_para(doc,
     'Fifth, the Others cluster ancestry assignments are inferred from haplotype '
     'signatures ' + cite(16, 17) + ' without confirmed self-reported ancestry '
     'data, and cluster stability was not independently validated via bootstrap '
-    'resampling of individuals — the labels and the high silhouette score '
-    '(0.97) reflect strong HLA–ancestry signal but independent confirmation '
+    'resampling of individuals — the labels are supported by distinct '
+    'population-specific top-haplotype signatures (Table 5), but the moderate '
+    'silhouette coefficient (0.24) indicates overlapping cluster boundaries, and '
+    'independent confirmation '
     'would strengthen these findings. Sixth, validation of EM frequencies against '
     'patient haplotypes was limited by small patient sample sizes in Malay, Indian, '
     'and Others groups ' + cite(1) + ' (see §3.6). Finally, the registry model '
@@ -1306,7 +1310,7 @@ for i, (authors, title, journal, doi) in enumerate(REFS, 1):
     p.add_run(ref_text).font.size = Pt(9)
 
 # ── Save ─────────────────────────────────────────────────────────────────────
-out_path = os.path.join(HERE, 'HLA_Registry_Size_CMIO_v2.14.docx')
+out_path = os.path.join(HERE, 'HLA_Registry_Size_CMIO_v2.15.docx')
 doc.save(out_path)
 print(f'Saved: {out_path}')
 print(f'  Paragraphs: {len(doc.paragraphs)}')

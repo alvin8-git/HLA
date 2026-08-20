@@ -1,5 +1,20 @@
 # Version History
 
+## v2.5.0 — 2026-08-20
+
+### Fixed — silhouette discrepancy (v2.15 docx)
+- **Silhouette 0.97 was a hand-typed prose error** (introduced at v2.1), never a
+  computed value. `11_others_stratification.py` computes s=0.24 at k=3 on the
+  five-PC clustering space (0.43 in the PC1–PC2 projection); Figure 7's title
+  was correct all along. §3.7, Figure 7 caption, and Limitations now cite 0.24
+  and no longer claim "well-separated" on the strength of the phantom 0.97.
+- `11_others_stratification.py` now writes `data/others_cluster_silhouette.csv`
+  (silhouette per k) so the manuscript cites a traceable computed value, and the
+  figure title reports `sil_dict[best_k]` explicitly.
+- **§3.7/Figure 7 donor count**: 3,941 → 3,847. The clustering uses only Others
+  donors with all five loci typed (cluster sizes 1,029+1,257+1,561 = 3,847);
+  3,941 remains correct in §2.4 as the per-ethnicity bootstrap donor count.
+
 ## v2.4.0 — 2026-06-18
 
 ### Fixed — peer-review correctness pass (text-only, no recomputation)

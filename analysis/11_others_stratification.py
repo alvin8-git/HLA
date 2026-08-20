@@ -178,7 +178,7 @@ def plot_pca_scatter(pca_scores: np.ndarray, labels: np.ndarray,
     ax.set_xlabel('PC1', fontsize=12)
     ax.set_ylabel('PC2', fontsize=12)
     ax.set_title(f'PCA of Others donors — K-means k={best_k} clusters '
-                 f'(silhouette={max(sil_dict.values()):.2f})',
+                 f'(silhouette={sil_dict[best_k]:.2f})',
                  fontsize=12, fontweight='bold')
     ax.legend(fontsize=10, markerscale=3, frameon=False)
     ax.spines['top'].set_visible(False)
@@ -259,6 +259,11 @@ def main():
     print("Selecting best k by silhouette (k=2..5)...")
     best_k, labels_dict, sil_dict = select_best_k(pca_scores[:, :5])
     labels = labels_dict[best_k]
+
+    # Persist silhouette scores so the manuscript cites a computed value,
+    # not a hand-typed one (source of the v2.x silhouette=0.97 prose error).
+    pd.DataFrame({'k': list(sil_dict), 'silhouette_5pc': list(sil_dict.values())}) \
+        .to_csv(os.path.join(DATA_DIR, 'others_cluster_silhouette.csv'), index=False)
 
     # Save cluster assignments (wide has sample_id as a column after reset_index)
     assignments = pd.DataFrame({
