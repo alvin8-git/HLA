@@ -22,7 +22,7 @@ DATA_DIR = os.path.join(HERE, 'data')
 FIG_DIR  = os.path.join(HERE, 'figures')
 os.makedirs(FIG_DIR, exist_ok=True)
 
-FREQ_THRESHOLD = 0.001
+FREQ_THRESHOLD = 0.000001
 SEED = 42
 SAMPLE_SIZES = [500, 1000, 2000, 3000, 5000, 7500, 10000, 15000, 20000, 30000, None]
 COVERAGE = 0.95

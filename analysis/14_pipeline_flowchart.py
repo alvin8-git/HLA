@@ -27,10 +27,10 @@ STEPS = [
      'Five loci typed: HLA-A, -B, -C, -DRB1, -DQB1',
      '#D6EAF8', None),
     ('EM haplotype phasing (in-house Python algorithm)\n'
-     'Input: unphased diplotypes per ethnicity\n'
-     'Output: ranked haplotype frequencies  {f̂ₖ}',
+     'Input: unphased diplotypes, ALL five-locus-typed individuals (no cap)\n'
+     'Retain haplotypes at f ≥ 1e-6, below every group 1/(2n)  →  100% of mass',
      '#D5F5E3',
-     'Validated vs GENE[RATE]\n(max discrepancy 0.27%)'),
+     'Validated vs GENE[RATE]\n(1,227–3,011 shared\nhaplotypes, r = 0.75–0.95)'),
     ('Hardy–Weinberg expansion to diplotype frequencies\n'
      'F(hᵢ, hᵢ) = f̂ᵢ²     [homozygous]\n'
      'F(hᵢ, hⱼ) = 2·f̂ᵢ·f̂ⱼ   [heterozygous, i ≠ j]',
@@ -40,7 +40,7 @@ STEPS = [
      'Computed for same-ethnicity and cross-ethnic donor pools',
      '#D5F5E3',
      'Same-ethnicity &\ncross-ethnic variants'),
-    ('Binary search for N*  (50 iterations, precision < 1 donor)\n'
+    ('Binary search for N*  (50 iterations, range 10³–10¹⁰ donors)\n'
      'Minimum N such that C(N) ≥ θ\n'
      'θ ∈ {75%, 85%, 90%, 95%} coverage targets',
      '#FCF3CF', None),

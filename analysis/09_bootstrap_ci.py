@@ -33,7 +33,10 @@ import matplotlib.pyplot as plt
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
-from registry_model import get_diplotype_frequencies, find_registry_size
+from registry_model import (get_diplotype_frequencies, find_registry_size,
+                            diplotype_freq_vector, find_registry_size_vec)
+from multiprocessing import Pool, cpu_count
+from functools import partial
 
 DATA_DIR = os.path.join(HERE, 'data')
 FIG_DIR  = os.path.join(HERE, 'figures')
@@ -42,16 +45,25 @@ os.makedirs(FIG_DIR, exist_ok=True)
 ETHNICITIES  = ['Chinese', 'Malay', 'Indian', 'Others']
 THRESHOLDS   = [0.75, 0.85, 0.90, 0.95]
 MATCH_LEVELS = ['10of10', '8of8']
-B            = 1000
+B            = int(os.environ.get('HLA_BOOTSTRAP_B', 1000))
 SEED         = 42
 
 # Actual 5-locus donor counts from hla_clean.csv (used as Dirichlet n_eff).
 # Using true sample sizes (not capped) to reflect genuine estimation precision
 # and reduce the Jensen downward-bias in N* at high coverage thresholds.
-N_EFF = {'Chinese': 45754, 'Malay': 5868, 'Indian': 5586, 'Others': 3941}
+# Corrected 2026-08-20: the previous values (45754/5868/5586/3941) summed to
+# 61,149, exceeding the 59,186 stated study total. These are the counts
+# reproducible from hla_clean.csv for individuals typed at all five loci.
+N_EFF = {'Chinese': 44400, 'Malay': 5578, 'Indian': 5490, 'Others': 3767}
 
 COLORS = {'Chinese': '#d62728', 'Malay': '#2ca02c',
           'Indian': '#9467bd',  'Others': '#DAA520'}
+
+
+def _boot_one(sampled, thresholds):
+    """Evaluate one bootstrap replicate. Module-level so it is picklable."""
+    vec = diplotype_freq_vector(sampled)
+    return {t: find_registry_size_vec(vec, t) for t in thresholds}
 
 
 def bootstrap_registry_ci(freqs: np.ndarray, n_eff: int,
@@ -82,14 +94,18 @@ def bootstrap_registry_ci(freqs: np.ndarray, n_eff: int,
     freqs_norm = freqs / freqs.sum()
     alpha = np.maximum(freqs_norm * n_eff, 0.1)
 
-    boot_results = {t: [] for t in thresholds}
+    # Draw every replicate in the parent so the rng sequence — and therefore
+    # the result — is identical to the original serial implementation, then
+    # evaluate them across cores. At a 1e-4 haplotype floor each replicate
+    # expands to millions of diplotypes, so serial evaluation would take days.
+    samples = [rng.dirichlet(alpha) for _ in range(B)]
 
-    for _ in range(B):
-        sampled = rng.dirichlet(alpha)
-        haplo_df_b = _make_haplo_df('__eth__', haplotypes, sampled, match_level)
-        diplo_df_b = get_diplotype_frequencies(haplo_df_b)
-        for t in thresholds:
-            boot_results[t].append(find_registry_size(diplo_df_b, t))
+    n_proc = max(1, min(cpu_count() - 2, 32))
+    with Pool(n_proc) as pool:
+        per_replicate = pool.map(
+            partial(_boot_one, thresholds=thresholds), samples, chunksize=4)
+
+    boot_results = {t: [r[t] for r in per_replicate] for t in thresholds}
 
     result = {}
     for t in thresholds:

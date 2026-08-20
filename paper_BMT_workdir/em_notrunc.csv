@@ -1,0 +1,5 @@
+ethnicity,threshold,n_haps,mass_retained,N95,cov_at_50k
+Chinese,0.001,143,0.5246,45148,95.6
+Others,0.001,126,0.3571,34110,97.4
+Chinese,0.0,57934,1.0,10000000,36.8
+Others,0.0,65020,1.0,10000000,17.6

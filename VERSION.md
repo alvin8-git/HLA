@@ -1,5 +1,203 @@
 # Version History
 
+## v2.6.0 — 2026-08-21 (v2.16 docx) — PIPELINE RE-RUN AT freq_threshold=1e-6
+
+**Final configuration:** `freq_threshold=1e-6`, `cap=50000`, search ceiling 1e10,
+EM maximum-likelihood point estimates, no confidence intervals. Retains 100% of
+haplotype frequency mass in all four groups (3,134–9,574 haplotypes each). The
+headline numbers are in "Final v2.16 figures" below.
+
+This entry records the route as well as the destination, because two intermediate
+configurations (1e-4 capped, then 1e-4 uncapped) produced numbers that circulated
+during the work and are **superseded**. Sections marked SUPERSEDED are kept so the
+reasoning is auditable, not because their figures stand.
+
+### SUPERSEDED step 1 — haplotype retention floor 0.1% → 0.01% (`hwe_test.run_em_haplotypes`)
+The 0.1% floor retained only 123–144 haplotypes per group, representing **36–53%
+of total haplotype frequency mass**, which was then renormalised to 1.0. Because
+`C(N)=Σ F·[1−(1−F)^N]` converges slowly precisely where F is small, the discarded
+tail is what determines high-coverage behaviour.
+
+At 0.01% the pipeline retains 2,310–3,035 haplotypes per group and **97.2–97.9%**
+of frequency mass. Headline consequences (10/10, same-ethnicity):
+
+| Group | N* at 95%, v2.15 (1e-3) | N* at 1e-4, capped (superseded) |
+|---|---|---|
+| Chinese | 42,847 | 12,001,379 |
+| Malay | 40,032 | 11,591,997 |
+| Indian | 43,855 | 20,877,121 |
+| Others | 31,181 | 21,989,663 |
+
+95% coverage is therefore **not attainable** by any national registry. The
+manuscript is reframed around coverage attainable at feasible size: at 50,000
+same-ethnicity donors, 10/10 coverage is 38.9% (Chinese), 40.7% (Malay), 23.1%
+(Indian), 18.7% (Others).
+
+Cross-ethnic matching from a Singapore-weighted pool, with the order fix below
+applied, is now quantified rather than reported as ">10⁷": 18.1M for Chinese
+(1.5× the same-ethnicity figure), 757M for Malay (65×), 1.88bn for Indian (90×),
+and beyond the 10bn search ceiling for Others. The single-shared-registry
+("Combined pooled") model requires 73.9M at 95%.
+
+Bootstrap CIs are computed at B=1,000 (unchanged from prior releases) via
+`run_overnight.sh`, which chains EM → downstream analyses → bootstrap → rebuild.
+
+### SUPERSEDED step 2 — EM input cap 5,000 → 50,000 (must accompany the floor change)
+`15_em_convergence.py`, re-run at the 1e-4 floor, showed the 5,000-individual cap
+inflates the Chinese N* by **264%** (11,487,962 capped vs **3,153,571** at the
+full 45,018 sample). A 5,000-individual EM cannot resolve phase in the rare tail
+and retains spurious low-frequency haplotypes, which the coverage model reads as
+real diversity. The curve is non-monotonic and peaks at the cap:
+
+| EM sample size | haplotypes | N* at 95% |
+|---|---|---|
+| 500 | 566 | 596,303 |
+| 5,000 (old cap) | 2,309 | 11,487,962 |
+| 15,000 | 1,319 | 3,501,491 |
+| 45,018 (full) | 1,253 | 3,153,571 |
+
+At the 1e-3 floor the same cap cost only ~8% and in the conservative direction —
+so **the floor and the input cap cannot be chosen independently**. Lowering the
+floor without removing the cap converts a mild conservative bias into a large
+anti-conservative one. The cap is now 50,000 and binds for no CMIO group.
+
+**Consequence:** the 12.0M/11.6M/20.9M/22.0M figures produced by the capped 1e-4
+run are themselves ~3.6× too high; the uncapped re-run supersedes them. The
+qualitative conclusion (95% coverage unattainable domestically) is unaffected.
+
+### WITHDRAWN — bootstrap confidence intervals
+The Dirichlet parametric bootstrap is **biased downward for N\*** on a
+long-tailed haplotype distribution, not merely imprecise. Under a Dirichlet draw
+E[f²] = f² + f(1−f)/(n+1), so resampling inflates the squared and product terms
+that form diplotype frequencies — by ~525% for haplotypes at 1e-6–1e-5, ~134% at
+1e-5–1e-4, 12% at 1e-4–1e-3, 1% above. Since the rare tail governs high-coverage
+behaviour, every replicate overstates coverage and understates N\*.
+
+The symptom was present and misread in earlier releases: in v2.15, **18 of 32
+rows had the EM estimate outside its own CI**, always above the upper bound,
+with pct_below 0.98–1.00. Switching the reported point estimate to the bootstrap
+median made the tables self-consistent without addressing the cause. At the 1e-6
+floor the gap is unmistakable — Chinese 10/10 at 95%: EM 87,384,114 vs CI
+50,772,223–53,870,680, all 1,000 replicates below.
+
+v2.16 therefore reports **EM maximum-likelihood point estimates with no
+intervals**, and §2.4 states plainly that uncertainty is real but unquantified.
+Figure 2 is now the coverage curve rather than the CI forest plot. Restoring
+intervals needs a resampling scheme that preserves rare-tail structure, or
+analytic propagation through C(N); neither is attempted here. The bootstrap was
+also impractical at this floor — 1 of 8 combinations in 9 hours (~72h projected).
+
+### Final v2.16 figures (10/10, same-ethnicity, EM point estimates)
+
+| Group | 75% | 90% | 95% |
+|---|---|---|---|
+| Chinese | 3,148,792 | 26,222,315 | 87,384,114 |
+| Malay | 1,121,822 | 6,716,756 | 16,552,048 |
+| Indian | 3,319,587 | 13,826,361 | 28,817,950 |
+| Others | 3,924,269 | 14,229,289 | 26,762,600 |
+
+Cross-group comparison of these values remains unsafe (see below): they are
+sampled to different depths.
+
+### RESOLVED — the floor is safe below 1/(2n) and destructive above it
+The full-sample floor sweep (`paper_BMT_workdir/floor_curve_full.py`) settles the
+open question below. The harmful threshold is not a fixed frequency; it is the
+frequency of a **singleton haplotype**, 1/(2n), and it moves with sample size.
+
+Chinese (n=45,754, singleton 1.09e-5) — N* at 95%, and inflation vs unfloored:
+
+| Floor | vs 1/(2n) | Haps | Mass | N* 95% | Inflation |
+|---|---|---|---|---|---|
+| none | — | 234,568 | 100% | 87,530,956 | 1.0× |
+| 1e-6 | below | 9,595 | 100.0% | 86,971,552 | 1.0× |
+| 1e-5 | below | 8,537 | 99.3% | 76,579,448 | 1.1× |
+| 3e-5 | **above** | 3,198 | 91.3% | 16,405,166 | 5.3× |
+| 1e-4 | **above** | 1,253 | 80.8% | 3,153,571 | 27.8× |
+| 1e-3 | **above** | 136 | 49.0% | 41,727 | **2,097.7×** |
+
+Others (n=3,941, singleton 1.27e-4) reproduces the rule with the break displaced
+to a higher floor: flat to 1e-4 (1.2×), collapsing by 1e-3 (791.2×).
+
+Two consequences:
+
+1. **The sub-singleton tail is inert.** Dropping the 224,973 Chinese haplotypes
+   below 1e-6 — 95.9% of all distinct haplotypes — costs 0.03% of mass and leaves
+   N* within 0.6%. So the tail *is* partly EM phase-ambiguity noise, but that part
+   does not matter. The damage above 1/(2n) is done to haplotypes the sample
+   genuinely resolves.
+2. **A single floor biases unequally-sampled groups unequally.** At the 1e-4 floor
+   this release uses: Chinese sits 9.2× above its singleton (27.8× error), Malay
+   1.2× above, Indian 1.1× above, Others 0.8× (i.e. below — 1.2× error). Registry
+   sizes are therefore **not comparable across CMIO groups** at a common floor,
+   and cross-group rankings in this analysis and its predecessors are unsafe.
+
+**Adopted as the final configuration:** `freq_threshold = 1e-6` (below every group's
+singleton; 4,654–9,595 haplotypes per group, computationally tractable), which
+would give Chinese ~87.0M and Others ~27.0M at 95%. The present release's 1e-4
+figures are lower bounds, most severely for Chinese.
+
+### SUPERSEDED NOTE — the floor and the sample size are coupled
+Retained frequency mass at a 1e-4 floor, before vs after removing the cap:
+
+| Group | capped (n=5,000) | uncapped (full n) |
+|---|---|---|
+| Chinese | 2,356 haps, 97.2% | 1,257 haps, **80.8%** |
+| Malay | 2,310 haps, 97.4% | 1,256 haps, 86.6% |
+| Indian | 3,013 haps, 97.3% | 1,609 haps, 82.7% |
+| Others | 3,035 haps, 97.9% | 3,035 haps, 97.9% (cap never bound) |
+
+Removing the cap *lowers* retained mass. The reason is that a fixed frequency
+floor means different things at different sample sizes: at n=5,000 (10,000
+chromosomes) a haplotype seen once has frequency 1e-4 and survives the floor, so
+the floor barely bites and retains sampling noise. At n=44,400 (88,800
+chromosomes) a singleton sits at ~1.1e-5, well below the floor, so genuinely rare
+haplotypes are now correctly distinguished from noise — but are also discarded.
+
+A floor should therefore scale roughly as 1/(2n): ~1e-5 for the full Chinese
+sample rather than 1e-4. The present release uses (full sample, 1e-4), which
+retains 81–98% of mass — a large improvement on the 36–53% of v2.15 — but a
+1e-5 floor is the logical next refinement and has **not** been run. Estimates
+here should be read as lower bounds on N* for that reason.
+
+A floor sweep shows the damage is a **threshold, not a gradient**: 0 → 1e-4
+discards 96% of distinct haplotypes but only 3.1% of mass (coverage at 50k moves
+36.8% → 39.5%), whereas 1e-4 → 1e-3 discards a further 44% of mass (39.5% →
+95.6%). Removing everything below 1e-5 moves coverage 0.2 points, so the effect
+is not EM phase-enumeration noise.
+
+### Fixed — order-sensitive cross-ethnic merge (`registry_model.get_diplotype_frequencies`)
+Diplotype pairs were labelled `(haplotype1, haplotype2)` in each population's own
+frequency-rank order, so the same unordered pair was stored `(X,Y)` in one frame
+and `(Y,X)` in another. `04_registry_model.compute_coverage_cross` merges on those
+two columns, so mismatched orderings silently scored `donor_freq = 0`. Measured on
+Malay-vs-combined: 62% of patient pairs unmatched, **30.4% of patient frequency
+mass wrongly zeroed**; cross-ethnic coverage at N=1e6 rose 0.6353 → 0.7757 once
+corrected. Pairs are now labelled in canonical lexicographic order.
+
+### Fixed — Dirichlet bootstrap sample sizes exceeded the study total
+`N_EFF` was `{45754, 5868, 5586, 3941}`, summing to 61,149 against a stated total
+of 59,186. Corrected to the counts reproducible from `hla_clean.csv` for
+five-locus-complete individuals: `{44400, 5578, 5490, 3767}` (= 59,235).
+
+### Changed — search ceiling and sweep range
+`find_registry_size` n_max 1e7 → 1e10 and `N_SWEEP` 1e3–1e7 → 1e3–1e9, because at
+the corrected floor every 95% cell otherwise reported the censored ceiling value
+rather than an estimate.
+
+### Performance (no change to results; all verified identical)
+- `get_diplotype_frequencies` vectorised over the upper triangle (was a Python
+  double loop) — required at 2.3–4.6M pairs.
+- `compute_coverage_cross` now aligns patient/donor vectors once and caches, rather
+  than re-merging millions of rows inside every binary-search step.
+- Added `diplotype_freq_vector` / `find_registry_size_vec` numeric fast paths, and
+  parallelised the bootstrap replicate loop (identical rng draw order preserved).
+
+### Known limitation of this release
+`06_partial_match_plots.py` is O(N_diplo²) and cannot run at 1e-4 (≈8e12
+comparisons). Partial-match results are recomputed by Monte-Carlo sampling of
+patient diplotypes instead; Figures 3–4 are otherwise carried over and are flagged
+in-text as computed at the previous floor.
+
 ## v2.5.0 — 2026-08-20
 
 ### Fixed — silhouette discrepancy (v2.15 docx)

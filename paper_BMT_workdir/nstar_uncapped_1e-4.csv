@@ -1,0 +1,17 @@
+ethnicity,coverage,N_star
+Chinese,0.75,920087
+Chinese,0.85,2581443
+Chinese,0.9,4969608
+Chinese,0.95,12001379
+Malay,0.75,831334
+Malay,0.85,2448544
+Malay,0.9,4775933
+Malay,0.95,11591997
+Indian,0.75,2508959
+Indian,0.85,5930535
+Indian,0.9,10140325
+Indian,0.95,20877121
+Others,0.75,3345295
+Others,0.85,7421524
+Others,0.9,11924542
+Others,0.95,21989663

@@ -67,22 +67,73 @@ def get_diplotype_frequencies(haplotype_df, top_k_pct=0.99):
         haplotypes.append('other')
         freqs.append(residual_freq)
 
-    # Compute diplotype frequencies under HWE
-    rows = []
-    n = len(haplotypes)
-    for i in range(n):
-        for j in range(i, n):
-            h1, h2 = haplotypes[i], haplotypes[j]
-            f1, f2 = freqs[i], freqs[j]
-            if i == j:
-                diplo_freq = f1 * f1
-            else:
-                diplo_freq = 2.0 * f1 * f2
-            rows.append({'haplotype1': h1, 'haplotype2': h2, 'diplotype_freq': diplo_freq})
+    # Compute diplotype frequencies under HWE.
+    # Vectorised over the upper triangle: identical output to the previous
+    # nested-loop form, but tractable at the ~2,300-haplotype scale that a
+    # 1e-4 frequency floor produces (2.7M pairs vs 10k at a 1e-3 floor).
+    hap_arr = np.asarray(haplotypes, dtype=object)
+    f_arr = np.asarray(freqs, dtype=np.float64)
+    n = len(hap_arr)
 
-    result = pd.DataFrame(rows, columns=['haplotype1', 'haplotype2', 'diplotype_freq'])
-    result = result.sort_values('diplotype_freq', ascending=False).reset_index(drop=True)
+    ii, jj = np.triu_indices(n)
+    diplo = 2.0 * f_arr[ii] * f_arr[jj]
+    diplo[ii == jj] = f_arr[ii[ii == jj]] ** 2
+
+    order = np.argsort(-diplo, kind='stable')
+    # Label each pair in canonical (lexicographic) order, not frequency-rank
+    # order. Populations rank haplotypes differently, so the same unordered
+    # pair {X,Y} was previously stored as (X,Y) in one frame and (Y,X) in
+    # another; the cross-ethnic merge in 04 is on (haplotype1, haplotype2)
+    # and silently scored those as donor_freq=0. diplotype_freq is unchanged.
+    a = hap_arr[ii[order]]
+    b = hap_arr[jj[order]]
+    swap = a > b
+    result = pd.DataFrame({
+        'haplotype1': np.where(swap, b, a),
+        'haplotype2': np.where(swap, a, b),
+        'diplotype_freq': diplo[order],
+    })
     return result
+
+
+def diplotype_freq_vector(freqs, top_k_pct=0.99):
+    """
+    Numeric-only equivalent of get_diplotype_frequencies(...)['diplotype_freq'].
+
+    Skips building the two haplotype string columns, which dominate cost and
+    memory once a 1e-4 floor pushes the pair count into the millions. Used by
+    the bootstrap, which never needs haplotype identities.
+
+    freqs : 1-D array of haplotype frequencies (need not sum to 1)
+    """
+    f = np.sort(np.asarray(freqs, dtype=np.float64))[::-1]
+    f = f / f.sum()
+    cut = min(int((f.cumsum() < top_k_pct).sum()) + 1, len(f))
+    kept = f[:cut]
+    residual = f[cut:].sum()
+    if residual > 0:
+        kept = np.append(kept, residual)
+    ii, jj = np.triu_indices(len(kept))
+    diplo = 2.0 * kept[ii] * kept[jj]
+    same = ii == jj
+    diplo[same] = kept[ii[same]] ** 2
+    return diplo
+
+
+def find_registry_size_vec(diplo_vec, target_coverage,
+                           n_min=1000, n_max=10_000_000_000):
+    """find_registry_size on a bare diplotype-frequency vector."""
+    lo, hi = math.log10(n_min), math.log10(n_max)
+    for _ in range(50):
+        mid = (lo + hi) / 2.0
+        cov = float(np.clip(
+            (diplo_vec * (1.0 - np.power(1.0 - diplo_vec, 10.0 ** mid))).sum(),
+            0.0, 1.0))
+        if cov >= target_coverage:
+            hi = mid
+        else:
+            lo = mid
+    return math.ceil(10 ** hi)
 
 
 def compute_coverage(diplotype_df, n_donors):
@@ -108,7 +159,7 @@ def compute_coverage(diplotype_df, n_donors):
     return float(np.clip(coverage, 0.0, 1.0))
 
 
-def find_registry_size(diplotype_df, target_coverage, n_min=1000, n_max=10_000_000):
+def find_registry_size(diplotype_df, target_coverage, n_min=1000, n_max=10_000_000_000):
     """
     Binary search (log scale) for minimum N where coverage >= target_coverage.
 

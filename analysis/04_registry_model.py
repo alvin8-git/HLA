@@ -18,6 +18,8 @@ from registry_model import (
     compute_coverage,
     find_registry_size,
     get_combined_haplotype_freqs,
+    diplotype_freq_vector,
+    find_registry_size_vec,
     SG_WEIGHTS,
 )
 
@@ -25,29 +27,72 @@ ETHNICITIES = ['Chinese', 'Malay', 'Indian', 'Others']
 THRESHOLDS = [0.75, 0.85, 0.90, 0.95]
 HERE = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.join(HERE, 'data')
-FIG_DIR = os.path.join(HERE, '..', 'figures')
+FIG_DIR = os.path.join(HERE, 'figures')  # was HERE/../figures; nothing reads that dir
 
-N_SWEEP = np.logspace(3, 7, 200)
+N_SWEEP = np.logspace(3, 9, 200)
 
 
-def compute_coverage_cross(patient_diplo, donor_diplo, n_donors):
+_CROSS_ALIGN_CACHE = {}
+
+
+def _donor_kept_map(donor_haplo_df, top_k_pct=0.99):
     """
-    Coverage where patients are drawn from patient_diplo and donors from donor_diplo.
+    Reproduce get_diplotype_frequencies' kept-set + 'other' pooling as a
+    {haplotype: frequency} lookup, WITHOUT expanding to diplotypes.
+    """
+    d = donor_haplo_df[['haplotype', 'frequency']].copy()
+    d = d.sort_values('frequency', ascending=False).reset_index(drop=True)
+    d['frequency'] = d['frequency'] / d['frequency'].sum()
+    cut = min(int((d['frequency'].cumsum() < top_k_pct).sum()) + 1, len(d))
+    m = dict(zip(d['haplotype'][:cut], d['frequency'][:cut]))
+    residual = float(d['frequency'][cut:].sum())
+    if residual > 0:
+        m['other'] = residual
+    return m
+
+
+def _align_cross(patient_diplo, donor_haplo_df):
+    """
+    Align patient and donor diplotype frequency vectors once, and cache.
+
+    The donor side is a haplotype-level lookup rather than a diplotype merge.
+    At a 1e-6 floor the combined donor pool is ~25,000 haplotypes, i.e. ~300M
+    diplotype pairs; materialising that frame (two object columns) to merge
+    against would exhaust memory, and the merge result never depends on N
+    anyway. Because get_diplotype_frequencies now labels pairs in canonical
+    lexicographic order, looking the two haplotypes up independently and
+    recombining under HWE reproduces the merge exactly (verified to 1.7e-18).
+    """
+    key = (id(patient_diplo), id(donor_haplo_df))
+    hit = _CROSS_ALIGN_CACHE.get(key)
+    if hit is not None:
+        return hit
+    cmap = _donor_kept_map(donor_haplo_df)
+    h1 = patient_diplo['haplotype1'].to_numpy()
+    h2 = patient_diplo['haplotype2'].to_numpy()
+    g1 = np.fromiter((cmap.get(x, 0.0) for x in h1), dtype=np.float64, count=len(h1))
+    g2 = np.fromiter((cmap.get(x, 0.0) for x in h2), dtype=np.float64, count=len(h2))
+    donor_freq = np.where(h1 == h2, g1 * g2, 2.0 * g1 * g2)
+    pf = patient_diplo['diplotype_freq'].to_numpy(dtype=np.float64)
+    _CROSS_ALIGN_CACHE.clear()          # only ever need the current pair
+    _CROSS_ALIGN_CACHE[key] = (pf, donor_freq)
+    return pf, donor_freq
+
+
+def compute_coverage_cross(patient_diplo, donor_haplo_df, n_donors):
+    """
+    Coverage where patients are drawn from patient_diplo and donors from the
+    haplotype pool donor_haplo_df.
 
     Coverage_cross(N) = Σ_g  fg_patient × [1 − (1 − fg_donor)^N]
     """
-    merged = patient_diplo.merge(
-        donor_diplo[['haplotype1', 'haplotype2', 'diplotype_freq']].rename(
-            columns={'diplotype_freq': 'donor_freq'}),
-        on=['haplotype1', 'haplotype2'], how='left'
-    )
-    merged['donor_freq'] = merged['donor_freq'].fillna(0.0)
-    p_match = 1.0 - np.power(1.0 - merged['donor_freq'], float(n_donors))
-    return float(np.clip((merged['diplotype_freq'] * p_match).sum(), 0.0, 1.0))
+    pf, donor_freq = _align_cross(patient_diplo, donor_haplo_df)
+    p_match = 1.0 - np.power(1.0 - donor_freq, float(n_donors))
+    return float(np.clip((pf * p_match).sum(), 0.0, 1.0))
 
 
 def find_registry_size_cross(patient_diplo, donor_diplo, target_coverage,
-                              n_min=1000, n_max=10_000_000):
+                              n_min=1000, n_max=10_000_000_000):
     """Binary search on log scale for cross-ethnic coverage."""
     import math
     lo = math.log10(n_min)
@@ -150,16 +195,19 @@ def main():
     print("Building diplotype frequency tables...")
     diplo5_by_eth = {eth: get_diplotype_frequencies(haplo5_by_eth[eth]) for eth in ETHNICITIES}
     diplo4_by_eth = {eth: get_diplotype_frequencies(haplo4_by_eth[eth]) for eth in ETHNICITIES}
-    diplo5_combined = get_diplotype_frequencies(combined5)
-    diplo4_combined = get_diplotype_frequencies(combined4)
+    # The combined pool is kept at HAPLOTYPE level. At a 1e-6 floor it is
+    # ~25,000 haplotypes (~300M diplotype pairs) and expanding it would
+    # exhaust memory; the cross-ethnic model needs only per-haplotype
+    # frequencies (see _align_cross), and the Combined-as-own-population
+    # curve uses the numeric vector path below.
 
     # 5. Run coverage sweeps
     curve_rows = []
     target_rows = []
 
-    for match_level, diplo_by_eth, diplo_combined in [
-        ('8of8',  diplo4_by_eth, diplo4_combined),
-        ('10of10', diplo5_by_eth, diplo5_combined),
+    for match_level, diplo_by_eth, combined_haplo in [
+        ('8of8',  diplo4_by_eth, combined4),
+        ('10of10', diplo5_by_eth, combined5),
     ]:
         print(f"\n=== {match_level} ===")
 
@@ -167,7 +215,7 @@ def main():
         for eth in ETHNICITIES:
             patient_diplo = diplo_by_eth[eth]
             donor_same = diplo_by_eth[eth]
-            donor_cross = diplo_combined
+            donor_cross = combined_haplo
 
             # same_ethnicity
             cov_same = run_sweep(patient_diplo, donor_same, N_SWEEP, cross=False)
@@ -201,15 +249,20 @@ def main():
 
             print(f"  Processed {eth} {match_level}")
 
-        # Combined (same_ethnicity only — donor=patient=combined)
-        cov_comb = run_sweep(diplo_combined, diplo_combined, N_SWEEP, cross=False)
+        # Combined (same_ethnicity only — donor=patient=combined).
+        # Numeric vector path: needs only diplotype frequencies, so the
+        # ~300M-pair combined frame is never materialised with string columns.
+        comb_vec = diplotype_freq_vector(combined_haplo['frequency'].to_numpy())
+        cov_comb = np.array([
+            float(np.clip((comb_vec * (1.0 - np.power(1.0 - comb_vec, float(n)))).sum(), 0.0, 1.0))
+            for n in N_SWEEP])
         for n, cov in zip(N_SWEEP, cov_comb):
             curve_rows.append({
                 'N': n, 'coverage': cov, 'match_level': match_level,
                 'ethnicity': 'Combined', 'model_variant': 'same_ethnicity',
             })
         for thr in THRESHOLDS:
-            rs = find_registry_size(diplo_combined, thr)
+            rs = find_registry_size_vec(comb_vec, thr)
             target_rows.append({
                 'match_level': match_level, 'ethnicity': 'Combined',
                 'model_variant': 'same_ethnicity',

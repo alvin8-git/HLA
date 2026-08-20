@@ -1,17 +1,17 @@
 scenario,target_coverage,registry_size,weight_Chinese,weight_Malay,weight_Indian,weight_Others
-SG population (current model),0.75,7672,0.77,0.08,0.09,0.06
-SG population (current model),0.85,15193,0.77,0.08,0.09,0.06
-SG population (current model),0.9,23400,0.77,0.08,0.09,0.06
-SG population (current model),0.95,42332,0.77,0.08,0.09,0.06
-BMDP+SCBB registry composition,0.75,7661,0.7496,0.0942,0.0927,0.0636
-BMDP+SCBB registry composition,0.85,15169,0.7496,0.0942,0.0927,0.0636
-BMDP+SCBB registry composition,0.9,23368,0.7496,0.0942,0.0927,0.0636
-BMDP+SCBB registry composition,0.95,42289,0.7496,0.0942,0.0927,0.0636
-Patient.txt composition,0.75,7492,0.7199,0.1489,0.0496,0.0816
-Patient.txt composition,0.85,14890,0.7199,0.1489,0.0496,0.0816
-Patient.txt composition,0.9,23035,0.7199,0.1489,0.0496,0.0816
-Patient.txt composition,0.95,41950,0.7199,0.1489,0.0496,0.0816
-Minority-focus (Indian+Malay+Others),0.75,7957,0.0,0.4,0.4,0.2
-Minority-focus (Indian+Malay+Others),0.85,15288,0.0,0.4,0.4,0.2
-Minority-focus (Indian+Malay+Others),0.9,23230,0.0,0.4,0.4,0.2
-Minority-focus (Indian+Malay+Others),0.95,41129,0.0,0.4,0.4,0.2
+SG population (current model),0.75,3048535,0.77,0.08,0.09,0.06
+SG population (current model),0.85,10210029,0.77,0.08,0.09,0.06
+SG population (current model),0.9,22826653,0.77,0.08,0.09,0.06
+SG population (current model),0.95,72809303,0.77,0.08,0.09,0.06
+BMDP+SCBB registry composition,0.75,3023319,0.7496,0.0942,0.0927,0.0636
+BMDP+SCBB registry composition,0.85,10081168,0.7496,0.0942,0.0927,0.0636
+BMDP+SCBB registry composition,0.9,22475652,0.7496,0.0942,0.0927,0.0636
+BMDP+SCBB registry composition,0.95,71435860,0.7496,0.0942,0.0927,0.0636
+Patient.txt composition,0.75,2918727,0.7199,0.1489,0.0496,0.0816
+Patient.txt composition,0.85,9745042,0.7199,0.1489,0.0496,0.0816
+Patient.txt composition,0.9,21724467,0.7199,0.1489,0.0496,0.0816
+Patient.txt composition,0.95,68985622,0.7199,0.1489,0.0496,0.0816
+Minority-focus (Indian+Malay+Others),0.75,2561417,0.0,0.4,0.4,0.2
+Minority-focus (Indian+Malay+Others),0.85,6313196,0.0,0.4,0.4,0.2
+Minority-focus (Indian+Malay+Others),0.9,11063105,0.0,0.4,0.4,0.2
+Minority-focus (Indian+Malay+Others),0.95,23500519,0.0,0.4,0.4,0.2

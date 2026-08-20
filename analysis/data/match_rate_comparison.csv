@@ -1,5 +1,5 @@
 ethnicity,n_patient_haplotypes,predicted_match_prob,observed_match_rate
-Chinese,406,0.0275,1.0
-Malay,84,0.0151,1.0
-Indian,28,0.0098,1.0
-Others,46,0.008,1.0
+Chinese,406,0.015,1.0
+Malay,84,0.0085,1.0
+Indian,28,0.0043,1.0
+Others,46,0.0031,1.0

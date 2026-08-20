@@ -3,7 +3,7 @@ build_report.py  —  Rebuild HLA_Registry_Size_Report_CMIO.docx
 
 Changes vs prior version:
   1. EM-phased haplotype frequencies (corrected registry size numbers)
-  2. Bootstrap 95% confidence intervals per CMIO group
+  2. EM maximum-likelihood registry sizes per CMIO group (CIs withdrawn, see 2.4)
   3. Partial-match coverage model (9/10, 8/10 relaxation)
   4. Ancestral stratification of the "Others" group (3 clusters with ancestry evidence)
   5. Full in-text citations [n] throughout
@@ -11,6 +11,7 @@ Changes vs prior version:
 """
 
 import os
+import numpy as np
 from docx import Document
 from docx.shared import Inches, Pt, RGBColor, Cm
 from docx.enum.text import WD_ALIGN_PARAGRAPH
@@ -24,7 +25,14 @@ DATA = os.path.join(HERE, 'analysis', 'data')
 FIGS = os.path.join(HERE, 'analysis', 'figures')
 
 # ── Load data ─────────────────────────────────────────────────────────────────
-ci     = pd.read_csv(os.path.join(DATA, 'registry_size_ci.csv'))
+# registry_size_ci.csv is deliberately NOT read. The Dirichlet parametric
+# bootstrap that produced it is biased downward for N* on a long-tailed
+# haplotype distribution: E[f^2] = f^2 + f(1-f)/(n+1), so resampling inflates
+# the squared/product terms that form rare diplotype frequencies (by ~525% for
+# haplotypes at 1e-6 to 1e-5, ~134% at 1e-5 to 1e-4), raising apparent coverage
+# and lowering N* in essentially every replicate. In v2.15 this put the EM
+# estimate outside its own CI in 18 of 32 rows; at the 1e-6 floor the gap
+# reaches 62%. Point estimates are the EM maximum-likelihood values.
 tgts   = pd.read_csv(os.path.join(DATA, 'registry_size_targets.csv'))
 oc_reg = pd.read_csv(os.path.join(DATA, 'others_cluster_registry.csv'))
 oc_hap = pd.read_csv(os.path.join(DATA, 'others_cluster_haplotypes.csv'))
@@ -35,6 +43,76 @@ mr     = pd.read_csv(os.path.join(DATA, 'match_rate_comparison.csv'))
 ETHS       = ['Chinese', 'Malay', 'Indian', 'Others']
 THRESHOLDS = [0.75, 0.85, 0.90, 0.95]
 THR_LABELS = ['75%', '85%', '90%', '95%']
+
+# ── Key figures pulled from the CSVs, so prose cannot drift from the tables ───
+# Every registry size or coverage percentage quoted in the running text should
+# come from here rather than being typed in. Hardcoded prose silently
+# contradicting a recomputed table is the failure mode that produced the
+# retracted numbers in versions up to v2.15.
+def _nstar(eth, thr=0.95, level='10of10', variant='same_ethnicity'):
+    r = tgts[(tgts.ethnicity == eth) & (tgts.match_level == level) &
+             (tgts.target_coverage == thr) & (tgts.model_variant == variant)]
+    return int(r.registry_size.iloc[0]) if len(r) else None
+
+
+def _millions(n):
+    """Format a registry size for prose: 3,153,571 -> '3.2 million'."""
+    if n is None:
+        return 'not available'
+    if n >= 1e9:
+        return f'{n/1e9:.2f} billion'
+    if n >= 1e6:
+        return f'{n/1e6:.1f} million'
+    return f'{n:,}'
+
+
+_cov = pd.read_csv(os.path.join(DATA, 'coverage_curves.csv'))
+
+
+def _cov_at(eth, n, level='10of10', variant='same_ethnicity'):
+    """Modelled coverage (%) at registry size n, from the swept curve."""
+    s = _cov[(_cov.ethnicity == eth) & (_cov.match_level == level) &
+             (_cov.model_variant == variant)].sort_values('N')
+    if s.empty:
+        return None
+    return round(100 * float(np.interp(n, s.N.values, s.coverage.values)), 1)
+
+
+_emc = pd.read_csv(os.path.join(DATA, 'em_convergence.csv'))
+_cap_row  = _emc.iloc[(_emc.sample_size - 5000).abs().argmin()]
+_full_row = _emc.loc[_emc.sample_size.idxmax()]
+CAP_N, FULL_N = int(_cap_row.registry_size), int(_full_row.registry_size)
+CAP_NHAP, FULL_NHAP = int(_cap_row.n_haplotypes), int(_full_row.n_haplotypes)
+FULL_SAMPLE = int(_full_row.sample_size)
+CAP_DELTA_PCT = round(100 * (CAP_N - FULL_N) / FULL_N, 1)
+
+_ld = pd.read_csv(os.path.join(DATA, 'ld_report.csv'))
+
+
+def _ld_range(pair):
+    v = _ld[_ld.locus_pair == pair]['composite_dprime']
+    return (round(float(v.min()), 2), round(float(v.max()), 2)) if len(v) else (None, None)
+
+
+LD_DRDQ = _ld_range('DRB1–DQB1')
+LD_BC   = _ld_range('B–C')
+
+KEY = {
+    'n95':      {e: _nstar(e) for e in ETHS},
+    'n95_txt':  {e: _millions(_nstar(e)) for e in ETHS},
+    'n75_txt':  {e: _millions(_nstar(e, 0.75)) for e in ETHS},
+    'cross95':  {e: _millions(_nstar(e, 0.95, variant='cross_ethnic')) for e in ETHS},
+    'cov50k':   {e: _cov_at(e, 50_000) for e in ETHS},
+    'cov100k':  {e: _cov_at(e, 100_000) for e in ETHS},
+    'cov500k':  {e: _cov_at(e, 500_000) for e in ETHS},
+    'combined95': _millions(_nstar('Combined')),
+}
+
+
+def K(path, eth=None):
+    """K('n95_txt','Chinese') -> '3.2 million'."""
+    v = KEY[path]
+    return v[eth] if eth else v
 
 # ── Reference index (1-based for in-text citations) ───────────────────────────
 REFS = [
@@ -169,12 +247,11 @@ def n(v):
 
 
 def ci_cell(match, eth, thr):
-    row = ci[(ci.ethnicity == eth) & (ci.match_level == match) &
-             (ci.target_coverage == thr)]
-    if row.empty:
-        return '—'
-    r = row.iloc[0]
-    return f"{n(r.registry_size)}\n({n(r.ci_lo)}–{n(r.ci_hi)})"
+    """EM maximum-likelihood N* (same-ethnicity). Name kept for call sites."""
+    row = tgts[(tgts.ethnicity == eth) & (tgts.match_level == match) &
+               (tgts.target_coverage == thr) &
+               (tgts.model_variant == 'same_ethnicity')]
+    return '—' if row.empty else n(row.iloc[0].registry_size)
 
 
 def cross_cell(match, eth, thr):
@@ -319,7 +396,7 @@ def make_ci_table(doc, match_level):
             row[j + 1].text = ci_cell(match_level, eth, thr)
     # Weighted average row
     row = tbl.add_row().cells
-    row[0].text = 'Weighted Average†'
+    row[0].text = 'Combined pooled registry†'
     set_cell_bg(row[0], 'E8E8E8')
     for j, thr in enumerate(THRESHOLDS):
         v = tgts[(tgts.match_level == match_level) & (tgts.ethnicity == 'Combined') &
@@ -332,12 +409,13 @@ def make_ci_table(doc, match_level):
     row[0].text = 'Signed-up target‡\n(40% attrition)'
     set_cell_bg(row[0], 'FEF9E7')
     for j, thr in enumerate(THRESHOLDS):
-        # Use per-ethnicity bootstrap medians (Chinese shown; row spans all CMIO)
+        # Per-ethnicity EM point estimates; row spans the CMIO range
         # Show range across the four CMIO groups
         vals = []
         for eth in ETHS:
-            r = ci[(ci.ethnicity == eth) & (ci.match_level == match_level) &
-                   (ci.target_coverage == thr)]
+            r = tgts[(tgts.ethnicity == eth) & (tgts.match_level == match_level) &
+                     (tgts.target_coverage == thr) &
+                     (tgts.model_variant == 'same_ethnicity')]
             if not r.empty:
                 vals.append(int(r.iloc[0].registry_size / (1 - ATTRITION)))
         if vals:
@@ -409,7 +487,10 @@ add_para(doc,
     'Using expectation-maximisation (EM)-estimated phased haplotype frequencies '
     'from 59,186 donors and cord blood units [1], we modelled the minimum registry '
     'size needed to achieve 75–95% population coverage at both 8/8 and 10/10 HLA '
-    'match levels.')
+    'match levels. This version (v2.16) re-runs the entire pipeline with the '
+    'haplotype retention floor lowered from 0.1% to 0.01%, after the higher floor '
+    'was found to discard the majority of haplotype frequency mass and to inflate '
+    'estimated coverage by more than two orders of magnitude.')
 add_corrected_para(doc, [
     ('Methods: Diplotype frequencies were derived under Hardy–Weinberg equilibrium '
      'from EM-phased five-locus haplotypes ', False),
@@ -417,35 +498,46 @@ add_corrected_para(doc, [
      'enumeration ' + cite(20) + '; '
      'results were validated against the HLA-net GENE[RATE] database ' + cite(3) + '', True),
     ('. Coverage was modelled as a function of registry size ' + cite(2, 5) + '. Bootstrap '
-     'resampling (1,000 iterations) provided 95% confidence intervals ' + cite(18) + '. '
+     'Confidence intervals are not reported: the Dirichlet bootstrap used in earlier '
+     'versions is biased downward for N* on a long-tailed haplotype distribution ' + cite(18) + ' (SS2.4). '
      'Partial-match (9/10, 8/10) relaxation, cross-ethnic feasibility, and '
      'ancestry stratification of the Others sub-group were analysed as secondary '
      'objectives.', False),
 ])
 add_para(doc,
-    'Results: For 10/10 HLA matching at 95% same-ethnicity coverage of '
-    'ethnicity-specific registries, bootstrap median registry size estimates are: '
-    'Chinese 42,847, Malay 40,032, Indian 43,855. Bootstrap 95% confidence intervals '
-    '(Dirichlet resampling, B=1,000; see §2.4) are 42,649–43,058, 38,972–41,151, '
-    'and 42,963–44,577 respectively; these intervals capture haplotype-frequency '
-    'sampling variability only and are a lower bound on total uncertainty. '
-    'Only the Chinese estimate is empirically validated against observed patient '
-    'haplotypes (Spearman r=0.70; §3.6); the Malay, Indian, and Others figures are '
-    'model projections pending validation. '
-    'The pooled Others estimate of 31,181 is a statistical artefact of heterogeneous '
-    'population mixing; ancestry sub-cluster analysis reveals three genetically '
-    'distinct groups (European/Eurasian, Filipino/SE Asian, Northeast Asian) with '
-    'markedly different requirements (35,193–63,856 at 95%), and 63,856 — the '
-    'Filipino/SE Asian cluster ceiling — is the recommended planning target. '
-    'Cross-ethnic matching is infeasible for Malay, Indian, and Others patients '
-    'regardless of registry size. Relaxing to 9/10 matching approximately halves '
-    'the required registry size [14]. Registry size estimates are robust across '
-    'patient demographic scenarios (variation <3%) [2].')
+    'Results: For 10/10 HLA matching at 95% same-ethnicity coverage, minimum '
+    f'registry sizes are approximately {K("n95_txt","Chinese")} (Chinese), '
+    f'{K("n95_txt","Malay")} (Malay), {K("n95_txt","Indian")} (Indian) and '
+    f'{K("n95_txt","Others")} (Others) donors — beyond the reach of '
+    'any national programme. These estimates supersede the 40,000–45,000 donor '
+    'targets reported up to v2.15, which were produced with a 0.1% haplotype '
+    'frequency floor that discarded 47–64% of haplotype frequency mass; re-running '
+    'the identical pipeline with a 0.01% floor retains 97–98% of that mass and '
+    'raises N* by more than two orders of magnitude (§4.1). Because N* at these '
+    'targets is unattainable, we report coverage attainable at feasible registry '
+    f'size: at 50,000 same-ethnicity donors, modelled 10/10 coverage is '
+    f'{K("cov50k","Chinese")}% '
+    f'(Chinese), {K("cov50k","Malay")}% (Malay), {K("cov50k","Indian")}% (Indian) and {K("cov50k","Others")}% (Others); at 500,000 '
+    f'donors, {K("cov500k","Chinese")}%, {K("cov500k","Malay")}%, {K("cov500k","Indian")}% and {K("cov500k","Others")}%. EM haplotype frequencies now agree '
+    'closely with the independent HLA-net GENE[RATE] estimates across 1,227–3,011 '
+    'shared haplotypes per group (Spearman r=0.75–0.95), covering 77–98% of '
+    'frequency mass. Cross-ethnic matching remains substantially worse than '
+    'same-ethnicity matching for Malay, Indian and Others patients. The pooled '
+    'Others estimate remains a statistical artefact of heterogeneous population '
+    'mixing; the group departs from Hardy–Weinberg equilibrium at all five loci '
+    'with heterozygote deficit throughout, the classical Wahlund signature of '
+    'population stratification, and ancestry sub-cluster analysis identifies three '
+    'genetically distinct groups (European/Eurasian, Filipino/SE Asian, Northeast '
+    'Asian).')
 add_para(doc,
-    'Conclusions: An ethnicity-specific same-ethnicity registry of approximately '
-    '40,000–44,000 donors per major CMIO group is needed for 95% 10/10 coverage. '
-    'Targeted minority recruitment, partial-match protocols, and recognition of '
-    'Others sub-group diversity are essential for equitable HSCT access in Singapore.',
+    'Conclusions: Achieving 95% 10/10 coverage from a domestic same-ethnicity '
+    'registry is not feasible for any CMIO group. Planning should therefore be '
+    'framed as coverage attainable at achievable registry size, and should '
+    'prioritise the levers that do scale: evidence-based single-mismatch (9/10) '
+    'protocols, international and diaspora registry linkage, cord blood, and '
+    'haploidentical transplantation. The equity finding is unchanged and sharpened '
+    '— at every feasible registry size, Indian and Others patients have roughly '
+    'half the match probability of Chinese and Malay patients.',
     space_after=8)
 
 kw = doc.add_paragraph()
@@ -453,7 +545,7 @@ kw.paragraph_format.space_after = Pt(12)
 kwr = kw.add_run(
     'Keywords: HLA; donor registry; haematopoietic stem cell transplantation; '
     'CMIO; Singapore; registry size; partial match; EM haplotype estimation; '
-    'bootstrap confidence interval; Others stratification'
+    'EM maximum-likelihood estimate; Others stratification'
 )
 kwr.italic = True
 kwr.font.size = Pt(9)
@@ -513,7 +605,7 @@ add_para(doc,
 add_heading(doc, '2. Methods')
 add_figure(doc, 'pipeline_flowchart.png', width=6.5,
     caption='Figure 1. Analysis pipeline overview: from raw HLA typing data to '
-    'registry size estimates with bootstrap confidence intervals. '
+    'registry size estimates as EM maximum-likelihood values. '
     'Shading: blue = input data; green = core model steps; '
     'yellow = optimisation; red = uncertainty quantification.')
 add_heading(doc, '2.1 Dataset', level=2)
@@ -539,17 +631,52 @@ add_corrected_para(doc, [
     ('an expectation–maximisation algorithm with full multi-locus phase '
      'enumeration (Excoffier–Slatkin formulation ' + cite(20) + '), implemented '
      'in Python, applying Hardy–Weinberg equilibrium to infer the most probable '
-     'phase assignments from unphased diplotype data (capped at 5,000 individuals '
-     'per ethnic group for computational efficiency; haplotypes retained at '
-     'frequency ≥ 0.1%). Results were validated against the HLA-net '
+     'phase assignments from unphased diplotype data (all five-locus-typed '
+     'individuals per ethnic group; haplotypes retained at '
+     'frequency ≥ 0.01%). Results were validated against the HLA-net '
      'GENE[RATE] database ' + cite(3) + '.', True),
 ])
+
+add_para(doc,
+    'The haplotype retention floor is not a neutral implementation detail. '
+    'Versions of this analysis up to v2.15 used a 0.1% floor, which retained only '
+    '123–144 haplotypes per group representing 36–53% of total haplotype frequency '
+    'mass; the surviving frequencies were then renormalised to sum to one, so the '
+    'model behaved as though every patient carried one of the few most common '
+    'haplotypes. Because the coverage function C(N) converges slowly precisely '
+    'where diplotype frequencies are small, the discarded tail is what determines '
+    'high-coverage behaviour. Lowering the floor to 0.01% retains 2,310–3,035 '
+    'haplotypes per group and 97–98% of frequency mass, and raises N* at 95% '
+    'coverage by more than two orders of magnitude. A sweep across floors shows '
+    'the effect is a threshold rather than a gradient: for Chinese donors, moving '
+    'from no floor to 0.01% discards 96% of distinct haplotypes but only 3.1% of '
+    'frequency mass and changes modelled coverage at 50,000 donors by 2.7 '
+    'percentage points, whereas moving from 0.01% to 0.1% discards a further 44% '
+    'of mass and moves the same figure from 39.5% to 95.6%. Removing all '
+    'haplotypes below 0.001% changes coverage by 0.2 percentage points, '
+    'establishing that the tail carrying the effect is not an artefact of EM '
+    'phase enumeration.')
+
+add_para(doc,
+    'One further consequence deserves statement because it constrains how these '
+    'estimates should be read. A fixed frequency floor means different things at '
+    'different sample sizes. In a sample of 5,000 individuals (10,000 chromosomes) '
+    'a haplotype observed once already has frequency 1e-4 and survives a 0.01% '
+    'floor, so the floor barely discriminates and retains sampling noise; in the '
+    'full 44,400-individual Chinese sample a singleton sits near 1.1e-5 and is '
+    'removed. Using all available individuals therefore lowers retained frequency '
+    'mass (Chinese 97.2% to 80.8%) even though it improves the estimate, because '
+    'genuinely rare haplotypes are now separated from noise rather than pooled '
+    'with it. An appropriate floor scales roughly as 1/(2n), implying about 1e-5 '
+    'for the full sample. This analysis uses 1e-4 with the full sample, retaining '
+    '81–98% of mass against 36–53% in versions to v2.15; the remaining discarded '
+    'tail means the registry sizes reported here should be read as lower bounds.')
 
 add_para(doc,
     'HLA loci are not independent — alleles at neighbouring loci are inherited '
     'together as haplotype blocks far more often than chance would predict. This '
     'non-random co-inheritance, known as linkage disequilibrium (LD), is especially '
-    'strong between DRB1 and DQB1 (D′ ≥ 0.94 in all CMIO groups) and '
+    f'strong between DRB1 and DQB1 (composite D′ {LD_DRDQ[0]}–{LD_DRDQ[1]} across CMIO groups) and '
     'between B and C (D′ ≥ 0.95) ' + cite(1, 13) + '. Ignoring LD by '
     'using a simple product approximation systematically underestimates the '
     'frequency of common haplotypes. The EM algorithm produces a more concentrated '
@@ -591,28 +718,44 @@ add_corrected_para(doc, [
      'Beatty et al. ' + cite(4) + '.', True),
 ])
 
-add_heading(doc, '2.4 Bootstrap Confidence Intervals', level=2)
+add_heading(doc, '2.4 Uncertainty: why confidence intervals are not reported', level=2)
 add_para(doc,
-    'To quantify uncertainty around N* estimates, we used Dirichlet parametric '
-    'bootstrapping (B = 1,000 iterations) ' + cite(18) + '. In each iteration, '
-    'haplotype frequencies were resampled from a Dirichlet distribution with '
-    'concentration parameters nₑₗₗ × f̂ₖ, where nₑₗₗ '
-    'is the actual 5-locus donor count per ethnicity (Chinese: 45,754; Malay: 5,868; '
-    'Indian: 5,586; Others: 3,941) and f̂ₖ is the EM-estimated haplotype '
-    'frequency. A new N* was computed for each resample. The reported point estimate '
-    'is the bootstrap median (50th percentile), which is bias-corrected for the '
-    'left-skew in N* near high coverage thresholds arising from Jensen\'s inequality '
-    'on the concave coverage function C(N). The 2.5th and 97.5th percentiles define '
-    'the 95% CI. These intervals quantify sampling variability in haplotype '
-    'frequencies given the observed donor counts; they do not propagate uncertainty '
-    'from the EM phasing step or from HWE model assumptions. Total uncertainty '
-    'across the full estimation pipeline is therefore wider than the reported CIs.')
+    'Versions of this analysis up to v2.15 reported Dirichlet parametric bootstrap '
+    'confidence intervals (B = 1,000), resampling haplotype frequencies from a '
+    'Dirichlet distribution with concentration parameters n_eth x f_k and '
+    'recomputing N* per resample. Those intervals are withdrawn, because the '
+    'procedure is biased for this statistic rather than merely imprecise.')
 add_para(doc,
-    'For clinical planning purposes, the bootstrap median is a conservative and '
-    'robust target: it is the registry size below which half of all plausible '
-    'sampling realisations would leave the stated coverage threshold unmet. '
-    'EM maximum-likelihood estimates are retained in the supplementary data archive '
-    'for reference; narrower CIs indicate more precisely estimated haplotype frequencies.')
+    'Under a Dirichlet draw the expectation of a squared frequency is not the '
+    'square of the expectation: E[f^2] = f^2 + f(1-f)/(n+1). Diplotype frequencies '
+    'are squares and pairwise products of haplotype frequencies, so resampling '
+    'inflates them, and the inflation is largest exactly where the frequencies are '
+    'smallest. For the Chinese distribution the mean inflation of E[f^2] is about '
+    '525% for haplotypes between 1e-6 and 1e-5, 134% between 1e-5 and 1e-4, 12% '
+    'between 1e-4 and 1e-3, and 1% above 1e-3. Because the rare tail is what '
+    'governs high-coverage behaviour, every resample overstates attainable coverage '
+    'and therefore understates N*.')
+add_para(doc,
+    'The symptom was visible in earlier releases and was misread as skew. In v2.15, '
+    '18 of 32 reported rows had the EM maximum-likelihood estimate lying outside '
+    'its own confidence interval, always above the upper bound, with 98-100% of '
+    'resamples falling below the point estimate. Reporting the bootstrap median '
+    'instead of the maximum-likelihood value made the tables internally consistent '
+    'but did not address the cause. At the 1e-6 floor used here the discrepancy is '
+    'unmistakable: for Chinese 10/10 at 95% coverage the maximum-likelihood '
+    'estimate is 87,384,114 against a bootstrap interval of 50,772,223 to '
+    '53,870,680, with every one of 1,000 resamples below the point estimate.')
+add_para(doc,
+    'All registry sizes in this version are therefore EM maximum-likelihood point '
+    'estimates, with no interval attached. This is a statement of what is not '
+    'known rather than a claim of precision: the estimates carry real uncertainty '
+    'from haplotype-frequency sampling, from the EM phasing step, from the '
+    'Hardy-Weinberg assumption, and from the choice of frequency floor (SS2.2), '
+    'and that uncertainty is not quantified here. A resampling scheme that '
+    'preserves the rare-tail structure, or an analytic propagation through the '
+    'coverage function, would be required to restore intervals; neither is '
+    'attempted in this release. Readers should treat every N* as an '
+    'order-of-magnitude quantity.')
 
 add_heading(doc, '2.5 Partial-Match Analysis', level=2)
 add_corrected_para(doc, [
@@ -654,52 +797,67 @@ add_heading(doc, '3.1 Registry Size Requirements — 10/10 HLA Matching', level=
 add_para(doc,
     'Table 1 presents the minimum registry sizes required for same-ethnicity '
     '10/10 HLA matching across all four CMIO groups, based on EM-phased '
-    'haplotype frequencies ' + cite(1, 3) + '. Values are bootstrap median '
+    'haplotype frequencies ' + cite(1, 3) + '. Values are EM maximum-likelihood '
     'estimates (bias-corrected point estimates); numbers in parentheses are 95% '
-    'bootstrap confidence intervals (2.5th–97.5th percentile) ' + cite(18) + '. '
-    'The Weighted Average row reflects Singapore population weights ' + cite(11) + '; '
+    'point estimates; confidence intervals are withdrawn (SS2.4) ' + cite(18) + '. '
+    'The Combined pooled registry row models a single shared registry in which both '
+    'patients and donors are drawn from a Singapore-weighted pool ' + cite(11) + '; '
     'it does not guarantee equitable access for minority ethnic groups.')
 
 make_ci_table(doc, '10of10')
 add_para(doc,
-    '† Weighted Average: Singapore population weights (Chinese 77%, Malay 8%, Indian 9%, '
+    '† Combined pooled registry (NOT an average of the per-group values): both patients '
+    'and donors drawn from a Singapore-weighted pool (Chinese 77%, Malay 8%, Indian 9%, '
     'Others 6%) [11]. This row is a mathematical convenience, not a policy target: '
     'it describes how a single shared registry would need to be sized to serve all '
     'groups proportionally under those weights, but it cannot substitute for '
     'ethnicity-specific recruitment because donors are not interchangeable across '
     'groups. The per-group same-ethnicity N* values above are the operative planning '
     'targets for each community.\n'
-    'Values shown as bootstrap median N (95% CI lower–upper).',
+    'Values shown as EM maximum-likelihood N. No interval is attached; see SS2.4.',
     size=8, space_after=4)
 add_caption(doc,
     'Table 1. Minimum same-ethnicity registry size for 10/10 HLA matching '
-    'by coverage target. Bootstrap 95% CIs (Dirichlet resampling, 1,000 '
-    'iterations) [18] reflect haplotype-frequency sampling variability only '
-    'and are a lower bound on total uncertainty. The pooled Others row is a '
-    'mathematical artefact; see §3.7 for sub-cluster targets. '
+    'by coverage target. Values are EM maximum-likelihood estimates; no '
+    'confidence intervals are attached, because the Dirichlet bootstrap used in '
+    'earlier versions is biased downward for this statistic (§2.4) [18]. '
+    'Estimates should be read as order-of-magnitude quantities. The pooled Others '
+    'row is a mathematical artefact; see §3.7 for sub-cluster targets. '
     '‡ Signed-up target assumes 40% real-world donor attrition '
     '(unreachability, refusal, or medical deferral); shows range across CMIO '
     'groups at each threshold.', fig=False)
 
 add_para(doc,
-    'At the clinically important 95% coverage threshold, same-ethnicity registry '
-    'sizes (bootstrap medians) span approximately 40,000–44,000 donors. The Indian '
-    'group requires the largest registry (43,855 donors), reflecting its greater '
-    'haplotype diversity ' + cite(1, 8) + '. The pooled Others estimate (31,181) '
-    'is a mathematical artefact of heterogeneous sub-group mixing and must not be '
-    'used as a policy target; sub-cluster analysis (§3.7) reveals requirements of '
-    '35,193–63,856. The 95% bootstrap CIs are narrower for Chinese (±~200 donors) '
-    '— where the largest 5-locus sample (45,754) was available — and wider for '
-    'Malay, Indian, and Others (±1,000–2,000 donors), reflecting smaller effective '
-    'sample sizes for those groups ' + cite(18) + '.')
+    'At the 95% coverage threshold, same-ethnicity registry sizes are far beyond '
+    f'what any single national programme can recruit: approximately '
+    f'{K("n95_txt","Chinese")} donors (Chinese), {K("n95_txt","Malay")} (Malay), '
+    f'{K("n95_txt","Indian")} (Indian) and {K("n95_txt","Others")} (Others). Even '
+    f'75% coverage requires {K("n75_txt","Malay")} to {K("n75_txt","Others")} '
+    'same-ethnicity donors. '
+    'The Others group requires the largest registry, followed by Indian, reflecting '
+    'their greater haplotype diversity ' + cite(1, 8) + '. These figures supersede '
+    'the 40,000–45,000 donor targets reported in versions up to v2.15 of this '
+    'analysis, which were computed with a 0.1% haplotype frequency floor that '
+    'discarded 47–64% of haplotype frequency mass before the coverage calculation '
+    '(see §2.2 and §4.1). They are consistent in order of magnitude with observed '
+    'international registry performance: the US registry, at 10.5 million donors, '
+    'achieves roughly 75% 8/8 match likelihood for its best-served ancestry group '
+    + cite(2) + '.')
 add_para(doc,
-    'These per-group same-ethnicity N* values (bootstrap medians; e.g., 42,847 '
-    'for Chinese) should be distinguished from the population-weighted combined '
-    'estimates in the sensitivity analysis (Table 6; §3.5), where Singapore\'s '
-    'ethnic composition (77% Chinese) produces a combined N* of ~42,332. The '
-    'combined figure reflects how a single shared registry would need to be sized '
-    'to serve all groups proportionally; the per-group figures reflect the target '
-    'for a dedicated ethnicity-specific registry.')
+    'Because N* at these coverage targets exceeds any feasible national registry, '
+    'the operationally meaningful quantity is the coverage attainable at a '
+    'realistic registry size. At 50,000 same-ethnicity donors — approximately the '
+    'scale of the current combined BMDP and SCBB inventory — modelled 10/10 '
+    f'coverage is {K("cov50k","Chinese")}% for Chinese patients, '
+    f'{K("cov50k","Malay")}% for Malay, {K("cov50k","Indian")}% for Indian and '
+    f'{K("cov50k","Others")}% for Others. At 100,000 donors these rise to '
+    f'{K("cov100k","Chinese")}%, {K("cov100k","Malay")}%, {K("cov100k","Indian")}% '
+    f'and {K("cov100k","Others")}%, and at 500,000 donors to '
+    f'{K("cov500k","Chinese")}%, {K("cov500k","Malay")}%, {K("cov500k","Indian")}% '
+    f'and {K("cov500k","Others")}%. '
+    'The equity gap is therefore not a matter of a few thousand donors: at any '
+    'feasible registry size, Indian and Others patients have roughly half the match '
+    'probability of Chinese and Malay patients.')
 
 add_para(doc,
     'A striking feature of these results is how rapidly requirements grow as '
@@ -707,12 +865,17 @@ add_para(doc,
     'HLA diplotypes: the first 90% of patients can be served by a relatively '
     'concentrated pool of common haplotype combinations, but the final 5–10% '
     'of patients carry increasingly rare diplotypes that require '
-    'disproportionately larger registries to cover ' + cite(2) + '.')
+    'disproportionately larger registries to cover ' + cite(2) + '. It is precisely '
+    'this tail that a frequency floor removes, which is why the choice of floor '
+    'dominates the resulting registry-size estimate.')
 
-add_figure(doc, 'registry_ci_plot.png', width=5.5,
-    caption='Figure 2. Bootstrap 95% confidence intervals for minimum registry size '
-    'at 95% coverage (10/10 matching) by CMIO group. Error bars show the 2.5th–97.5th '
-    'percentile range across 1,000 Dirichlet bootstrap resamples [18].')
+add_figure(doc, 'coverage_curves_10of10.png', width=6.4,
+    caption='Figure 2. Coverage as a function of registry size for 10/10 matching, '
+    'by CMIO group, under same-ethnicity (solid) and cross-ethnic (dashed) donor '
+    'pools. The curve, rather than a single N*, is the honest summary: it shows '
+    'what a registry of any achievable size delivers, and makes clear how far the '
+    '95% target sits beyond feasible recruitment. This figure replaces the bootstrap '
+    'confidence-interval plot of earlier versions, for the reasons in section 2.4.')
 
 # 3.2 Registry size 8/8
 add_heading(doc, '3.2 Registry Size Requirements — 8/8 HLA Matching', level=2)
@@ -721,24 +884,24 @@ add_para(doc,
     'registry size requirements are marginally lower than for 10/10 matching '
     '(Table 2). The difference is modest — typically 600–1,200 fewer donors at '
     '95% coverage — because DRB1 and DQB1 are in very strong linkage '
-    'disequilibrium across all CMIO groups (D′ = 0.94–0.99) ' + cite(1, 13) + '. '
+    f'disequilibrium across all CMIO groups (composite D′ {LD_DRDQ[0]}–{LD_DRDQ[1]}) ' + cite(1, 13) + '. '
     'A donor matched at DRB1 is almost always also matched at DQB1, so the '
     'additional constraint of DQB1 matching adds very little to registry size '
     'requirements in practice.')
 
 make_ci_table(doc, '8of8')
 add_para(doc,
-    '† Weighted Average: Singapore population weights [11]. This weighted average does '
+    '† Combined pooled registry: patients and donors both drawn from a Singapore-weighted '
+    'pool [11]; this is not an average of the per-group values and does '
     'not guarantee equitable access for minority ethnic groups; see same-ethnicity '
     'targets above.\n'
     '‡ Signed-up target assumes 40% real-world donor attrition; shows range across CMIO groups.\n'
-    'Values shown as bootstrap median N (95% CI lower–upper).',
+    'Values shown as EM maximum-likelihood N. No interval is attached; see SS2.4.',
     size=8, space_after=4)
 add_caption(doc,
     'Table 2. Minimum same-ethnicity registry size for 8/8 HLA matching '
-    'by coverage target. Bootstrap 95% CIs (Dirichlet resampling, 1,000 '
-    'iterations) [18]; CIs reflect haplotype-frequency sampling variability '
-    'only (lower bound on total uncertainty). '
+    'by coverage target. EM maximum-likelihood estimates; confidence intervals '
+    'withdrawn (§2.4) [18]. '
     '‡ Signed-up target assumes 40% attrition; shows range across CMIO groups.', fig=False)
 
 add_para(doc,
@@ -784,15 +947,30 @@ add_caption(doc,
     fig=False)
 
 add_para(doc,
-    'For the Chinese group, cross-ethnic matching is feasible (93,348 donors at '
-    '95% coverage) but requires roughly twice the same-ethnicity target — because '
-    'Chinese haplotypes dominate the combined pool. For Malay, Indian, and Others '
-    'patients, cross-ethnic matching from a Chinese-dominated pool is essentially '
-    'impossible: no registry of realistic size achieves adequate coverage, because '
-    'their distinctive haplotype combinations are not represented in the donor pool '
-    + cite(10) + '. This underscores that same-ethnicity donor recruitment is not '
-    'merely preferable but, on these results, the only viable strategy for these '
-    'groups ' + cite(9) + '.')
+    'At 95% coverage the penalty for drawing donors from a Singapore-weighted '
+    f'combined pool rather than a same-ethnicity pool is smallest for Chinese '
+    f'patients ({K("cross95","Chinese")} versus {K("n95_txt","Chinese")}), because Chinese haplotypes '
+    'dominate the combined pool. For the other groups the penalty is of a '
+    f'different order entirely: {K("cross95","Malay")} for Malay, {K("cross95","Indian")} for Indian '
+    f'and {K("cross95","Others")} for Others. Their '
+    'distinctive haplotype combinations are not represented in the pool, so scale '
+    'cannot compensate ' + cite(10) + '. This is the one headline conclusion of '
+    'earlier versions that survives the corrected analysis intact, and it survives '
+    'it more strongly: same-ethnicity recruitment is not merely preferable but, on '
+    'these results, the only viable domestic strategy for these groups ' + cite(9) + '.')
+
+add_para(doc,
+    'These cross-ethnic figures also incorporate a correction to the matching code '
+    'itself. Diplotype pairs were previously labelled in each population\'s own '
+    'frequency-rank order, so the same unordered pair of haplotypes could be stored '
+    'as (X,Y) in the patient table and (Y,X) in the donor table; the lookup that '
+    'joins them on those labels then silently scored such pairs as unmatched. '
+    'Measured on Malay patients against the combined pool, 30.4% of patient '
+    'frequency mass was affected, and correcting it raised cross-ethnic coverage at '
+    'a one-million-donor registry from 0.635 to 0.776. Pairs are now labelled in a '
+    'canonical order. The correction makes cross-ethnic matching look better than '
+    'previously reported, and the conclusion above holds despite it rather than '
+    'because of it.')
 
 # 3.4 Partial match
 add_heading(doc,
@@ -812,17 +990,35 @@ add_figure(doc, 'partial_match_10locus.png', width=6.2,
     'effect at the 9/10 boundary for all groups.')
 
 add_para(doc,
-    'The most important finding is the dramatic threshold effect at the 9/10 '
-    'boundary. Relaxing from 10/10 to 9/10 matching roughly halves the required '
-    'registry size for all CMIO groups. For Chinese patients, the 9/10 registry '
-    'requirement at 95% coverage is approximately 20,000–22,000 donors, compared '
-    'with 42,847 at 10/10. This is clinically significant because several large '
+    'Relaxing the match requirement by a single allele is the largest lever '
+    'available, and at the corrected 0.01% floor it is best expressed as coverage '
+    'gained at a fixed registry size rather than as a ratio of unattainable N* '
+    'values. For Chinese patients at a 50,000-donor same-ethnicity registry, '
+    'modelled coverage rises from 40.6% at strict 10/10 to 72.0% at ≥9/10, and to '
+    '93.8% at ≥8/10. Accepting one mismatch therefore delivers roughly the same '
+    'gain as a thirty-fold increase in registry size, which no recruitment '
+    'campaign can match. This is clinically significant because several large '
     'multi-centre trials have demonstrated that a single allele mismatch at certain '
     'loci — particularly at HLA-DPB1 when the mismatch is at a permissive '
     'T-cell epitope group position — carries minimal additional survival impact '
-    + cite(12, 15) + '. Programmes that formalise evidence-based partial-match '
-    'protocols could effectively double their donor reach without recruiting a '
-    'single additional donor ' + cite(2, 19) + '.')
+    + cite(12, 15) + '. Two cautions apply: the model treats a mismatch at any of '
+    'the five loci as equivalent, which the outcomes literature does not support '
+    '(permissiveness is locus-specific, which is why DPB1 is assessed through a '
+    'T-cell-epitope framework rather than as a flat allele count), and ≥8/10 falls '
+    'below currently accepted match stringency for most indications and is '
+    'reported here only to show the shape of the relationship, not as a '
+    'recommendation ' + cite(2, 19) + '.')
+
+add_para(doc,
+    'Note on method: the exact partial-match algorithm is quadratic in the number '
+    'of diplotypes and is not computable at the 0.01% floor (approximately 8e12 '
+    'diplotype comparisons per group). The figures above are Monte-Carlo '
+    'estimates obtained by sampling 3,000 patient diplotypes in proportion to '
+    'their frequency and evaluating each against the complete donor diplotype set, '
+    'which is unbiased for coverage with sampling error of order 1/sqrt(3000). '
+    'Figures 3 and 4 below were generated at the previous 0.1% floor and are '
+    'retained for their qualitative shape only; their absolute registry-size axis '
+    'is not comparable with the tables in this version.')
 
 add_figure(doc, 'partial_match_8locus.png', width=6.2,
     caption='Figure 4. Coverage curves for 8-locus (HLA-A, -B, -C, -DRB1) partial '
@@ -884,16 +1080,20 @@ add_caption(doc,
 add_figure(doc, 'cross_ethnic_sensitivity.png', width=6.0,
     caption='Figure 5. Registry size sensitivity across four patient demographic '
     'scenarios [11], including HSA Patient-Donor Data (Health Sciences Authority '
-    'Singapore). Near-identical bar heights confirm the ~40,000–45,000 donor '
-    'target is a structural property of CMIO haplotype diversity [2].')
+    'Singapore). Near-identical bar heights show that the combined estimate is '
+    'insensitive to patient ethnic composition [2].')
 
 add_para(doc,
     'This stability arises because per-group N* values are all in the same order '
-    'of magnitude (~31,000–44,000 at 95%). Reweighting the groups changes the '
-    'combined N* only marginally ' + cite(2) + '. This structural robustness '
-    'gives decision-makers confidence that the ~40,000–45,000 donor target per '
-    'ethnicity will remain valid even as Singapore\'s demographic composition '
-    'evolves ' + cite(11) + '.')
+    'of magnitude. Reweighting the groups therefore changes the combined N* only '
+    'marginally ' + cite(2) + '. The practical implication is unchanged by the '
+    'revised floor: the difficulty of the matching problem is a structural '
+    'property of CMIO haplotype diversity rather than an artefact of assumptions '
+    'about who the future patients will be, and will not be resolved by '
+    'demographic change ' + cite(11) + '. Note that this sensitivity analysis '
+    'tests only the patient-composition assumption; it does not probe the '
+    'haplotype-retention floor, which §4.1 shows is the dominant source of '
+    'variation in N*.')
 
 # 3.6 Model validation
 add_heading(doc, '3.6 Model Validation', level=2)
@@ -952,10 +1152,21 @@ add_para(doc,
     'five-component PCA space used for clustering) of the 3,847 fully five-locus-typed Others donors reveals '
     'three genetically distinct sub-groups — European/Eurasian, Filipino/SE Asian, '
     'and Northeast Asian/Mixed — with markedly different registry size requirements '
-    '(Table 4). The pooled Others estimate in Table 1 is a mathematical artefact of '
-    'heterogeneous population mixing and should not be used as a standalone policy '
-    'target; the Filipino/SE Asian sub-cluster ceiling of 63,856 donors provides the '
-    'appropriate conservative planning figure for this group.')
+    '(Table 4). The pooled Others estimate in Table 1 should not be used as a '
+    'policy target. At the corrected 0.01% floor the direction of the pooling '
+    'artefact is the reverse of what earlier versions reported: pooled Others '
+    f'requires {K("n95_txt","Others")} donors at 95% coverage, whereas each '
+    f'individual sub-cluster requires only {_millions(int(oc_reg[oc_reg.target_coverage==0.95].registry_size.min()))} '
+    f'to {_millions(int(oc_reg[oc_reg.target_coverage==0.95].registry_size.max()))}. This is the statistically expected '
+    'ordering — a patient from one ancestry cluster rarely matches a donor from '
+    'another, so a stratified pool is harder to match within than any of its '
+    'homogeneous parts — and it is corroborated by the group\'s departure from '
+    'Hardy–Weinberg equilibrium at all five loci with heterozygote deficit '
+    'throughout (§4.1), the classical Wahlund signature. The practical implication '
+    'is favourable and actionable: recruiting to a specific Others sub-ancestry is '
+    'roughly five to ten times more efficient per donor than recruiting to the '
+    'undifferentiated category, which makes collecting sub-ancestry data at '
+    'registration a high-yield intervention rather than a refinement.')
 
 # Table 4: cluster registry sizes
 tbl4_header = ['Cluster', 'Putative ancestry', 'N individuals',
@@ -1079,31 +1290,36 @@ add_caption(doc,
 add_heading(doc, '4. Discussion and Recommendations')
 
 add_para(doc,
-    'This analysis provides the first quantitative registry size targets for '
-    'Singapore\'s CMIO populations with bootstrap confidence intervals, grounded '
+    'This analysis provides quantitative registry size estimates for '
+    'Singapore\'s CMIO populations, grounded '
     'in EM-phased haplotype frequencies from the largest local HLA dataset to date '
-    + cite(1) + '. The findings are consistent, robust, and carry clear '
-    'recommendations for donor recruitment strategy ' + cite(9) + '.')
+    + cite(1) + '. Its central practical finding is negative and, we believe, more '
+    'useful than the target figures it replaces: no domestically achievable '
+    'registry delivers high-resolution coverage comparable to what earlier '
+    'versions of this analysis projected, and recruitment strategy should be '
+    'planned accordingly ' + cite(9) + '.')
 
 rec_items = [
     (
-        'Build same-ethnicity registries of 40,000–45,000 donors per major group.',
-        'Cross-ethnic matching is demonstrably insufficient for Malay, Indian, '
-        'and Others patients ' + cite(10) + '. The current BMDP registry '
-        '(predominantly Chinese) provides good coverage for Chinese patients '
-        'but leaves other groups critically under-served. Ethnicity-specific '
-        'recruitment campaigns are strongly indicated by these results: the '
-        'model shows no realistic shared-registry alternative for these groups '
-        + cite(9) + '.'
+        'Plan against coverage attainable at achievable size, not against a 95% target.',
+        f'A 95% 10/10 coverage target requires {K("n95_txt","Malay")} to {K("n95_txt","Others")} same-ethnicity '
+        'donors and is not reachable by any national programme. Stating a target '
+        'that cannot be met obscures the real decision, which is how to allocate '
+        'a registry of realistic size. At 50,000 same-ethnicity donors, modelled '
+        f'coverage is {K("cov50k","Chinese")}% (Chinese), {K("cov50k","Malay")}% (Malay), {K("cov50k","Indian")}% (Indian) and {K("cov50k","Others")}% '
+        '(Others); these are the numbers a programme can be held to and can track '
+        'year on year ' + cite(2) + '.'
     ),
     (
-        'Prioritise Malay and Indian donor recruitment urgently.',
+        'Prioritise Malay and Indian donor recruitment, and measure it in coverage gained.',
         'Both the Malay and Indian communities are under-represented in existing '
-        'registries relative to their HSCT need ' + cite(8, 9) + '. At 95% '
-        'coverage, both groups require registries of ~40,000 same-ethnicity '
-        'donors (model projections pending validation; see §3.6 and §4.1) — '
-        'comparable in scale to the entire current BMDP. Targeted '
-        'outreach, community partnerships, and incentive programmes are required.'
+        'registries relative to their HSCT need ' + cite(8, 9) + '. Indian and '
+        'Others patients sit at roughly half the match probability of Chinese and '
+        'Malay patients at every feasible registry size, and closing that gap by '
+        'recruitment alone would require millions of donors. Targeted outreach, '
+        'community partnerships and incentive programmes remain necessary, but '
+        'should be costed against the coverage percentage points they actually '
+        'deliver rather than against an unreachable headcount.'
     ),
     (
         'Adopt partial-match protocols to extend effective coverage.',
@@ -1116,22 +1332,23 @@ rec_items = [
         'registries without additional donor recruitment.'
     ),
     (
-        'Plan Others recruitment to 63,856 donors and collect ancestry sub-group data.',
-        'The pooled Others estimate of 31,181 is a statistical artefact of '
-        'heterogeneous pooling and must not be used as a policy target (see §3.7). '
-        'The three ancestry clusters have markedly different requirements '
-        '(35,193–63,856 at 95%); planning to any figure below the highest '
-        'sub-cluster ceiling will guarantee under-service for the most '
-        'haplotype-diverse sub-group. The Filipino/SE Asian cluster (Cluster 2, '
-        'N*=63,856) is the recommended planning ceiling for Others recruitment. '
-        'In parallel, simple ancestry questions at registration — parental '
-        'birthplace, self-reported heritage — would enable sub-group–targeted '
-        'recruitment and allow the pooled figure to be retired as a planning '
-        'metric ' + cite(16) + '.'
+        'Disaggregate the Others category and collect ancestry sub-group data.',
+        'Pooled Others estimates must not be used as a policy target (see §3.7). '
+        'Beyond the heterogeneity of the three ancestry clusters, the group '
+        'departs from Hardy–Weinberg equilibrium at all five loci, with observed '
+        'heterozygosity below expected at every locus — the classical Wahlund '
+        'signature of pooling stratified subpopulations. That violation '
+        'invalidates the random-mating assumption underlying the diplotype '
+        'expansion F(hi,hj) = 2·fi·fj for this group specifically, independently '
+        'of any question about the frequency floor, so pooled-Others figures are '
+        'not merely imprecise but structurally inadmissible. Simple ancestry '
+        'questions at registration — parental birthplace, self-reported heritage '
+        '— would enable sub-group–targeted recruitment and allow cluster-level '
+        'rather than pooled estimates to be used ' + cite(16) + '.'
     ),
     (
         'Invest in DQB1 typing for all donors.',
-        'Although 8/8 and 10/10 registry sizes differ by less than 5% due to '
+        'Although 8/8 and 10/10 registry sizes differ only modestly due to '
         'strong DRB1–DQB1 LD ' + cite(1, 13) + ', DQB1 mismatches are '
         'associated with increased graft-versus-host disease in some populations '
         + cite(12) + '. The marginal recruitment cost of achieving 10/10 vs '
@@ -1165,30 +1382,53 @@ for i, (heading, body) in enumerate(rec_items):
 add_heading(doc, '4.1 Limitations', level=2)
 add_para(doc,
     'Several limitations should be noted. First, diplotype frequencies are '
-    'derived under Hardy–Weinberg equilibrium. HWE departures were detected '
-    'in Indian and Others groups at several loci ' + cite(1) + '. The direction '
-    'and magnitude of bias are uncertain and depend on the nature of the '
-    'sub-structure; registry size estimates for Indian and Others should be '
-    'treated as exploratory, while Chinese and Malay estimates are on firmer '
-    'ground. Second, the EM algorithm was capped at 5,000 individuals per '
-    'ethnic group; this cap binds materially only for Chinese (5,000 of 45,018 '
-    'five-locus-typed donors). A convergence test rerunning the EM at sample '
-    'sizes from 500 to 45,018 (Supporting Figure S1) shows N* stabilising near '
-    '42,000 donors above ~20,000 samples; at 5,000 the estimate is 45,148 versus '
-    '41,727 at the full sample — a conservative 8.2% overestimate, which is a '
-    'safe direction of bias for planning. Third, the reported N* values represent '
+    'derived under Hardy–Weinberg equilibrium. Departures are not uniform across '
+    'groups: Chinese and Malay show no significant departure at any locus, Indian '
+    'departs at three of five (DQB1, HLA-B, HLA-C), and Others departs at all '
+    'five, with observed heterozygosity below expected at every locus '
+    '(p from 3.7e-05 at DQB1 to 3.8e-28 at HLA-B) ' + cite(1) + '. The uniform '
+    'heterozygote deficit in Others is the classical Wahlund signature of '
+    'population stratification and corroborates the sub-cluster analysis in §3.7, '
+    'but it also invalidates the random-mating assumption behind the diplotype '
+    'expansion for that group; pooled-Others estimates should be replaced by '
+    'cluster-level ones. Indian estimates should be treated as exploratory, while '
+    'Chinese and Malay estimates are on firmer ground. Second, the EM input '
+    'sample size interacts strongly with the frequency floor, and this analysis '
+    'removes a cap that earlier versions applied. Versions up to v2.15 capped the '
+    'EM at 5,000 individuals per group and reported, on the basis of a convergence '
+    'test, that this cost about 8% in a conservative direction. That figure was '
+    'specific to the 0.1% floor and does not generalise. Repeating the convergence '
+    'test at the floor used here (Supporting Figure S1) gives a Chinese N* of '
+    f'{CAP_N:,} from 5,000 individuals against {FULL_N:,} from the full '
+    f'{FULL_SAMPLE:,} — a difference of {abs(CAP_DELTA_PCT)}% in the '
+    + ('anti-conservative' if CAP_DELTA_PCT < 0 else 'conservative') + ' direction, '
+    f'with the estimated haplotype count moving from {CAP_NHAP:,} to {FULL_NHAP:,}. '
+    'A 5,000-individual EM cannot resolve phase in the rare tail, so what it '
+    'retains there is largely noise. The direction of the cap\'s bias is not even '
+    'stable: at a 0.1% floor it overstates N*, and at the floor used here it '
+    'understates it. The analysis reported here therefore uses all available '
+    'individuals (cap raised to 50,000, which binds for no CMIO group). The general '
+    'lesson is that a frequency floor and an input-sample cap cannot be chosen '
+    'independently, and neither can be reported without the other. Third, the '
+    'reported N* values represent '
     'biologically matched donors; real-world donor attrition (unreachability, '
     'refusal, medical deferral — typically 30–50% in established registries) '
     'means signed-up recruitment targets must exceed N* by a corresponding '
     'factor. At 40% attrition, signed-up targets are N* ÷ 0.60 ≈ '
     'N* × 1.67; per-threshold ranges across CMIO groups are shown in the '
     '"Signed-up target" rows of Tables 1 and 2. Fourth, N* estimates are lower '
-    'bounds for unobserved haplotypes. Sensitivity analysis with Laplace '
-    'pseudocount smoothing (α = 0.001 per haplotype) changes N* at the 95% '
-    'threshold by +0.9% (Chinese), +2.3% (Malay), −3.1% (Indian), and '
-    '−1.9% (Others) — confirming robustness at the primary planning threshold. '
-    'Effects are larger at 75% (+11–24%), indicating that lower-coverage '
-    'targets are more sensitive to rare-haplotype treatment. '
+    'bounds for unobserved haplotypes, and at the corrected 0.01% floor the '
+    'treatment of rare haplotypes is a leading source of uncertainty rather than a '
+    'minor one. Sensitivity analysis with Laplace pseudocount smoothing '
+    '(α = 0.001 per haplotype) changes N* at the 95% threshold by −17.9% '
+    '(Chinese), −17.7% (Malay), −27.8% (Indian) and −31.4% (Others), and at the '
+    '75% threshold by +300%, +327%, +143% and +86% respectively. Earlier versions '
+    'reported this analysis as confirming robustness (±3% at 95%); that '
+    'conclusion was itself an artefact of the 0.1% floor, which had already '
+    'removed most of the haplotypes that smoothing perturbs. The honest reading is '
+    'that N* is sensitive to rare-haplotype treatment at every threshold, and that '
+    'the point estimates in Tables 1 and 2 should be read as order-of-magnitude '
+    'quantities. '
     'Fifth, the Others cluster ancestry assignments are inferred from haplotype '
     'signatures ' + cite(16, 17) + ' without confirmed self-reported ancestry '
     'data, and cluster stability was not independently validated via bootstrap '
@@ -1206,12 +1446,16 @@ add_para(doc,
 add_heading(doc, '5. Conclusions')
 add_para(doc,
     'Using EM-phased haplotype frequencies from 59,186 Singapore donors and cord '
-    'blood units ' + cite(1) + ', we have derived the first quantitative registry '
-    'size targets for Singapore\'s CMIO populations with bootstrap confidence '
-    'intervals ' + cite(18) + '. Same-ethnicity registries of approximately '
-    '40,000–45,000 donors are required per CMIO group to achieve 95% coverage '
-    'at 10/10 HLA matching — a target that cannot be met by cross-ethnic matching '
-    'from any registry of realistic size ' + cite(2, 10) + '.')
+    'blood units ' + cite(1) + ', we have derived quantitative registry '
+    'size estimates for Singapore\'s CMIO populations. Achieving 95% coverage at '
+    f'10/10 HLA matching requires {K("n95_txt","Malay")} to {K("n95_txt","Others")} '
+    'same-ethnicity donors and is '
+    'therefore not attainable by any national programme; cross-ethnic matching '
+    'from a Singapore-weighted pool is worse still for Malay, Indian and Others '
+    'patients ' + cite(2, 10) + '. The 40,000–45,000 donor targets reported in '
+    'earlier versions of this analysis were an artefact of a 0.1% haplotype '
+    'frequency floor that removed the rare-haplotype tail on which high-coverage '
+    'behaviour depends, and are withdrawn.')
 
 add_corrected_para(doc, [
     ('Partial-match analysis demonstrates that 9/10 matching halves this requirement ', False),
@@ -1310,7 +1554,7 @@ for i, (authors, title, journal, doi) in enumerate(REFS, 1):
     p.add_run(ref_text).font.size = Pt(9)
 
 # ── Save ─────────────────────────────────────────────────────────────────────
-out_path = os.path.join(HERE, 'HLA_Registry_Size_CMIO_v2.15.docx')
+out_path = os.path.join(HERE, 'HLA_Registry_Size_CMIO_v2.16.docx')
 doc.save(out_path)
 print(f'Saved: {out_path}')
 print(f'  Paragraphs: {len(doc.paragraphs)}')

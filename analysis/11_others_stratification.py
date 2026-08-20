@@ -37,8 +37,8 @@ os.makedirs(FIG_DIR, exist_ok=True)
 
 LOCI      = ['HLA-A', 'HLA-B', 'HLA-C', 'DRB1', 'DQB1']
 THRESHOLDS = [0.75, 0.85, 0.90, 0.95]
-FREQ_THRESHOLD = 0.001
-CAP       = 5000
+FREQ_THRESHOLD = 0.000001
+CAP       = 50000  # was 5000; never binds here (max cluster 1,561) but kept consistent with hwe_test
 SEED      = 42
 
 CLUSTER_COLORS = ['#e41a1c', '#377eb8', '#4daf4a', '#984ea3', '#ff7f00']

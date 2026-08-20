@@ -106,8 +106,14 @@ def compute_hwe_stats(df: pd.DataFrame, allele_freqs: pd.DataFrame) -> pd.DataFr
 
 
 def run_em_haplotypes(df: pd.DataFrame, max_iter: int = 200,
-                      tol: float = 1e-6, freq_threshold: float = 0.001,
-                      cap: int = 5000, random_state: int = 42) -> pd.DataFrame:
+                      tol: float = 1e-6, freq_threshold: float = 0.000001,
+                      # cap raised 5,000 -> 50,000 (2026-08-20). At the 1e-3 floor
+                      # the cap cost ~8%; at 1e-4 it inflates Chinese N* by 264%
+                      # (11,487,962 capped vs 3,153,571 at the full 45,018 sample),
+                      # because a 5,000-individual EM cannot resolve the rare tail
+                      # and retains spurious phase-ambiguity haplotypes. 50,000
+                      # exceeds every CMIO group, so the cap no longer binds.
+                      cap: int = 50000, random_state: int = 42) -> pd.DataFrame:
     """
     Estimate 5-locus haplotype frequencies via EM for each ethnicity.
 
