@@ -1,5 +1,257 @@
 # Version History
 
+## v2.7.2 — 2026-08-24 (v2.15b docx) — v2.15 MADE DEFENSIBLE BY ADDITION ONLY
+
+`HLA_Registry_Size_CMIO_v2.15b.docx`, built by `build_report_v215b.py` — the
+v2.15 script (commit 792fa1a) verbatim, reading the frozen 1e-3 snapshot, plus
+the minimum text that makes it defensible. Tables, figures, recommendations,
+and all v2.15 prose untouched; none of v2.17's extra table columns, Table 1b,
+or §3.1.1/§4.2 sections.
+
+Additions (exactly 3 paragraphs, marked red; all other text black):
+1. §2.2 — one sentence: post-floor frequencies renormalised; coverage
+   conditional on two haplotypes above the floor; see §4.1.
+2. §4.1 Limitations — the conditional estimand: retained mass
+   51.7/52.9/40.2/35.6%, unconditional ≈ one-third to one-half, the observed
+   41.8% Chinese twin rate vs 49.1% conditional-equivalent, and rare-haplotype
+   patients routed to partial-match (Recommendation 3).
+3. §4.1 Limitations — floor sensitivity: 1e-6 floor → 8.7×10⁷; absolute
+   targets are order-of-magnitude guidance, comparative findings robust.
+
+Rationale (user decision): v2.15 is the simpler, more readable manuscript and
+its conclusions are essentially those of v2.17; it need not be perfect, only
+defensible on its own terms. The six recommendations survive with these
+caveats (Recommendation 6's equity argument transfers to partial-match
+tolerance — the rare-haplotype patients sit below the floor at any threshold).
+
+Marking: `mark_v217_diffs.py` now takes optional OLD NEW arguments;
+`python mark_v217_diffs.py HLA_Registry_Size_CMIO_v2.15.docx
+HLA_Registry_Size_CMIO_v2.15b.docx` resets all runs to black (including
+v2.15's legacy hand-set red) and paints only the diff. Verified: 3/148
+paragraphs and 0 table cells red; body colours exactly {000000, C00000};
+page 11 rendered and inspected.
+
+**Same-day follow-ups.** (1) Cross-references now use "Section n" instead of
+"§n" in both v2.15b and v2.17 (0 § remain in either docx); the diff marker
+normalises §→Section before comparing, so pure restyling of inherited v2.15
+text stays black. (2) Recommendation 6 restated additively: one red sentence
+noting both coverage thresholds are conditional on the frequency floor and
+that below-floor patients depend on the partial-match protocols of
+Recommendation 3. v2.15b now carries exactly 4 red paragraphs (Section 2.2
+sentence, Recommendation 6 sentence, two Limitations paragraphs); 0 red table
+cells.
+
+**v2.15b slides (same day).** `build_slides_v215b.py` →
+`HLA_Registry_Size_CMIO_v2.15b_slides.pptx` (26 slides), adapted from the
+v2.17 deck: version strings v2.15b; slide 12 reframed from
+"correction to the previous version" to "the most important caveat"
+(matching v2.15b, where this lives in Limitations); Recommendation 3 names
+MMUD explicitly (a 9/10 donor is an MMUD; only route for below-floor
+patients; safety from external trials — speaker note carries the full form);
+Recommendation 6 restated per the manuscript (neither 90% nor 95% reaches
+below-floor patients; their route is Recommendation 3); limitations slide
+gains the frequency-floor bullet (conditional coverage; 1e-6 → 8.7×10⁷).
+
+**Reader notes (same day).** Every v2.15b slide's notes now carry two
+paragraphs: the speaking script, then an "Additional detail —" paragraph for
+readers working through the deck without the talk (manuscript
+section/table/figure cross-references, exact numbers, and scope caveats;
+verified present on all 26 slides). Also fixed the last stale speaker note:
+slide 25's take-home still promised "95 per cent of patients a fully matched
+donor" — now states 95% of common-haplotype patients ≈ half of all patients,
+41.8% observed.
+
+**Deck figure-source bug found in passing:** both deck scripts read the live
+`analysis/figures/`, which the 1e-6 re-run overwrote — slide 22/23's
+em_convergence.png showed N* rising to 8.7e7 under a caption claiming
+stability near 45k. Both `build_slides.py` (v2.17) and `build_slides_v215b.py`
+now read `analysis/snapshot_1e-3/figures/`; all 9 deck figures exist in the
+snapshot; both decks rebuilt and the limitations slide re-rendered and
+inspected (curve now stabilises at ~45k, consistent with its caption).
+
+**MMUD sentence (same day).** Recommendation 3 gains one red sentence drawing
+the MMUD conclusion already implicit in v2.15b's own results: a 9/10 unrelated
+donor is by definition an MMUD, so MMUD capability halves every group's
+effective registry requirement and is the only access route for below-floor
+patients (Section 4.1); safety rests on the external trial literature [12,15].
+No new calculations. v2.15b now carries 5 red paragraphs, 0 red table cells,
+8 figures.
+
+**Marker bug fix (same day).** `mark_v217_diffs.py`'s picture guard used
+`findall()` (direct children of w:r) and missed drawings nested at
+w:r/w:drawing/wp:inline — figure paragraphs were stripped as empty text, so
+both marked docx files silently lost all 8 embedded figures. Guard now uses
+`iter()` over descendants and covers anchored drawings too; both documents
+rebuilt and re-marked. Verified: 8 inline images in each, red counts
+unchanged (v2.15b 4/148 + 0 cells; v2.17 37/162 + 62 cells), v2.15b page 7
+rendered — Figure 2 present above the untouched v2.15-style Table 2.
+
+Three manuscripts now stand: v2.15b (simple, additive caveats), v2.17 (full
+conditional/unconditional reporting), v2.16 (1e-6 methodological).
+
+## v2.7.1 — 2026-08-24 (v2.17 docx + v2.17 slides) — CONSISTENCY PASS + RED CHANGE-MARKING
+
+Text and colour only. No analysis script re-run, no figure regenerated. Full
+audit trail: `paper_BMT_workdir/v217_consistency_audit.md`.
+
+**Cohort count — 59,186 retained, deliberately.** Three totals were in
+circulation. Ground truth from `analysis/data/hla_clean.csv`:
+
+| definition | value |
+|---|---|
+| Ng et al. 2022 published cohort, after inclusion criteria | **59,186** |
+| BMDP_OUT 57,785 + SCBB_OUT 1,450 on re-ingest (all 5-locus complete) | 59,235 |
+| + HSA-Donor 1,350 + HSA-Patient 564 | 61,149 |
+
+An earlier pass here changed the headline to 59,235 on the reading that 59,186
+was a three-source (BMDP+SCBB+HSA) total. That reading was wrong: 59,186 is
+*below* BMDP+SCBB alone, so HSA cannot be inside it. 59,186 is BMDP+SCBB after
+the published inclusion criteria, and the 49-record (0.08%) gap is what those
+criteria remove. This study is a direct follow-up on the identical dataset, so
+the published figure is what it reports. §2.1 now states the 59,235 re-ingest
+count and the 49-record difference once, explicitly, and confirms the HSA
+records enter only §3.5 and §3.6.
+
+**Regression from the v2.17 branch point.** `build_report_v217.py` was branched
+from `16bd246`, which predates `792fa1a`. That commit's fix — Others donor count
+3,941 → 3,847, and removal of the phantom silhouette=0.97 — had been silently
+undone in §3.7 and the Figure 7 caption. Its wording is grafted back verbatim.
+(§4.1 Limitations already carried 0.24; the regression was confined to §3.7/Fig 7.)
+
+**Also corrected**
+- §3.1.1 caption: 42,871 labelled point estimate, alongside Table 1's 42,847
+  bootstrap median. Both were always correct; neither was labelled.
+- Table 1 footnote †: "Weighted Average" → "Combined pooled registry", matching
+  the table body renamed at v2.17.
+- §3.5: notes 77/8/9/6 is the resident-citizen breakdown, against the
+  73.3/13.5/9.0/3.2 citizens-plus-PR figures cited by Ng et al.
+
+**Verified consistent, unchanged:** Table 4 registry weights (75/9/9/6 vs actual
+75.0/9.4/9.3/6.4), HSA scenario weights (72/15/5/8 vs actual 72.0/14.9/5.0/8.2),
+§3.6's 564 HSA pairs, all Table 1 / Table 4 figures.
+
+**Prose pass (same day).** The v2.17-new passages were rewritten into
+manuscript register after review flagged them as reading machine-generated:
+the abstract's labelled "Estimand:" block folded into Methods; ALL-CAPS
+emphasis (CONDITIONAL/ALL/WITHIN) lowercased; editorial meta-commentary
+removed ("the single most important check in this report", "companion
+methodological analysis", "worth far more than any recruitment programme that
+could plausibly be funded", "stark finding", code-file line citations);
+87,384,114 now reported as 8.7×10⁷. Content, numbers, and claims unchanged —
+register only. 36/162 paragraphs red after the pass.
+
+**Red now means one thing: differs from v2.15.** `mark_v217_diffs.py` (new) is a
+post-build pass that resets every run to black, then paints red the paragraph-
+and word-level differences against `HLA_Registry_Size_CMIO_v2.15.docx`. It
+replaces the hand-set red of the old `add_corrected_para` convention, which by
+v2.17 marked v2.14-era corrections and no longer meant anything a reader could
+name. Idempotent — colour is always recomputed from the two documents.
+
+    python build_report_v217.py && python mark_v217_diffs.py
+
+Result: 37/163 paragraphs and 62 table cells red; body text is exactly two
+colours, 000000 and C00000. Table header rows stay white-on-navy (red on a dark
+fill is unreadable, and the header change shows in the body cells beneath).
+Tables are paired by whole-table text similarity, not by header — the 10/10 and
+8/8 tables share a header, and header-matching floods the 8/8 table with false
+differences.
+
+**Slides — `HLA_Registry_Size_CMIO_v2.17_slides.pptx`, 26 slides.**
+Rebuilt from `build_slides.py`; the v2.15 pptx is left untouched on disk. Slide 6
+had the worst defect in either artifact: headline 59,186 over a table of
+45,754/5,868/5,586/3,941 (per-locus, HSA included) under the header "Donors with
+full 5-gene typing". Now the 5-locus counts.
+
+The deck also still presented the conditional 95% as unconditional, which is what
+v2.17 exists to correct. Brought into line:
+- new slide 12 "Reality check" carrying Table 1b — observed 41.8% against
+  modelled 49.1% — with speaker notes;
+- slide 11 subtitle and headline bullet marked CONDITIONAL;
+- recommendation 1 and the take-home bullet now state ~49% full-match coverage;
+- Figure 7 caption and its bullet drop "cleanly separated" for s=0.24.
+
+Slides 6 and 12, and docx pages 1–3, rendered and inspected: no overflow or
+overlap; red marking lands where intended.
+
+## v2.7.0 — 2026-08-21 (v2.17 docx) — v2.15 MODEL, CORRECTLY REPORTED
+
+**There are now two manuscripts, answering two different questions. Neither
+supersedes the other.**
+
+| | v2.17 (`build_report_v217.py`) | v2.16 (`build_report.py`) |
+|---|---|---|
+| Floor | 1e-3 (v2.15 model, unchanged) | 1e-6 |
+| Estimand | conditional on both haplotypes > floor | unconditional |
+| Chinese 95% 10/10 | 42,847 | 87,384,114 |
+| Intervals | bootstrap percentile ranges, retained | none (withdrawn) |
+| Audience | clinical / policy | methodological |
+| Data source | `analysis/snapshot_1e-3/` (frozen from 16bd246) | `analysis/data/` (live) |
+
+v2.17 changes **nothing** about the v2.15 computation. Every registry size,
+figure, and bootstrap range is the number v2.15 produced. What changed is that
+the estimand is now declared, and the dropped denominator restored.
+
+**The diagnosis.** `04_registry_model.py:139` renormalises the post-floor
+haplotype frequencies to sum to 1. The v2.15 EM table sums to 0.5172 (Chinese),
+0.5288 (Malay), 0.4024 (Indian), 0.3563 (Others) — so 47–64% of frequency mass
+was discarded and the remainder rescaled. v2.15's coverage figures are coverage
+*of the retained subpopulation*, reported as if unconditional. The arithmetic was
+never wrong; the denominator was.
+
+**The check that settles it.** `paper_BMT_workdir/empirical_match.py` counts, with
+no EM, no HWE and no floor, how many donors have an exact 10/10 genotype twin
+inside the registry. All five loci are 2-field typed, so this is allele-level.
+Chinese: **41.8% of 44,400**. v2.15 claimed a ~42,871-donor registry gives 95% —
+Singapore *has* that registry and gets 41.8%. Restoring the denominator gives
+0.95 × 0.5172 = **49.1%**, which matches. The residual gap is in the expected
+direction (HWE assumes random mating; substructure raises real match rates).
+
+**Applied in v2.17** (all text-only; no script re-run, no figure regenerated):
+1. Estimand declared conditional; retained mass per group in §2.2 and Table 1
+2. N* retitled throughout to name the conditioning
+3. Table 1 gains "Mass retained" and "Uncond. at 95%" columns
+4. New §3.1.1 + Table 1b: observed registry match rate vs model
+5. §2.4 retitled "Bootstrap Percentile Ranges" — kept, with the E[f²] bias
+   disclosed. Small here (0.6–1.5% displacement) *because* the 1e-3 floor leaves
+   no rare haplotypes; the same procedure at 1e-6 is uninterpretable
+6. §4.1: cross-group ranking withdrawn (floor bites unequally, 0.36–0.53 mass)
+7. §4.1: floor named as the dominant uncertainty, 1e-6 sensitivity cited
+8. New §4.2 + Table 9: MMUD implications
+
+**Also corrected in passing:** "Weighted Average" → "Combined pooled registry"
+(it is the pooled model, not an average); Others silhouette 0.97 → 0.24;
+bootstrap concentration parameters used per-locus typed counts (61,149) rather
+than 5-locus-complete counts (59,235), now disclosed in §2.4.
+
+**New headline (§4.2).** At a fixed 50,000-donor registry, coverage by stringency:
+
+| Group | 10/10 | ≥9/10 | ≥8/10 |
+|---|---|---|---|
+| Chinese | 33.6% | 67.9% | 92.0% |
+| Malay | 40.4% | 70.1% | 91.8% |
+| Indian | 21.3% | 53.6% | 85.4% |
+| Others | 17.3% | 41.0% | 76.0% |
+
+One permitted mismatch is worth a 19–81× registry expansion, and is worth most to
+the groups with the poorest same-ethnicity prospects. The paper's conclusion moves
+from "recruit N donors" to "recruitment cannot close the gap; mismatch tolerance
+can". PTCy/haplo/cord are cited as external literature — this analysis contains no
+outcome data and says so explicitly.
+
+**Robustness of the comparative claims** (`paper_BMT_workdir/robustness.py`):
+cross-ethnic N* exceeds same-ethnicity N* in all four groups under *both* floors,
+so that conclusion is floor-independent. Magnitude is not: three of four v2.15
+ratios were censored at the old `n_max=1e7` ceiling and are lower bounds only.
+Reported qualitatively with ≥ signs.
+
+**Reproducing v2.17:** `python build_report_v217.py`. It reads
+`analysis/snapshot_1e-3/`, a frozen copy of `analysis/data` + `analysis/figures`
+taken from commit 16bd246, so it stays reproducible even though `analysis/data/`
+has since been re-run at 1e-6. `check_freshness.py` governs the 1e-6 pipeline and
+does not apply to the snapshot.
+
+---
+
 ## v2.6.0 — 2026-08-21 (v2.16 docx) — PIPELINE RE-RUN AT freq_threshold=1e-6
 
 **Final configuration:** `freq_threshold=1e-6`, `cap=50000`, search ceiling 1e10,

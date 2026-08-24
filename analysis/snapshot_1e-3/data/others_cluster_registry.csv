@@ -1,0 +1,13 @@
+cluster,n_individuals,n_haplotypes,target_coverage,registry_size
+Cluster_1,1029,122,0.75,3889
+Cluster_1,1029,122,0.85,9544
+Cluster_1,1029,122,0.9,16845
+Cluster_1,1029,122,0.95,35193
+Cluster_2,1257,168,0.75,12743
+Cluster_2,1257,168,0.85,24836
+Cluster_2,1257,168,0.9,37239
+Cluster_2,1257,168,0.95,63856
+Cluster_3,1561,151,0.75,11681
+Cluster_3,1561,151,0.85,20024
+Cluster_3,1561,151,0.9,28287
+Cluster_3,1561,151,0.95,45731
