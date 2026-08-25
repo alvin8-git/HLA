@@ -1,5 +1,40 @@
 # Version History
 
+## v2.7.3 — 2026-08-25 (v2.15b docx + slides) — BOOTSTRAP n_eff MATCHED TO THE EM SAMPLE
+
+Four related defects, all inherited from the June `16bd246` snapshot, which was
+frozen between two settings that the August pass later made consistent
+(`hwe_test.py` EM cap 5,000 -> 50,000; `09_bootstrap_ci.py` N_EFF corrected).
+
+1. **n_eff overstated.** The Dirichlet used the full 5-locus donor count while
+   EM had seen only the capped sample: Chinese frequencies came from 5,000
+   individuals but the interval asserted the precision of 44,400. Re-ran
+   `09_bootstrap_ci.py` against the snapshot with `n_eff = min(cap, count)` =
+   5,000 / 5,000 / 5,000 / 3,767. Chinese 95% CI widens ~4x and the Jensen
+   correction deepens: 42,847 (42,649-43,058) -> **41,183 (40,184-42,153)**.
+   Malay, Indian and Others move <1% (their caps barely bound).
+2. **61,149 arithmetic.** Section 2.4 quoted n_eff values (45,754/5,868/5,586/
+   3,941) summing to 61,149, above the 59,186 total stated in Section 2.1.
+   True 5-locus counts, recomputed from the snapshot `hla_clean.csv`, are
+   44,400/5,578/5,490/3,767 = 59,235.
+3. **Section 3.1 causal claim.** Attributed the narrow Chinese CI to "the
+   largest 5-locus sample (45,754)". Under the cap all three major groups fed
+   EM the same 5,000 individuals, so the stated cause was contradicted by
+   Section 2.3. Now reports comparable widths (+/-800-1,100) and explains why.
+4. **Section 3.6 cap claim.** Said Malay/Indian/Others were uncapped ("sample
+   sizes <= 5,868"). Malay (5,578) and Indian (5,490) both exceed the 5,000
+   cap; only Others (3,767) does not.
+
+No recommendation changes: 41,183 remains inside R1's 40,000-45,000 band and
+every comparative result is unaffected. Figure 2 (`registry_ci_plot.png`)
+regenerated. Previous CI table kept as
+`analysis/snapshot_1e-3/data/registry_size_ci_PRE_NEFF_FIX.csv.bak`.
+
+Red marking after rebuild: 12 paragraphs + 60 table cells (was 5 + 0) — the
+corrected values genuinely differ from v2.15, so the marker paints them.
+Deck: both results tables corrected and their changed cells marked red
+(21 and 20 cells), slide-10 bullet and reader note rewritten.
+
 ## v2.7.2 — 2026-08-24 (v2.15b docx) — v2.15 MADE DEFENSIBLE BY ADDITION ONLY
 
 `HLA_Registry_Size_CMIO_v2.15b.docx`, built by `build_report_v215b.py` — the

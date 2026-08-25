@@ -431,14 +431,14 @@ add_corrected_para(doc, [
 add_para(doc,
     'Results: For 10/10 HLA matching at 95% same-ethnicity coverage of '
     'ethnicity-specific registries, bootstrap median registry size estimates are: '
-    'Chinese 42,847, Malay 40,032, Indian 43,855. Bootstrap 95% confidence intervals '
-    '(Dirichlet resampling, B=1,000; see Section 2.4) are 42,649–43,058, 38,972–41,151, '
-    'and 42,963–44,577 respectively; these intervals capture haplotype-frequency '
+    'Chinese 41,183, Malay 39,831, Indian 43,785. Bootstrap 95% confidence intervals '
+    '(Dirichlet resampling, B=1,000; see Section 2.4) are 40,184–42,153, 38,680–40,935, '
+    'and 42,762–44,547 respectively; these intervals capture haplotype-frequency '
     'sampling variability only and are a lower bound on total uncertainty. '
     'Only the Chinese estimate is empirically validated against observed patient '
     'haplotypes (Spearman r=0.70; Section 3.6); the Malay, Indian, and Others figures are '
     'model projections pending validation. '
-    'The pooled Others estimate of 31,181 is a statistical artefact of heterogeneous '
+    'The pooled Others estimate of 31,129 is a statistical artefact of heterogeneous '
     'population mixing; ancestry sub-cluster analysis reveals three genetically '
     'distinct groups (European/Eurasian, Filipino/SE Asian, Northeast Asian) with '
     'markedly different requirements (35,193–63,856 at 95%), and 63,856 — the '
@@ -608,16 +608,25 @@ add_para(doc,
     'bootstrapping (B = 1,000 iterations) ' + cite(18) + '. In each iteration, '
     'haplotype frequencies were resampled from a Dirichlet distribution with '
     'concentration parameters nₑₗₗ × f̂ₖ, where nₑₗₗ '
-    'is the actual 5-locus donor count per ethnicity (Chinese: 45,754; Malay: 5,868; '
-    'Indian: 5,586; Others: 3,941) and f̂ₖ is the EM-estimated haplotype '
+    'is the number of individuals from which the haplotype frequencies for that '
+    'ethnicity were estimated — the 5-locus donor count subject to the '
+    '5,000-individual EM limit of Section 2.3 (Chinese: 5,000; Malay: 5,000; '
+    'Indian: 5,000; Others: 3,767, this group falling below the limit) — '
+    'and f̂ₖ is the EM-estimated haplotype '
     'frequency. A new N* was computed for each resample. The reported point estimate '
     'is the bootstrap median (50th percentile), which is bias-corrected for the '
     'left-skew in N* near high coverage thresholds arising from Jensen\'s inequality '
     'on the concave coverage function C(N). The 2.5th and 97.5th percentiles define '
-    'the 95% CI. These intervals quantify sampling variability in haplotype '
-    'frequencies given the observed donor counts; they do not propagate uncertainty '
-    'from the EM phasing step or from HWE model assumptions. Total uncertainty '
-    'across the full estimation pipeline is therefore wider than the reported CIs.')
+    'the 95% CI. Setting nₑₗₗ to the full group size rather than the capped '
+    'estimation sample would assert a precision the frequencies do not carry — for '
+    'the Chinese group, whose 44,400 5-locus donors exceed the EM limit almost '
+    'ninefold, it narrows the 95% interval by a factor of roughly four. '
+    'These intervals quantify sampling variability in haplotype '
+    'frequencies given the sample the frequencies were estimated from; they do not '
+    'propagate uncertainty from the EM phasing step, from the choice of which '
+    'individuals fall within the 5,000 cap, or from HWE model assumptions. Total '
+    'uncertainty across the full estimation pipeline is therefore wider than the '
+    'reported CIs.')
 add_para(doc,
     'For clinical planning purposes, the bootstrap median is a conservative and '
     'robust target: it is the registry size below which half of all plausible '
@@ -695,16 +704,18 @@ add_caption(doc,
 add_para(doc,
     'At the clinically important 95% coverage threshold, same-ethnicity registry '
     'sizes (bootstrap medians) span approximately 40,000–44,000 donors. The Indian '
-    'group requires the largest registry (43,855 donors), reflecting its greater '
-    'haplotype diversity ' + cite(1, 8) + '. The pooled Others estimate (31,181) '
+    'group requires the largest registry (43,785 donors), reflecting its greater '
+    'haplotype diversity ' + cite(1, 8) + '. The pooled Others estimate (31,129) '
     'is a mathematical artefact of heterogeneous sub-group mixing and must not be '
     'used as a policy target; sub-cluster analysis (Section 3.7) reveals requirements of '
-    '35,193–63,856. The 95% bootstrap CIs are narrower for Chinese (±~200 donors) '
-    '— where the largest 5-locus sample (45,754) was available — and wider for '
-    'Malay, Indian, and Others (±1,000–2,000 donors), reflecting smaller effective '
-    'sample sizes for those groups ' + cite(18) + '.')
+    '35,193–63,856. The 95% bootstrap CIs are of comparable width across all four '
+    'groups (±800–1,100 donors at 95% coverage), because the 5,000-individual EM '
+    'limit (Section 2.3) equalises the sample from which haplotype frequencies were '
+    'estimated for Chinese, Malay and Indian; Others falls below the limit at 3,767. '
+    'These intervals therefore reflect the estimation sample rather than the size of '
+    'each donor pool ' + cite(18) + '.')
 add_para(doc,
-    'These per-group same-ethnicity N* values (bootstrap medians; e.g., 42,847 '
+    'These per-group same-ethnicity N* values (bootstrap medians; e.g., 41,183 '
     'for Chinese) should be distinguished from the population-weighted combined '
     'estimates in the sensitivity analysis (Table 6; Section 3.5), where Singapore\'s '
     'ethnic composition (77% Chinese) produces a combined N* of ~42,332. The '
@@ -827,7 +838,7 @@ add_para(doc,
     'boundary. Relaxing from 10/10 to 9/10 matching roughly halves the required '
     'registry size for all CMIO groups. For Chinese patients, the 9/10 registry '
     'requirement at 95% coverage is approximately 20,000–22,000 donors, compared '
-    'with 42,847 at 10/10. This is clinically significant because several large '
+    'with 41,183 at 10/10. This is clinically significant because several large '
     'multi-centre trials have demonstrated that a single allele mismatch at certain '
     'loci — particularly at HLA-DPB1 when the mismatch is at a permissive '
     'T-cell epitope group position — carries minimal additional survival impact '
@@ -1134,7 +1145,7 @@ rec_items = [
     ),
     (
         'Plan Others recruitment to 63,856 donors and collect ancestry sub-group data.',
-        'The pooled Others estimate of 31,181 is a statistical artefact of '
+        'The pooled Others estimate of 31,129 is a statistical artefact of '
         'heterogeneous pooling and must not be used as a policy target (see Section 3.7). '
         'The three ancestry clusters have markedly different requirements '
         '(35,193–63,856 at 95%); planning to any figure below the highest '
@@ -1297,9 +1308,12 @@ add_figure(doc, 'em_convergence.png', width=6.0,
 add_para(doc,
     'The 8.2% overestimate at the cap means the reported N* values for Chinese '
     'are conservative by approximately 3,400 donors — equivalent to slightly '
-    'less than one year of typical registry recruitment. For Malay, Indian, and '
-    'Others, all donors were used (sample sizes ≤ 5,868); the cap does not '
-    'affect those estimates.')
+    'less than one year of typical registry recruitment. Malay (5,578) and Indian '
+    '(5,490) exceed the cap only marginally, so roughly a tenth of their donors is '
+    'excluded from phasing; Others, at 3,767, falls below the cap and is '
+    'unaffected. The convergence curve is not monotonic in this region, so the '
+    'direction of the residual bias for Malay and Indian is not established by '
+    'this analysis.')
 
 # ── GLOSSARY ─────────────────────────────────────────────────────────────────
 add_heading(doc, 'Abbreviations', level=2)

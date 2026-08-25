@@ -247,7 +247,8 @@ bullets(s, [
     "Haplotype frequencies are estimates from a finite sample — they carry statistical noise",
     "We re-ran the entire calculation 1,000 times, each time re-drawing plausible frequencies (Dirichlet bootstrap)",
     ("Reported value = the median of 1,000 answers; the middle 95% of answers = the confidence interval", {"bold": True}),
-    "Bigger samples → tighter intervals: Chinese CIs are ±~200 donors; Malay/Indian/Others ±1,000–2,000",
+    ("Intervals are comparable across groups (±800–1,100 donors at 95%): the 5,000-person EM limit "
+     "equalises the sample the frequencies come from", {"color": RED}),
     "The CIs capture frequency-sampling noise only — a stated lower bound on total uncertainty",
 ], w=Inches(7.7), size=20, gap=12)
 pic(s, "assets/cartoons/bootstrap_icon.png", Inches(8.8), Inches(2.0), Inches(3.9), Inches(3.9))
@@ -259,20 +260,22 @@ title(s, "Result 1 — donors needed for a 10/10 match (same ethnicity)",
       sub="Coverage is CONDITIONAL: of patients whose both haplotypes clear the 0.1% frequency floor. See the next slide.")
 table(s, [
     ["Ethnicity", "75%", "85%", "90%", "95% coverage  (95% CI)"],
-    ["Chinese", "7,577", "15,173", "23,497", "42,847  (42,649–43,058)"],
-    ["Malay", "6,206", "12,787", "20,657", "40,032  (38,972–41,151)"],
-    ["Indian", "9,547", "17,793", "26,134", "43,855  (42,963–44,577)"],
-    ["Others (pooled)*", "6,884", "12,525", "18,386", "31,181  (30,490–31,959)"],
+    ["Chinese", "7,292", "14,555", "22,534", "41,183  (40,184–42,153)"],
+    ["Malay", "6,169", "12,712", "20,521", "39,831  (38,680–40,935)"],
+    ["Indian", "9,491", "17,706", "26,038", "43,785  (42,762–44,547)"],
+    ["Others (pooled)*", "6,864", "12,487", "18,341", "31,129  (30,420–32,001)"],
     ["Combined pooled registry†", "24,530", "57,443", "102,032", "236,906"],
-    ["Signed-up target (40% attrition)‡", "10,343–15,911", "20,875–29,655", "30,643–43,556", "51,968–73,091"],
+    ["Signed-up target (40% attrition)‡", "10,282–15,818", "20,812–29,510", "30,568–43,397", "51,882–72,975"],
 ], Inches(0.7), Inches(1.5), Inches(11.9), Inches(3.9), size=14,
-      col_w=[2.6, 1.3, 1.3, 1.3, 2.9], bold_cols=(4,), red_cells=((4, 0), (4, 4)))
+      col_w=[2.6, 1.3, 1.3, 1.3, 2.9], bold_cols=(4,),
+      # every per-group figure moved when n_eff was matched to the EM sample
+      red_cells=tuple((r, c) for r in (1, 2, 3, 4, 6) for c in range(1, 5)) + ((4, 0),))
 bullets(s, [
     ("≈ 40,000–44,000 same-ethnicity donors per major group for 95% CONDITIONAL coverage", {"bold": True, "color": ACCENT}),
     "* Pooled Others figure is a statistical artefact — see the sub-group analysis later",
     "† / ‡ The combined pooled registry is a mathematical convenience, not a policy target; signed-up targets add ~1.67× for real-world donor attrition",
 ], t=Inches(5.55), size=16, gap=6)
-notes(s, "Here is the headline result — Table 1 of the paper. Read the right-hand column: to give 95 per cent of patients a full 10-out-of-10 match from their own community — and hold on to the word 'conditional' here, I will unpack it on the very next slide — Singapore needs roughly 43,000 Chinese donors, 40,000 Malay donors, and 44,000 Indian donors — with the tight confidence intervals shown in brackets. So the memorable number is: about forty to forty-four thousand donors per major community. Two footnotes matter. The pooled 'Others' figure of 31,000, shown in red, is misleading — I'll show you why in a few slides; don't use it for planning. And these are biologically matched donors: in the real world 30 to 50 per cent of registered donors are unreachable or deferred when called, so the bottom row grosses the targets up by about 1.67 times to actual sign-up numbers. [~2 min]")
+notes(s, "Here is the headline result — Table 1 of the paper. Read the right-hand column: to give 95 per cent of patients a full 10-out-of-10 match from their own community — and hold on to the word 'conditional' here, I will unpack it on the very next slide — Singapore needs roughly 41,000 Chinese donors, 40,000 Malay donors, and 44,000 Indian donors, with the confidence intervals shown in brackets. So the memorable number is: about forty to forty-four thousand donors per major community. Two footnotes matter. The pooled 'Others' figure of 31,000 is misleading — I'll show you why in a few slides; don't use it for planning. And these are biologically matched donors: in the real world 30 to 50 per cent of registered donors are unreachable or deferred when called, so the bottom row grosses the targets up by about 1.67 times to actual sign-up numbers. [~2 min]")
 
 # ------------------------------------------------- 11b the floor caveat (v2.15b Limitations)
 s = slide()
@@ -323,14 +326,15 @@ s = slide()
 title(s, "Result 2 — dropping DQB1 (8/8) barely helps")
 table(s, [
     ["Ethnicity", "75%", "85%", "90%", "95% coverage  (95% CI)"],
-    ["Chinese", "7,479", "14,946", "23,119", "42,115  (41,924–42,306)"],
-    ["Malay", "5,665", "11,599", "18,672", "36,176  (35,287–37,172)"],
-    ["Indian", "9,207", "17,214", "25,351", "42,738  (41,779–43,438)"],
-    ["Others (pooled)*", "6,460", "11,927", "17,736", "30,525  (29,864–31,349)"],
+    ["Chinese", "7,188", "14,327", "22,170", "40,490  (39,534–41,528)"],
+    ["Malay", "5,635", "11,548", "18,563", "35,999  (34,976–37,067)"],
+    ["Indian", "9,169", "17,138", "25,256", "42,590  (41,628–43,391)"],
+    ["Others (pooled)*", "6,454", "11,913", "17,704", "30,489  (29,790–31,271)"],
     ["Combined pooled registry†", "23,483", "54,617", "96,637", "223,667"],
-    ["Signed-up target (40% attrition)‡", "9,441–15,345", "19,331–28,690", "29,560–42,251", "50,875–71,230"],
+    ["Signed-up target (40% attrition)‡", "9,392–15,282", "19,247–28,563", "29,507–42,093", "50,815–70,983"],
 ], Inches(0.7), Inches(1.5), Inches(11.9), Inches(3.9), size=14,
-      col_w=[2.6, 1.3, 1.3, 1.3, 2.9], bold_cols=(4,))
+      col_w=[2.6, 1.3, 1.3, 1.3, 2.9], bold_cols=(4,),
+      red_cells=tuple((r, c) for r in (1, 2, 3, 4, 6) for c in range(1, 5)))
 bullets(s, [
     ("8/8 targets are only ~600–1,200 donors lower than 10/10 at 95% coverage", {"bold": True, "color": ACCENT}),
     "Because DRB1 and DQB1 versions co-travel ≥94% of the time, a DRB1-matched donor is almost always DQB1-matched too",
@@ -353,7 +357,7 @@ table(s, [
 bullets(s, [
     "Model: one combined registry mirroring Singapore's population (77% Chinese)",
     ("For Malay, Indian and Others patients, no realistic registry size achieves coverage — their haplotypes simply aren't in the pool", {"bold": True, "color": ACCENT}),
-    "Even Chinese patients need ~2× more donors from a mixed pool (93,348 vs 42,847)",
+    "Even Chinese patients need ~2× more donors from a mixed pool (93,348 vs 41,183)",
     "Same-ethnicity recruitment is not merely preferable — it is the only viable strategy",
 ], t=Inches(4.75), size=17, gap=8)
 notes(s, "Result three answers the tempting question: couldn't one big shared registry — which in Singapore would be 77 per cent Chinese — serve everyone? Table 3 says no, definitively. For Chinese patients a shared pool works, but inefficiently: you'd need 93,000 donors instead of 43,000, because most of the pool is now diluted from any one patient's perspective. But look at the red rows: for Malay, Indian and Others patients, the model cannot reach 95 per cent coverage with any registry under ten million donors. Their distinctive haplotypes are simply not present in a Chinese-dominated pool — no amount of scale fixes an absence. This mirrors what the Israeli and US registries have reported. The policy conclusion is blunt: same-ethnicity recruitment is not a nice-to-have; for these communities it is the only strategy that works. [~2 min]")
@@ -366,7 +370,7 @@ bullets(s, [
     ("Green: 10/10 · Blue: ≥9/10 · Red: ≥8/10", {"size": 15}),
     ("Dashed = cross-ethnic pool", {"size": 15}),
     ("Relaxing 10/10 → 9/10 roughly halves N* for every group", {"bold": True, "size": 17}),
-    ("Chinese at 95%: ~20–22k (9/10) vs 42,847 (10/10)", {"size": 16}),
+    ("Chinese at 95%: ~20–22k (9/10) vs 41,183 (10/10)", {"size": 16}),
     ("Trials show a single permissive mismatch can carry minimal survival impact", {"size": 16}),
 ], l=Inches(9.85), t=Inches(1.6), w=Inches(3.2), size=16, gap=10)
 caption(s, "Figure 3. Coverage vs registry size for 10-gene partial matching, by CMIO group.")
@@ -453,10 +457,10 @@ table(s, [
     ["3", "A*02:07~B*46:01~C*01:02~DRB1*09:01~DQB1*03:03", "4.7%", "Chinese-specific"],
 ], Inches(0.7), Inches(3.75), Inches(11.9), Inches(1.9), size=12, col_w=[0.7, 4.6, 0.8, 2.6])
 bullets(s, [
-    ("Sub-group requirements span 35,193 → 63,856 — the pooled figure of 31,181 is below every one of them", {"bold": True, "color": ACCENT, "size": 16}),
+    ("Sub-group requirements span 35,193 → 63,856 — the pooled figure of 31,129 is below every one of them", {"bold": True, "color": ACCENT, "size": 16}),
     ("Recommended planning ceiling for Others: 63,856 (the Filipino/SE Asian cluster)", {"bold": True, "size": 16}),
 ], t=Inches(5.85), size=16, gap=6)
-notes(s, "Here's the payoff of that clustering — Tables 4 and 5. Each sub-group has its own registry requirement: 35,000 for the European-Eurasian cluster, 46,000 for the Northeast-Asian-mixed cluster, and 64,000 for the Filipino-Southeast-Asian cluster, which is the most haplotype-diverse. Now recall the pooled 'Others' figure from Table 1: 31,181 — below every single sub-group's true requirement. That's the artefact: mixing three different populations makes the blend look artificially easy to match, because the model wrongly assumes any Others donor can match any Others patient. The lower table shows the evidence for the ancestry labels — each cluster's top haplotype is a textbook population signature, like the 8.1 ancestral haplotype marking Northern Europeans. Planning recommendation: use 63,856 — the highest sub-group ceiling — and start collecting simple ancestry information at donor registration. [~2 min]")
+notes(s, "Here's the payoff of that clustering — Tables 4 and 5. Each sub-group has its own registry requirement: 35,000 for the European-Eurasian cluster, 46,000 for the Northeast-Asian-mixed cluster, and 64,000 for the Filipino-Southeast-Asian cluster, which is the most haplotype-diverse. Now recall the pooled 'Others' figure from Table 1: 31,129 — below every single sub-group's true requirement. That's the artefact: mixing three different populations makes the blend look artificially easy to match, because the model wrongly assumes any Others donor can match any Others patient. The lower table shows the evidence for the ancestry labels — each cluster's top haplotype is a textbook population signature, like the 8.1 ancestral haplotype marking Northern Europeans. Planning recommendation: use 63,856 — the highest sub-group ceiling — and start collecting simple ancestry information at donor registration. [~2 min]")
 
 # ---------------------------------------------------------------- 22 honesty / limitations
 s = slide()
@@ -624,12 +628,17 @@ EXTRA = {
        "pool (manuscript Section 2.3, equations 1–4).",
     10: "Additional detail — Dirichlet parametric bootstrap, B=1,000; reported "
         "point estimate is the bootstrap median, range = 2.5th–97.5th "
-        "percentile. The manuscript (Section 2.4) notes these cover "
-        "frequency-sampling noise only.",
+        "percentile. Concentration is n_eff × f, with n_eff the number of "
+        "individuals the frequencies were estimated from — the 5-locus donor "
+        "count subject to the 5,000-person EM limit (Chinese/Malay/Indian "
+        "5,000; Others 3,767), not the full group size. Using the full size "
+        "for Chinese (44,400) would narrow that interval about fourfold and "
+        "claim a precision the frequencies do not carry. The manuscript "
+        "(Section 2.4) notes these cover frequency-sampling noise only.",
     11: "Additional detail — Full table: manuscript Table 1. 95% conditional "
-        "targets: Chinese 42,847 (42,649–43,058), Malay 40,032 "
-        "(38,972–41,151), Indian 43,855 (42,963–44,577), Others pooled 31,181 "
-        "(30,490–31,959; artefact — see slide 22). Signed-up targets gross up "
+        "targets: Chinese 41,183 (40,184–42,153), Malay 39,831 "
+        "(38,680–40,935), Indian 43,785 (42,762–44,547), Others pooled 31,129 "
+        "(30,420–32,001; artefact — see slide 22). Signed-up targets gross up "
         "by ÷0.60 for 40% attrition.",
     12: "Additional detail — Retained frequency mass: Chinese 51.7%, Malay "
         "52.9%, Indian 40.2%, Others 35.6% (manuscript Sections 2.2 and 4.1). "
@@ -654,7 +663,7 @@ EXTRA = {
         "examined (ceiling 1×10⁷ in the v2.15 run) — their haplotypes are "
         "absent from the majority pool.",
     17: "Additional detail — Manuscript Section 3.4, Figure 3. 9/10 halves N* "
-        "for every group (Chinese 95%: ~21k vs 42,847). A 9/10 unrelated donor "
+        "for every group (Chinese 95%: ~21k vs 41,183). A 9/10 unrelated donor "
         "is by definition an MMUD; safety at permissive mismatches rests on "
         "external trials (refs [12,15]) — this analysis contains no outcome "
         "data.",
@@ -678,7 +687,7 @@ EXTRA = {
         "sub-populations (manuscript Sections 2.6, 3.7, 4.1).",
     22: "Additional detail — Manuscript Tables 4–5. Cluster targets at 95%: "
         "European/Eurasian 35,193, NE Asian/Mixed 45,731, Filipino/SE Asian "
-        "63,856. The pooled 31,181 sits below all three because mixing "
+        "63,856. The pooled 31,129 sits below all three because mixing "
         "heterogeneous pools inflates apparent common-haplotype coverage.",
     23: "Additional detail — Floor sensitivity (manuscript Sections 2.2 and "
         "4.1): a 1×10⁻⁶ floor (below every group's singleton frequency 1/(2n)) "
@@ -688,8 +697,8 @@ EXTRA = {
     24: "Additional detail — per recommendation (all map to manuscript "
         "Section 4):\n"
         "R1 (40,000–45,000 per group): Table 1 bootstrap medians at 95% "
-        "conditional 10/10 coverage — Chinese 42,847, Malay 40,032, Indian "
-        "43,855. Conditional on the 0.1% floor: unconditionally these serve "
+        "conditional 10/10 coverage — Chinese 41,183, Malay 39,831, Indian "
+        "43,785. Conditional on the 0.1% floor: unconditionally these serve "
         "~49/50/38/34% of all patients (slide 12), and 41.8% is observed for "
         "Chinese. Signed-up recruitment must gross up ×1.67 for ~40% donor "
         "attrition (Tables 1–2, bottom rows). Absolute sizes are "
@@ -700,12 +709,12 @@ EXTRA = {
         "and observed 10/10 twin rates are 25.3% and 19.7% vs Chinese 41.8%, "
         "a model-free measure of the same gap.\n"
         "R3 (9/10 protocols = MMUD): relaxing one allele roughly halves N* in "
-        "every group (Chinese 95%: ~21k vs 42,847; Section 3.4, Figure 3). A "
+        "every group (Chinese 95%: ~21k vs 41,183; Section 3.4, Figure 3). A "
         "9/10 unrelated donor is by definition an MMUD; for patients below "
         "the frequency floor this is the only route to a donor at all. "
         "Clinical safety (permissive DPB1, PTCy-era MMUD) rests on external "
         "trials [12,15] — this paper contains no outcome data.\n"
-        "R4 (Others ceiling 63,856 + ancestry data): the pooled 31,181 is an "
+        "R4 (Others ceiling 63,856 + ancestry data): the pooled 31,129 is an "
         "artefact sitting below every sub-cluster (35,193 / 45,731 / 63,856; "
         "Section 3.7). Plan to the hardest cluster; clusters are exploratory "
         "(silhouette 0.24), so an ancestry field at registration is what "
