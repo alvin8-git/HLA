@@ -1,5 +1,45 @@
 # Version History
 
+## v2.7.6 — 2026-08-25 (v2.15b) — REFERENCE [08] WITHDRAWN; IDENTIFIER AUDIT
+
+Reference [08] "Lim YA, Teo D, Ang AL, et al. HLA allele and haplotype
+frequencies in unrelated bone marrow donor registries in Asia. Transpl
+Immunol. 2010;22(3-4):166-174" could not be found in PubMed under any form of
+its title, and Transpl Immunol 2010;22(3-4) runs ...165-71, 172-8, 179-83 —
+there is no 166-174 slot. Treated as unverifiable and removed.
+
+Its four citations rested on claims [09] Aljurf already supported, so each
+now reads [08] Aljurf alone (or [1] alone for the haplotype-diversity
+sentence). References 09-21 shifted down to 08-20.
+
+Renumbering required two passes: cite() calls (74 rewritten) and 27 bracket
+citations hardcoded in prose strings, which the first pass missed — the
+abstract's "[1,11]" had silently come to mean Fleischhauer instead of the
+Census. Verified afterwards that every surviving reference number still
+resolves to the same paper it did in v2.15.
+
+PMIDs — all 18 journal references checked against PubMed esummary (title,
+journal, volume, pages must all match). 12 of the identifiers previously in
+Publications/DOWNLOAD_LINKS.txt resolved to unrelated papers; the old Price
+PMID returned a study of the avian MHC, the old Petersdorf PMID a paper on
+dietary trans-fatty acids. Corrected: Nunes 24738646, Maiers 17869653,
+Passweg 29540849, Lee 17785583, Aljurf 30778127, Halagan 28396163,
+Fleischhauer 22340965, Pidala 25161269, Gonzalez-Galarza 31722398,
+Price 10319267, Petersdorf 23878143.
+
+[11] Fleischhauer title corrected to the published spelling,
+"unrelated-donor haemopoietic-cell transplantation".
+
+mark_v217_diffs.py — normalize_refs now also maps the old reference numbering
+forward, so renumbering alone does not paint red; without it 51 of 148
+paragraphs reddened. Normalisation moved to where the old text is read
+(it is not idempotent — applying it twice would shift numbers twice), which
+also lets the paragraph aligner see the withdrawn entry as a clean delete.
+Red is back to 17 paragraphs + 60 cells, all substantive.
+
+Publications/ renumbered to match (17 of 20 references now have a PDF;
+[04] Beatty, [10] Census and [17] Efron outstanding). Nothing deleted.
+
 ## v2.7.5 — 2026-08-25 — REFERENCE IDENTIFIER AUDIT
 
 Reference [13] was a mangled citation and is corrected in the manuscript.

@@ -46,18 +46,53 @@ def has_image(par):
         True for tag in DRAWING for _ in par._p.iter(tag))
 
 
+# v2.15 reference 8 (Lim et al.) was withdrawn as unverifiable, so 9..20
+# shifted down by one. Renumbering is bookkeeping, not a change to the text;
+# mapping the OLD numbering forward keeps red meaning "the claim changed".
+# Set to None (or {}) once a rebuilt v2.15 baseline carries the new numbering.
+CITE_RENUMBER = {k: k - 1 for k in range(9, 21)}
+
+
+def _remap(nums):
+    out = [CITE_RENUMBER.get(k, k) for k in nums if k != 8]
+    return out or nums          # never let a citation vanish entirely
+
+
 def normalize_refs(t):
-    """Restyle old-text cross-references (§2.4 -> Section 2.4) before diffing,
-    so a pure notation change is not painted as an addition."""
+    """Restyle old-text cross-references before diffing, so pure notation or
+    numbering changes are not painted as additions.
+
+    Two normalisations: §2.4 -> Section 2.4, and the reference renumbering
+    that followed withdrawing old [8].
+    """
     t = re.sub(r'§(\d[\d.]*) and §(\d[\d.]*)', r'Sections \1 and \2', t)
-    return re.sub(r'§(?=\d)', 'Section ', t)
+    t = re.sub(r'§(?=\d)', 'Section ', t)
+    if not CITE_RENUMBER:
+        return t
+
+    def cite_sub(m):
+        nums = [int(x) for x in re.findall(r'\d+', m.group(1))]
+        return '[' + ','.join(str(k) for k in _remap(nums)) + ']'
+
+    t = re.sub(r'\[(\d+(?:\s*,\s*\d+)*)\]', cite_sub, t)
+
+    # reference-list lines ("9.  Aljurf M, ...") carry the number too
+    def entry_sub(m):
+        k = int(m.group(1))
+        return f'{CITE_RENUMBER.get(k, k)}.{m.group(2)}'
+
+    return re.sub(r'^(\d{1,2})\.(\s+[A-Z])', entry_sub, t)
 
 
 def word_mask(old, new):
-    """Per-character bool over `new`: True where it differs from `old`."""
+    """Per-character bool over `new`: True where it differs from `old`.
+
+    `old` must already be normalised — normalize_refs is NOT idempotent (it
+    shifts citation numbers), so it is applied exactly once, where the old
+    text is read.
+    """
     if old is None:
         return [True] * len(new)
-    old = normalize_refs(old)
     ot, nt = WORD.findall(old), WORD.findall(new)
     mask = []
     for tag, _i1, _i2, j1, j2 in difflib.SequenceMatcher(
@@ -135,7 +170,7 @@ def pair_tables(old_tables, new_tables, floor=0.35):
     the 10/10 one and floods it with false differences. Whole-table text
     separates them. Anything below `floor` is treated as a table new in v2.17.
     """
-    old_sigs = [table_sig(t) for t in old_tables]
+    old_sigs = [normalize_refs(table_sig(t)) for t in old_tables]
     new_sigs = [table_sig(t) for t in new_tables]
     scored = sorted(
         ((difflib.SequenceMatcher(None, o, n).ratio(), i, j)
@@ -154,7 +189,7 @@ def pair_tables(old_tables, new_tables, floor=0.35):
 def main():
     old_doc, new_doc = Document(OLD), Document(NEW)
 
-    old_paras = [p.text for p in old_doc.paragraphs]
+    old_paras = [normalize_refs(p.text) for p in old_doc.paragraphs]
     new_paras = [p.text for p in new_doc.paragraphs]
 
     masks = [None] * len(new_paras)
@@ -192,7 +227,7 @@ def main():
                 prev = None
                 if match is not None and ri < len(match.rows) \
                         and ci < len(match.rows[ri].cells):
-                    prev = cell_text(match.rows[ri].cells[ci])
+                    prev = normalize_refs(cell_text(match.rows[ri].cells[ci]))
                 cur = cell_text(cell)
                 mask = word_mask(prev, cur)
                 if any(mask):
@@ -216,8 +251,17 @@ if __name__ == '__main__':
         m = word_mask('a c', 'a b c')
         assert m[0] is False and m[2] is True
         # §->Section restyling is not an addition
-        assert not any(word_mask('see §2.4.', 'see Section 2.4.'))
-        assert not any(word_mask('see §3.6 and §4.1.', 'see Sections 3.6 and 4.1.'))
+        nm = lambda a, b: word_mask(normalize_refs(a), b)
+        assert not any(nm('see §2.4.', 'see Section 2.4.'))
+        assert not any(nm('see §3.6 and §4.1.', 'see Sections 3.6 and 4.1.'))
+        # nor is the reference renumbering after old [8] was withdrawn
+        assert not any(nm('need [8,9].', 'need [8].'))
+        assert not any(nm('diversity [1,8].', 'diversity [1].'))
+        assert not any(nm('registries [9].', 'registries [8].'))
+        assert not any(nm('LD [1,13].', 'LD [1,12].'))
+        assert not any(nm('9.  Aljurf M, Weisdorf D.', '8.  Aljurf M, Weisdorf D.'))
+        # a genuinely different claim still reddens
+        assert any(nm('halves the size [9].', 'doubles the size [8].'))
         print('mark_v217_diffs: self-check OK')
         sys.exit()
     main()
