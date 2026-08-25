@@ -40,6 +40,12 @@ sens   = pd.read_csv(os.path.join(DATA, 'cross_ethnic_sensitivity.csv'))
 # Table 6's figure is their population-weighted MEAN — a different quantity.
 tot95  = int(ci[(ci.match_level == '10of10')
                & (ci.target_coverage == 0.95)]['registry_size'].sum())
+# ...and the single pooled registry (ethnicity 'Combined') is a THIRD quantity,
+# larger than either: 243,849. Table 6's 42,567 is the weighted mean. Do not mix.
+pooled95 = int(tgts[(tgts.match_level == '10of10')
+                    & (tgts.ethnicity == 'Combined')
+                    & (tgts.model_variant == 'same_ethnicity')
+                    & (tgts.target_coverage == 0.95)]['registry_size'].iloc[0])
 mv     = pd.read_csv(os.path.join(DATA, 'match_validation.csv'))
 mr     = pd.read_csv(os.path.join(DATA, 'match_rate_comparison.csv'))
 
@@ -326,7 +332,7 @@ def make_ci_table(doc, match_level):
             row[j + 1].text = ci_cell(match_level, eth, thr)
     # Weighted average row
     row = tbl.add_row().cells
-    row[0].text = 'Weighted Average†'
+    row[0].text = 'Combined pooled registry†'
     set_cell_bg(row[0], 'E8E8E8')
     for j, thr in enumerate(THRESHOLDS):
         v = tgts[(tgts.match_level == match_level) & (tgts.ethnicity == 'Combined') &
@@ -689,17 +695,18 @@ add_para(doc,
 
 make_ci_table(doc, '10of10')
 add_para(doc,
-    '† Weighted Average: Singapore resident population weights (Chinese 74.3%, Malay 13.5%, '
-    'Indian 9.0%, Others 3.2%) [10]. This row is a mathematical convenience, not a policy target: '
-    'it is the mean of the four per-group targets weighted by how likely a patient '
-    'is to belong to each group — the expected size of the dedicated registry a '
-    'randomly drawn Singaporean patient would need. It is not the size of a single '
-    'shared pool serving all groups; that quantity is the cross-ethnic model of '
-    'Section 3.3, which is roughly twice as large for Chinese patients and '
-    'infeasible for the other three groups. Nor is it a national total: four '
-    'dedicated registries require the sum of the per-group targets, not their mean '
-    f'(≈{tot95:,} donors at 95%). The per-group same-ethnicity N* values above are '
-    'the operative planning targets for each community.\n'
+    '† Combined pooled registry: Singapore resident population weights (Chinese 74.3%, Malay 13.5%, '
+    'Indian 9.0%, Others 3.2%) [10]. This row is a single pooled registry, its donor '
+    'haplotype frequencies formed by merging the four groups under those weights, '
+    'serving a patient population of the same composition. It is a mathematical '
+    'convenience, not a policy target, and it is the most expensive option on this '
+    f'page: {pooled95:,} donors at 95%, against ≈{tot95:,} for four dedicated '
+    'same-ethnicity registries covering the same patients — pooling costs roughly '
+    f'{pooled95 / tot95:.1f}x more because a merged pool dilutes every patient\'s '
+    'own haplotypes. Distinguish it from the population-weighted mean of Table 6 '
+    '(Section 3.5), a different quantity that is neither a pool nor a total. The '
+    'per-group same-ethnicity N* values above are the operative planning targets '
+    'for each community.\n'
     'Values shown as bootstrap median N (95% CI lower–upper).',
     size=8, space_after=4)
 add_caption(doc,
@@ -730,10 +737,15 @@ add_para(doc,
     'for Chinese) should be distinguished from the population-weighted combined '
     'estimates in the sensitivity analysis (Table 6; Section 3.5), where Singapore\'s '
     'ethnic composition (74.3% Chinese) produces a population-weighted mean N* of '
-    '~42,567. That mean is an expected-per-patient figure, not a pooled registry '
-    'and not a national total: standing up a dedicated registry for each of the '
-    f'four groups requires their sum, ≈{tot95:,} donors at 95% coverage. The '
-    'per-group figures are the operative planning targets.')
+    '~42,567. Three distinct quantities must be kept apart. The per-group values '
+    'are the size of one dedicated same-ethnicity registry; supplying all four '
+    f'groups requires their sum, ≈{tot95:,} donors at 95%. The pooled registry of '
+    f'Table 1 merges the four donor pools and needs {pooled95:,} — more than the '
+    'four separate registries combined, because merging dilutes each patient\'s '
+    'own haplotypes. The Table 6 mean of ~42,567 is neither: it is an '
+    'expected-per-patient figure, the average dedicated-registry size weighted by '
+    'how likely a patient is to come from each group. Only the per-group values '
+    'are planning targets.')
 
 add_para(doc,
     'A striking feature of these results is how rapidly requirements grow as '

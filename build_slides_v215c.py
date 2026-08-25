@@ -273,7 +273,8 @@ table(s, [
 bullets(s, [
     ("≈ 40,000–44,000 same-ethnicity donors per major group for 95% CONDITIONAL coverage", {"bold": True, "color": ACCENT}),
     "* Pooled Others figure is a statistical artefact — see the sub-group analysis later",
-    "† / ‡ The combined pooled registry is a mathematical convenience, not a policy target; signed-up targets add ~1.67× for real-world donor attrition",
+    "† One merged pool serving a census-mix patient population — 243,849, vs 155,928 for four dedicated registries. Pooling costs 1.6× more; not a policy target",
+    "‡ Signed-up targets add ~1.67× for real-world donor attrition",
 ], t=Inches(5.55), size=16, gap=6)
 notes(s, "Here is the headline result — Table 1 of the paper. Read the right-hand column: to give 95 per cent of patients a full 10-out-of-10 match from their own community — and hold on to the word 'conditional' here, I will unpack it on the very next slide — Singapore needs roughly 41,000 Chinese donors, 40,000 Malay donors, and 44,000 Indian donors, with the confidence intervals shown in brackets. So the memorable number is: about forty to forty-four thousand donors per major community. Two footnotes matter. The pooled 'Others' figure of 31,000 is misleading — I'll show you why in a few slides; don't use it for planning. And these are biologically matched donors: in the real world 30 to 50 per cent of registered donors are unreachable or deferred when called, so the bottom row grosses the targets up by about 1.67 times to actual sign-up numbers. [~2 min]")
 
@@ -360,7 +361,7 @@ bullets(s, [
     "Even Chinese patients need ~2× more donors from a mixed pool (93,348 vs 41,183)",
     "Same-ethnicity recruitment is not merely preferable — it is the only viable strategy",
 ], t=Inches(4.75), size=17, gap=8)
-notes(s, "Result three answers the tempting question: couldn't one big shared registry — which in Singapore would be 77 per cent Chinese — serve everyone? Table 3 says no, definitively. For Chinese patients a shared pool works, but inefficiently: you'd need 93,000 donors instead of 43,000, because most of the pool is now diluted from any one patient's perspective. But look at the red rows: for Malay, Indian and Others patients, the model cannot reach 95 per cent coverage with any registry under ten million donors. Their distinctive haplotypes are simply not present in a Chinese-dominated pool — no amount of scale fixes an absence. This mirrors what the Israeli and US registries have reported. The policy conclusion is blunt: same-ethnicity recruitment is not a nice-to-have; for these communities it is the only strategy that works. [~2 min]")
+notes(s, "Result three answers the tempting question: couldn't one big shared registry — which in Singapore would be 74 per cent Chinese — serve everyone? Table 3 says no, definitively. For Chinese patients a shared pool works, but inefficiently: you'd need 93,000 donors instead of 43,000, because most of the pool is now diluted from any one patient's perspective. But look at the red rows: for Malay, Indian and Others patients, the model cannot reach 95 per cent coverage with any registry under ten million donors. Their distinctive haplotypes are simply not present in a Chinese-dominated pool — no amount of scale fixes an absence. This mirrors what the Israeli and US registries have reported. The policy conclusion is blunt: same-ethnicity recruitment is not a nice-to-have; for these communities it is the only strategy that works. [~2 min]")
 
 # ---------------------------------------------------------------- 16 Figure 3 partial match 10-locus
 s = slide()
@@ -394,17 +395,19 @@ title(s, "Result 5 — the targets don't depend on demographic assumptions")
 pic(s, f"{FIG}/cross_ethnic_sensitivity.png", Inches(0.55), Inches(1.4), Inches(7.3), Inches(4.4))
 table(s, [
     ["Scenario (C/M/I/O weights)", "N* at 95%"],
-    ["SG population (74.3/13.5/9/3.2)", "42,567"],
-    ["BMDP+SCBB donors (75/9/9/6)", "42,289"],
-    ["HSA patient data (72/15/5/8)", "41,950"],
+    ["SG population (74.3/13.5/9.0/3.2)", "42,567"],
+    ["BMDP+SCBB donors (75.0/9.4/9.3/6.4)", "42,289"],
+    ["HSA patient data (72.0/14.9/5.0/8.2)", "41,950"],
     ["Minority-focus (0/40/40/20)", "41,129"],
 ], Inches(8.15), Inches(1.7), Inches(4.7), Inches(2.7), size=13, col_w=[3, 1.5])
 bullets(s, [
-    ("Combined N* varies by 3.5% across all four scenarios", {"bold": True, "size": 16, "color": RED}),
-    ("The ~40–45k target is a structural property of CMIO haplotype diversity, robust to demographic change", {"size": 15}),
+    ("Bars = weighted MEAN of the four per-group targets. Not a pooled registry, not a total", {"size": 13, "color": RED}),
+    ("Varies only 3.5% across all four scenarios", {"bold": True, "size": 15, "color": RED}),
+    ("Flat by arithmetic: any mean of four values in the 31–44k band is flat", {"size": 12}),
+    ("Real finding: all four targets within 1.4× of each other", {"size": 14, "bold": True, "color": ACCENT}),
 ], l=Inches(8.15), t=Inches(4.6), w=Inches(4.7), size=15, gap=8)
-caption(s, "Figure 5 & Table 6. Registry size under four patient-composition scenarios — near-identical bars.")
-notes(s, "A planner's natural worry: do these numbers depend on assumptions about who the future patients are? We stress-tested that. Table 6 and Figure 5 show the combined registry size under four very different patient-mix scenarios: Singapore's census composition, the donor registry's own composition, the actual referral mix seen by the Health Sciences Authority, and an extreme minority-only scenario with no Chinese patients at all. The bars are near-identical — the answer moves by less than three per cent. Why? Because every group's individual requirement is in the same 31-to-44-thousand band, reweighting between them barely moves the total. The practical value: the 40-to-45-thousand target is structural. It will not be invalidated by demographic drift, and no one can argue it away by quibbling with the patient-mix assumption. [~1.5 min]")
+caption(s, "Figure 5 & Table 6. Population-weighted mean of the per-group same-ethnicity targets, under four patient-composition scenarios.")
+notes(s, "A planner's natural worry: do these numbers depend on assumptions about who the future patients are? We stress-tested that under four very different patient-mix scenarios: Singapore's census composition, the donor registry's own composition, the actual referral mix seen by the Health Sciences Authority, and an extreme minority-only scenario with no Chinese patients at all. The bars are near-identical — the answer moves by less than three per cent. Be precise about what the bars are, because it is easy to over-claim here. Each bar is the population-weighted mean of the four per-group targets: the expected size of the dedicated registry a randomly drawn Singaporean patient would need. It is not one pooled registry, and it is not a national total. And the flatness is arithmetic rather than biological — any weighted mean of four numbers between 31 and 44 thousand has to land in a narrow band. If anything the point is stronger than the bars suggest: if each community has its own registry, the population mix never enters that community's target at all, so demographic drift cannot invalidate it. The substantive finding sitting underneath is the one worth remembering — all four communities need registries within a factor of 1.4 of each other. [~1.5 min]")
 
 # ---------------------------------------------------------------- 19 validation
 s = slide()
@@ -710,10 +713,14 @@ EXTRA = {
         "every relaxation level, so relaxation does not rescue a shared-pool "
         "strategy.",
     19: "Additional detail — Manuscript Table 6, Section 3.5. Four scenarios "
-        "(SG population 74.3/13.5/9/3.2, registry composition 75/9/9/6, HSA referral "
-        "72/15/5/8, minority-focus 0/40/40/20) move the combined N* by 3.5%. "
-        "The 2020 census citizens+PR breakdown (73.3/13.5/9.0/3.2) lies within "
-        "this envelope.",
+        "(SG population 74.3/13.5/9.0/3.2, registry 75.0/9.4/9.3/6.4, HSA referral "
+        "72.0/14.9/5.0/8.2, minority-focus 0/40/40/20) move the weighted MEAN by "
+        "3.5%. Three quantities must be kept apart: the per-group targets "
+        "(41,183 / 39,831 / 43,785 / 31,129), their sum for four dedicated "
+        "registries (155,928), and one merged pool serving a census-mix patient "
+        "population (243,849, Table 1). Table 6 is none of these — it is the "
+        "population-weighted mean, 42,567. The 2020 census citizens+PR breakdown "
+        "(73.3/13.5/9.0/3.2) lies within this envelope.",
     20: "Additional detail — Manuscript Table 7, Section 3.6. Chinese: "
         "Spearman r = 0.70 on shared haplotypes vs 564 HSA patient–donor "
         "pairs. Malay/Indian/Others have too few shared haplotypes (n < 3) — "
