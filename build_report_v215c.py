@@ -35,6 +35,11 @@ tgts   = pd.read_csv(os.path.join(DATA, 'registry_size_targets.csv'))
 oc_reg = pd.read_csv(os.path.join(DATA, 'others_cluster_registry.csv'))
 oc_hap = pd.read_csv(os.path.join(DATA, 'others_cluster_haplotypes.csv'))
 sens   = pd.read_csv(os.path.join(DATA, 'cross_ethnic_sensitivity.csv'))
+
+# Four dedicated same-ethnicity registries need the SUM of the per-group targets.
+# Table 6's figure is their population-weighted MEAN — a different quantity.
+tot95  = int(ci[(ci.match_level == '10of10')
+               & (ci.target_coverage == 0.95)]['registry_size'].sum())
 mv     = pd.read_csv(os.path.join(DATA, 'match_validation.csv'))
 mr     = pd.read_csv(os.path.join(DATA, 'match_rate_comparison.csv'))
 
@@ -441,8 +446,9 @@ add_para(doc,
     'Filipino/SE Asian cluster ceiling — is the recommended planning target. '
     'Cross-ethnic matching is infeasible for Malay, Indian, and Others patients '
     'regardless of registry size. Relaxing to 9/10 matching approximately halves '
-    'the required registry size. Registry size estimates are robust across '
-    'patient demographic scenarios (variation 3.5%).')
+    'the required registry size. The population-weighted mean registry size is '
+    'robust across patient demographic scenarios (variation 3.5%); serving all '
+    f'four groups with dedicated registries requires ≈{tot95:,} donors in total.')
 add_para(doc,
     'Conclusions: An ethnicity-specific same-ethnicity registry of approximately '
     '40,000–44,000 donors per major CMIO group is needed for 95% 10/10 coverage. '
@@ -685,11 +691,15 @@ make_ci_table(doc, '10of10')
 add_para(doc,
     '† Weighted Average: Singapore resident population weights (Chinese 74.3%, Malay 13.5%, '
     'Indian 9.0%, Others 3.2%) [10]. This row is a mathematical convenience, not a policy target: '
-    'it describes how a single shared registry would need to be sized to serve all '
-    'groups proportionally under those weights, but it cannot substitute for '
-    'ethnicity-specific recruitment because donors are not interchangeable across '
-    'groups. The per-group same-ethnicity N* values above are the operative planning '
-    'targets for each community.\n'
+    'it is the mean of the four per-group targets weighted by how likely a patient '
+    'is to belong to each group — the expected size of the dedicated registry a '
+    'randomly drawn Singaporean patient would need. It is not the size of a single '
+    'shared pool serving all groups; that quantity is the cross-ethnic model of '
+    'Section 3.3, which is roughly twice as large for Chinese patients and '
+    'infeasible for the other three groups. Nor is it a national total: four '
+    'dedicated registries require the sum of the per-group targets, not their mean '
+    f'(≈{tot95:,} donors at 95%). The per-group same-ethnicity N* values above are '
+    'the operative planning targets for each community.\n'
     'Values shown as bootstrap median N (95% CI lower–upper).',
     size=8, space_after=4)
 add_caption(doc,
@@ -719,10 +729,11 @@ add_para(doc,
     'These per-group same-ethnicity N* values (bootstrap medians; e.g., 41,183 '
     'for Chinese) should be distinguished from the population-weighted combined '
     'estimates in the sensitivity analysis (Table 6; Section 3.5), where Singapore\'s '
-    'ethnic composition (74.3% Chinese) produces a combined N* of ~42,567. The '
-    'combined figure reflects how a single shared registry would need to be sized '
-    'to serve all groups proportionally; the per-group figures reflect the target '
-    'for a dedicated ethnicity-specific registry.')
+    'ethnic composition (74.3% Chinese) produces a population-weighted mean N* of '
+    '~42,567. That mean is an expected-per-patient figure, not a pooled registry '
+    'and not a national total: standing up a dedicated registry for each of the '
+    f'four groups requires their sum, ≈{tot95:,} donors at 95% coverage. The '
+    'per-group figures are the operative planning targets.')
 
 add_para(doc,
     'A striking feature of these results is how rapidly requirements grow as '
@@ -781,7 +792,10 @@ add_para(doc,
     'by the numerically dominant Chinese donor group — could serve patients of '
     'all ethnicities. The cross-ethnic analysis answers this question definitively: '
     'it cannot (Table 3). This is consistent with findings from other multiethnic '
-    'registries ' + cite(9) + '.')
+    'registries: the U.S. registry, where match likelihood falls sharply for '
+    'patients of non-European ancestry ' + cite(2) + ', and the Israeli Ezer '
+    'Mizion registry, where donor match rates differ markedly between Ashkenazi '
+    'and non-Ashkenazi patients ' + cite(9) + '.')
 
 tbl3_data = [['Ethnicity', '75% coverage', '85% coverage',
               '90% coverage', '95% coverage']]
@@ -813,7 +827,7 @@ add_para(doc,
     'patients, cross-ethnic matching from a Chinese-dominated pool is essentially '
     'impossible: no registry of realistic size achieves adequate coverage, because '
     'their distinctive haplotype combinations are not represented in the donor pool '
-    + cite(9) + '. This underscores that same-ethnicity donor recruitment is not '
+    + cite(2, 9) + '. This underscores that same-ethnicity donor recruitment is not '
     'merely preferable but, on these results, the only viable strategy for these '
     'groups ' + cite(8) + '.')
 
@@ -868,9 +882,15 @@ add_para(doc,
     '13.5% Malay, 9.0% Indian, 3.2% Others; 3,006,770, 545,500, 362,270 and 129,670 '
     'of 4,044,210 residents) ' + cite(10) + ', BMDP+SCBB registry composition, '
     'HSA Patient-Donor Data (referral composition from Health Sciences Authority Singapore), and an extreme minority-focus '
-    'scenario (equal Malay, Indian, and Others weighting, no Chinese). Table 6 and '
-    'Figure 5 show that the combined N* varies by 3.5% across all scenarios at the '
-    '95% target (42,567 down to 41,129), and by less at lower targets.')
+    'scenario (equal Malay, Indian, and Others weighting, no Chinese). In each '
+    'scenario the reported figure is the population-weighted mean of the four '
+    'per-group same-ethnicity targets — an expected-per-patient registry size, not '
+    'a pooled registry and not a national total. Table 6 and Figure 5 show that '
+    'this weighted mean varies by 3.5% across all scenarios at the 95% target '
+    '(42,567 down to 41,129), and by less at lower targets. The corresponding '
+    f'national total is unaffected by the weights entirely: at ≈{tot95:,} donors '
+    'it is the sum of the four per-group targets, which are computed within each '
+    'group and so do not depend on the population mix at all.')
 
 tbl6_data = [['Scenario', 'Ethnic weights (C/M/I/O)',
               '75%', '85%', '90%', '95%']]
@@ -901,20 +921,24 @@ for i, row_data in enumerate(tbl6_data):
         tbl6.rows[i].cells[j].text = val
 style_table(tbl6)
 add_caption(doc,
-    'Table 6. Sensitivity of combined registry size to patient ethnic composition '
+    'Table 6. Sensitivity of the population-weighted mean registry size to patient '
+    'ethnic composition '
     'scenario [10]. C/M/I/O = Chinese/Malay/Indian/Others percentage weights.',
     fig=False)
 
 add_figure(doc, 'cross_ethnic_sensitivity.png', width=6.0,
     caption='Figure 5. Registry size sensitivity across four patient demographic '
     'scenarios [10], including HSA Patient-Donor Data (Health Sciences Authority '
-    'Singapore). Near-identical bar heights confirm the ~40,000–45,000 donor '
-    'target is a structural property of CMIO haplotype diversity [2].')
+    'Singapore). Bars are the population-weighted mean of the four per-group '
+    'same-ethnicity targets, not a pooled registry. Their near-identical heights '
+    'follow from the per-group targets all lying between ~31,000 and ~44,000 [2].')
 
 add_para(doc,
-    'This stability arises because per-group N* values are all in the same order '
-    'of magnitude (~31,000–44,000 at 95%). Reweighting the groups changes the '
-    'combined N* only marginally ' + cite(2) + '. This structural robustness '
+    'This stability is arithmetic rather than biological: any weighted mean of four '
+    'values spanning ~31,000–44,000 must itself fall in a narrow band, and under '
+    'dedicated per-group registries the weights do not enter the per-group targets '
+    'at all. The substantive finding underneath it is that the four per-group N* '
+    'values sit within a factor of 1.4 of one another ' + cite(2) + '. This structural robustness '
     'gives decision-makers confidence that the ~40,000–45,000 donor target per '
     'ethnicity will remain valid even as Singapore\'s demographic composition '
     'evolves ' + cite(10) + '.')
