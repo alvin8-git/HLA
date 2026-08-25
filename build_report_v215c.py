@@ -46,6 +46,26 @@ pooled95 = int(tgts[(tgts.match_level == '10of10')
                     & (tgts.ethnicity == 'Combined')
                     & (tgts.model_variant == 'same_ethnicity')
                     & (tgts.target_coverage == 0.95)]['registry_size'].iloc[0])
+
+def _t(ml, eth, thr, variant='same_ethnicity'):
+    return int(tgts[(tgts.match_level == ml) & (tgts.ethnicity == eth)
+                    & (tgts.model_variant == variant)
+                    & (tgts.target_coverage == thr)]['registry_size'].iloc[0])
+
+# Cross-ethnic Chinese and the 10/10-vs-8/8 gap were hardcoded and went stale
+# when SG_WEIGHTS was corrected. Derive them.
+cross_cn95 = _t('10of10', 'Chinese', 0.95, 'cross_ethnic')
+cross_ratio = cross_cn95 / int(ci[(ci.ethnicity == 'Chinese')
+                                  & (ci.match_level == '10of10')
+                                  & (ci.target_coverage == 0.95)]['registry_size'].iloc[0])
+_gap = {e: (int(ci[(ci.ethnicity == e) & (ci.match_level == '10of10')
+                   & (ci.target_coverage == 0.95)]['registry_size'].iloc[0])
+            - int(ci[(ci.ethnicity == e) & (ci.match_level == '8of8')
+                     & (ci.target_coverage == 0.95)]['registry_size'].iloc[0]))
+        for e in ['Chinese', 'Malay', 'Indian', 'Others']}
+gap_lo, gap_hi = min(_gap.values()), max(_gap.values())
+gap_malay = _gap['Malay']
+n_others_clustered = int(oc_reg.groupby('cluster')['n_individuals'].first().sum())
 mv     = pd.read_csv(os.path.join(DATA, 'match_validation.csv'))
 mr     = pd.read_csv(os.path.join(DATA, 'match_rate_comparison.csv'))
 
@@ -450,8 +470,9 @@ add_para(doc,
     'distinct groups (European/Eurasian, Filipino/SE Asian, Northeast Asian) with '
     'markedly different requirements (35,193–63,856 at 95%), and 63,856 — the '
     'Filipino/SE Asian cluster ceiling — is the recommended planning target. '
-    'Cross-ethnic matching is infeasible for Malay, Indian, and Others patients '
-    'regardless of registry size. Relaxing to 9/10 matching approximately halves '
+    'Cross-ethnic matching is infeasible for Malay, Indian, and Others patients at '
+    'any registry size Singapore could realistically build. '
+    'Relaxing to 9/10 matching approximately halves '
     'the required registry size. The population-weighted mean registry size is '
     'robust across patient demographic scenarios (variation 3.5%); serving all '
     f'four groups with dedicated registries requires ≈{tot95:,} donors in total.')
@@ -765,8 +786,10 @@ add_heading(doc, '3.2 Registry Size Requirements — 8/8 HLA Matching', level=2)
 add_para(doc,
     'At the 8/8 match level (omitting DQB1 as a mandatory matching criterion), '
     'registry size requirements are marginally lower than for 10/10 matching '
-    '(Table 2). The difference is modest — typically 600–1,200 fewer donors at '
-    '95% coverage — because DRB1 and DQB1 are in very strong linkage '
+    f'(Table 2). The difference is modest for three of the four groups — {gap_lo:,}–1,200 '
+    f'fewer donors at 95% coverage — though Malay is an exception at {gap_malay:,} '
+    f'({100 * gap_malay / int(ci[(ci.ethnicity == "Malay") & (ci.match_level == "10of10") & (ci.target_coverage == 0.95)]["registry_size"].iloc[0]):.0f}% of its 10/10 target). '
+    'The general pattern holds because DRB1 and DQB1 are in very strong linkage '
     'disequilibrium across all CMIO groups (D′ = 0.94–0.99) ' + cite(1, 12) + '. '
     'A donor matched at DRB1 is almost always also matched at DQB1, so the '
     'additional constraint of DQB1 matching adds very little to registry size '
@@ -833,8 +856,8 @@ add_caption(doc,
     fig=False)
 
 add_para(doc,
-    'For the Chinese group, cross-ethnic matching is feasible (93,348 donors at '
-    '95% coverage) but requires roughly twice the same-ethnicity target — because '
+    f'For the Chinese group, cross-ethnic matching is feasible ({cross_cn95:,} donors at '
+    f'95% coverage) but requires roughly {cross_ratio:.1f} times the same-ethnicity target — because '
     'Chinese haplotypes dominate the combined pool. For Malay, Indian, and Others '
     'patients, cross-ethnic matching from a Chinese-dominated pool is essentially '
     'impossible: no registry of realistic size achieves adequate coverage, because '
@@ -1009,7 +1032,8 @@ add_para(doc,
     'The Others category in Singapore\'s CMIO classification encompasses Eurasians, '
     'Caucasians, and individuals of mixed or diverse Asian ancestry ' + cite(10) + '. '
     'Unsupervised clustering (optimal k=3 by silhouette coefficient; s=0.24 in the '
-    'five-component PCA space used for clustering) of the 3,847 fully five-locus-typed Others donors reveals '
+    f'five-component PCA space used for clustering) of {n_others_clustered:,} five-locus-typed '
+    'Others individuals reveals '
     'three genetically distinct sub-groups — European/Eurasian, Filipino/SE Asian, '
     'and Northeast Asian/Mixed — with markedly different registry size requirements '
     '(Table 4). The pooled Others estimate in Table 1 is a mathematical artefact of '
@@ -1057,7 +1081,7 @@ add_caption(doc,
     'be used as a policy target (see text).', fig=False)
 
 add_figure(doc, 'others_pca_scatter.png', width=5.0,
-    caption='Figure 7. PCA scatter of 3,847 fully five-locus-typed Others donors (binary HLA allele '
+    caption=f'Figure 7. PCA scatter of {n_others_clustered:,} five-locus-typed Others individuals (binary HLA allele '
     'indicators, alleles ≥1%). Three distinct clusters (optimal k=3 by silhouette '
     'coefficient, s=0.24 in the five-PC clustering space; 0.43 in the PC1–PC2 '
     'projection shown) indicate different ancestry backgrounds. Cluster identities inferred from '
@@ -1278,7 +1302,14 @@ add_para(doc,
     '−1.9% (Others) — confirming robustness at the primary planning threshold. '
     'Effects are larger at 75% (+11–24%), indicating that lower-coverage '
     'targets are more sensitive to rare-haplotype treatment. '
-    'Fifth, the Others cluster ancestry assignments are inferred from haplotype '
+    'Fifth, the Others sub-cluster analysis (Section 3.7) draws on a different '
+    'cohort from the rest of this study: it includes every five-locus-typed Others '
+    'record in the cleaned dataset, HSA donor and patient records among them, '
+    'whereas all other results are restricted to the BMDP+SCBB registry '
+    '(3,767 five-locus-typed Others donors). The sub-cluster targets are therefore '
+    'not strictly comparable with the pooled Others row of Table 1, which reinforces '
+    'their exploratory status. The cluster ancestry assignments are further '
+    'inferred from haplotype '
     'signatures ' + cite(14, 15) + ' without confirmed self-reported ancestry '
     'data, and cluster stability was not independently validated via bootstrap '
     'resampling of individuals — the labels are supported by distinct '

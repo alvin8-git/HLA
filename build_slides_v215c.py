@@ -13,7 +13,35 @@ import os
 
 # Frozen 1e-3 snapshot: live analysis/figures now holds the 1e-6 re-run
 # (e.g. em_convergence.png rises to 8.7e7, contradicting the v2.15 caption).
-FIG = "analysis/snapshot_1e-3/figures"
+FIG  = "analysis/snapshot_1e-3/figures"
+DATA = "analysis/snapshot_1e-3/data"
+
+import pandas as pd
+_tg = pd.read_csv(os.path.join(DATA, 'registry_size_targets.csv'))
+_ci = pd.read_csv(os.path.join(DATA, 'registry_size_ci.csv'))
+
+
+def xeth(eth, thr):
+    """Cross-ethnic 10/10 target, formatted as the manuscript's Table 3 does."""
+    v = int(_tg[(_tg.match_level == '10of10') & (_tg.ethnicity == eth)
+                & (_tg.model_variant == 'cross_ethnic')
+                & (_tg.target_coverage == thr)]['registry_size'].iloc[0])
+    return '>10 million' if v >= 10_000_000 else f'{v:,}'
+
+
+def _cross_val(eth, thr):
+    return int(_tg[(_tg.match_level == '10of10') & (_tg.ethnicity == eth)
+                   & (_tg.model_variant == 'cross_ethnic')
+                   & (_tg.target_coverage == thr)]['registry_size'].iloc[0])
+
+
+def seth(eth, thr, ml='10of10'):
+    return int(_ci[(_ci.ethnicity == eth) & (_ci.match_level == ml)
+                   & (_ci.target_coverage == thr)]['registry_size'].iloc[0])
+
+
+_xcn = _cross_val('Chinese', 0.95)
+
 OUT = "HLA_Registry_Size_CMIO_v2.15c_slides.pptx"
 
 # neutral palette
@@ -337,7 +365,7 @@ table(s, [
       col_w=[2.6, 1.3, 1.3, 1.3, 2.9], bold_cols=(4,),
       red_cells=tuple((r, c) for r in (1, 2, 3, 4, 6) for c in range(1, 5)))
 bullets(s, [
-    ("8/8 targets are only ~600–1,200 donors lower than 10/10 at 95% coverage", {"bold": True, "color": ACCENT}),
+    ("8/8 targets are only ~640–1,200 donors lower than 10/10 at 95% — except Malay, at 3,832 (9.6%)", {"bold": True, "color": ACCENT}),
     "Because DRB1 and DQB1 versions co-travel ≥94% of the time, a DRB1-matched donor is almost always DQB1-matched too",
     "Practical implication: full 10-gene typing adds clinical value at almost no extra recruitment cost",
 ], t=Inches(5.55), size=16, gap=6)
@@ -348,20 +376,18 @@ s = slide()
 title(s, "Result 3 — a shared pool cannot replace same-ethnicity donors")
 table(s, [
     ["Patient group", "75%", "85%", "90%", "95% coverage"],
-    ["Chinese", "12,198", "25,941", "42,769", "93,348"],
-    ["Malay", ">10 million", ">10 million", ">10 million", ">10 million"],
-    ["Indian", "1.6 million", "5.2 million", ">10 million", ">10 million"],
-    ["Others", ">10 million", ">10 million", ">10 million", ">10 million"],
+    *[[e] + [xeth(e, t) for t in (0.75, 0.85, 0.90, 0.95)]
+      for e in ("Chinese", "Malay", "Indian", "Others")],
 ], Inches(0.7), Inches(1.55), Inches(11.9), Inches(2.9), size=16,
       col_w=[2.2, 1.6, 1.6, 1.6, 1.8],
-      red_cells=((2, 1), (2, 2), (2, 3), (2, 4), (3, 1), (3, 2), (3, 3), (3, 4), (4, 1), (4, 2), (4, 3), (4, 4)))
+      red_cells=tuple((r, c) for r in (1, 2, 3, 4) for c in range(1, 5)))
 bullets(s, [
     "Model: one combined registry mirroring Singapore's population (74.3% Chinese)",
     ("For Malay, Indian and Others patients, no realistic registry size achieves coverage — their haplotypes simply aren't in the pool", {"bold": True, "color": ACCENT}),
-    "Even Chinese patients need ~2× more donors from a mixed pool (93,348 vs 41,183)",
+    f"Even Chinese patients need ~{_xcn / seth('Chinese', 0.95):.1f}× more donors from a mixed pool ({_xcn:,} vs {seth('Chinese', 0.95):,})",
     "Same-ethnicity recruitment is not merely preferable — it is the only viable strategy",
 ], t=Inches(4.75), size=17, gap=8)
-notes(s, "Result three answers the tempting question: couldn't one big shared registry — which in Singapore would be 74 per cent Chinese — serve everyone? Table 3 says no, definitively. For Chinese patients a shared pool works, but inefficiently: you'd need 93,000 donors instead of 43,000, because most of the pool is now diluted from any one patient's perspective. But look at the red rows: for Malay, Indian and Others patients, the model cannot reach 95 per cent coverage with any registry under ten million donors. Their distinctive haplotypes are simply not present in a Chinese-dominated pool — no amount of scale fixes an absence. This mirrors what the Israeli and US registries have reported. The policy conclusion is blunt: same-ethnicity recruitment is not a nice-to-have; for these communities it is the only strategy that works. [~2 min]")
+notes(s, "Result three answers the tempting question: couldn't one big shared registry — which in Singapore would be 74 per cent Chinese — serve everyone? Table 3 says no, definitively. For Chinese patients a shared pool works, but inefficiently: you'd need about 69,000 donors instead of 41,000, because most of the pool is now diluted from any one patient's perspective. But look at the red rows: Malay patients would need 1.4 million donors, Indian and Others more than ten million — figures no national registry will ever reach. Their distinctive haplotypes are simply not present in a Chinese-dominated pool — no amount of scale fixes an absence. This mirrors what the Israeli and US registries have reported. The policy conclusion is blunt: same-ethnicity recruitment is not a nice-to-have; for these communities it is the only strategy that works. [~2 min]")
 
 # ---------------------------------------------------------------- 16 Figure 3 partial match 10-locus
 s = slide()
@@ -433,15 +459,15 @@ s = slide()
 title(s, "Result 7 — 'Others' is not one population, it's three")
 pic(s, f"{FIG}/others_pca_scatter.png", Inches(0.7), Inches(1.35), Inches(8.6), Inches(5.3))
 bullets(s, [
-    ("Clustering of 3,847 fully-typed Others donors by HLA profile", {"size": 16}),
+    ("Clustering of 3,847 five-locus-typed Others individuals by HLA profile", {"size": 16}),
     ("Three groups; boundaries overlap (s=0.24)", {"bold": True, "size": 16}),
     ("European / Eurasian", {"size": 15}),
     ("Filipino / SE Asian", {"size": 15}),
     ("Northeast Asian / Mixed", {"size": 15}),
     ("Ancestry inferred from haplotype signatures (AFND)", {"size": 14, "color": MUTED}),
 ], l=Inches(9.45), t=Inches(1.7), w=Inches(3.6), size=15, gap=8)
-caption(s, "Figure 7. PCA of the 3,847 fully-typed Others donors: three ancestry clusters (k=3 optimal by silhouette; s=0.24 in the five-PC clustering space, 0.43 in the projection shown).")
-notes(s, "Now the most surprising finding. The 'Others' census category lumps together Eurasians, Europeans, Filipinos, and many mixed backgrounds. Is it statistically legitimate to model them as one population? We let the data answer: we ran principal component analysis and clustering on the HLA profiles of all 3,847 fully-typed Others donors, with no ancestry labels supplied. The result is this picture — three clusters, visually distinct in the PCA projection, with k=3 selected as optimal by the silhouette criterion. Be honest about the strength of that separation: the silhouette is 0.24 in the full clustering space, so the boundaries overlap; what really carries the argument is that each cluster has its own characteristic haplotypes. Matching each cluster's characteristic haplotypes against international reference databases identifies them as European-slash-Eurasian, Filipino-slash-Southeast-Asian, and Northeast Asian or mixed. So 'Others' is not a population — it's at least three, hiding inside one administrative box. And that has direct consequences for the registry target, on the next slide. [~1.5 min]")
+caption(s, "Figure 7. PCA of 3,847 five-locus-typed Others individuals: three ancestry clusters (k=3 optimal by silhouette; s=0.24 in the five-PC clustering space, 0.43 in the projection shown).")
+notes(s, "Now the most surprising finding. The 'Others' census category lumps together Eurasians, Europeans, Filipinos, and many mixed backgrounds. Is it statistically legitimate to model them as one population? We let the data answer: we ran principal component analysis and clustering on the HLA profiles of 3,847 five-locus-typed Others individuals, with no ancestry labels supplied. One caveat to keep in mind: that pool includes HSA records, so it is slightly wider than the 3,767 registry donors behind every other result in the deck, which is a further reason to treat this section as exploratory. The result is this picture — three clusters, visually distinct in the PCA projection, with k=3 selected as optimal by the silhouette criterion. Be honest about the strength of that separation: the silhouette is 0.24 in the full clustering space, so the boundaries overlap; what really carries the argument is that each cluster has its own characteristic haplotypes. Matching each cluster's characteristic haplotypes against international reference databases identifies them as European-slash-Eurasian, Filipino-slash-Southeast-Asian, and Northeast Asian or mixed. So 'Others' is not a population — it's at least three, hiding inside one administrative box. And that has direct consequences for the registry target, on the next slide. [~1.5 min]")
 
 # ---------------------------------------------------------------- 21 Others tables
 s = slide()
@@ -661,7 +687,7 @@ EXTRA = {
        "cover sampling noise only — they do not cover the modelling "
        "assumptions above, which the limitations section handles.",
     8: "Additional detail — DRB1–DQB1 D' = 0.94–0.99 in all four groups; B–C "
-       "D' ≥ 0.95. This LD is why 8/8 targets sit only 600–1,200 donors below "
+       "D' ≥ 0.95. This LD is why 8/8 targets sit only 640–1,200 donors below "
        "10/10 (manuscript Sections 2.2 and 3.2, Table 2).",
     9: "Additional detail — Match probability for one patient: 1−(1−F)^N. "
        "Population coverage weights this by diplotype frequency. The model "
@@ -786,7 +812,7 @@ EXTRA = {
         "Section 3.7). Plan to the hardest cluster; clusters are exploratory "
         "(silhouette 0.24), so an ancestry field at registration is what "
         "eventually replaces inference with observation.\n"
-        "R5 (keep DQB1 typing): 8/8 targets sit only 600–1,200 donors below "
+        "R5 (keep DQB1 typing): 8/8 targets sit only 640–1,200 donors below (Malay 3,832) "
         "10/10 because DRB1–DQB1 D' = 0.94–0.99 (Section 3.2, Table 2) — so "
         "full typing costs almost nothing in registry size while DQB1 "
         "mismatches carry GvHD risk [12].\n"
