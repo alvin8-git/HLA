@@ -114,9 +114,10 @@ REFS = [
      'Lancet Oncol. 2012;13(4):366–374.',
      ''),
     # 13
-    ('Klitz W, Gragert L, Maiers M, Byard PJ.',
-     'New HLA haplotype frequency reference standards: five-locus haplotypes, '
-     'and allele frequencies for 66 North American populations.',
+    ('Klitz W, Maiers M, Spellman S, et al.',
+     'New HLA haplotype frequency reference standards: high-resolution and '
+     'large sample typing of HLA DR-DQ haplotypes in a sample of European '
+     'Americans.',
      'Tissue Antigens. 2003;62(4):296–307.',
      ''),
     # 14

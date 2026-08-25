@@ -1,5 +1,41 @@
 # Version History
 
+## v2.7.5 — 2026-08-25 — REFERENCE IDENTIFIER AUDIT
+
+Reference [13] was a mangled citation and is corrected in the manuscript.
+Journal, volume, issue and pages (Tissue Antigens 2003;62(4):296-307) were
+right, but the author list and subtitle belonged to no real paper:
+
+  was:  Klitz W, Gragert L, Maiers M, Byard PJ. "New HLA haplotype frequency
+        reference standards: five-locus haplotypes, and allele frequencies
+        for 66 North American populations."
+  now:  Klitz W, Maiers M, Spellman S, et al. "New HLA haplotype frequency
+        reference standards: high-resolution and large sample typing of
+        HLA DR-DQ haplotypes in a sample of European Americans."
+
+Gragert L and Byard PJ are not authors of it; the real author list is Klitz,
+Maiers, Spellman, Baxter-Lowe, Schmeckpeper, Williams, Fernandez-Vina
+(PMID 12974796, verified via PubMed esummary; it is also cited as ref 3 of
+Maiers 2007). The correction is apt: [13] is cited only for DRB1-DQB1 linkage
+disequilibrium, and the real paper is specifically about DR-DQ haplotypes.
+
+Publications/DOWNLOAD_LINKS.txt — identifiers audited against PubMed:
+  [02] PMID 24989227 -> 25054717; DOI NEJMsa1311854 -> NEJMsa1311707
+       (both were wrong and neither resolved); PMC5965695 added, so it is
+       freely available after all.
+  [04] PMID 7878796 -> 7482734 (7878796 is Burrows et al, Transplant Proc
+       1995 — a different paper).
+  [13] PMID 14617064 -> 12974796 (14617064 is a plant-biology paper on leaf
+       senescence).
+  [20] and [21] added — the file had no entries for them.
+
+Publications/ PDFs renamed to NN_Author_ShortTitle_JournalYear.pdf, NN being
+the manuscript reference number; each verified by reading its first page.
+The file previously named 05_Gragret_HLA_Likelihood_NEJM2014.pdf is now
+02_Gragert_MatchLikelihoods_NEJM2014.pdf and holds the real NEJM paper.
+16 of 21 references now have a PDF; [04], [08], [11], [13], [18] outstanding.
+Nothing was deleted.
+
 ## v2.7.4 — 2026-08-25 (v2.15b docx) — CITATION AUDIT AGAINST THE SOURCE PDFs
 
 Verified reference [20] (Excoffier–Slatkin) against the primary literature:
