@@ -1,5 +1,53 @@
 # Version History
 
+## v2.15c — "combined" disambiguated; Table 6 labels; US registry citation (2026-08-25)
+
+Three different quantities were all being called "combined", and two passages
+described the wrong one:
+
+  - per-group targets      41,183 / 39,831 / 43,785 / 31,129  (dedicated registry)
+  - their sum                                        155,928  (all four groups)
+  - pooled model (Table 1)                           243,849  (one merged pool)
+  - weighted mean (Table 6)                           42,567  (expected per patient)
+
+Table 1's row is the pooled model (registry_size_targets.csv, ethnicity
+'Combined'); it is now labelled "Combined pooled registry" instead of
+"Weighted Average", which read as an average and is not one. Section 3.1 and
+the Table 1 footnote had described it as sizing "a single shared registry to
+serve all groups proportionally" — correct for that row, but the same sentence
+was also attached to Table 6's 42,567, which is a mean of per-group targets and
+neither a pool nor a total. All three are now named wherever they can be
+confused, and the 155,928 / 243,849 figures are computed from the CSVs rather
+than hardcoded.
+
+Pooling costs 1.6x more than four dedicated registries for the same patients
+(243,849 vs 155,928) because a merged pool dilutes each patient's own
+haplotypes. Stated explicitly for the first time.
+
+Section 3.5 no longer claims the flat sensitivity bars show a structural
+property of haplotype diversity: any weighted mean of four values in the
+31,000-44,000 band is flat, and under dedicated registries the population
+weights never enter the per-group targets at all. The substantive finding — the
+four targets lie within 1.4x of each other — is now the claim.
+
+Table 6's "Ethnic weights" column carried pre-census literals (77/8/9/6) that
+contradicted the prose two paragraphs above once SG_WEIGHTS was corrected. All
+four rows are now derived from the same CSV rows the sizes come from.
+
+Section 3.3 cited only the Israeli Ezer Mizion registry [9] for a claim about
+multiethnic registries plural; adds Gragert [2] for the U.S. registry and names
+which is which.
+
+Deck (build_slides_v215c.py) updated to match: slide 11 footnote carries the
+243,849-vs-155,928 comparison, slide 19 states the bars are a weighted mean and
+promotes the 1.4x spread to the finding, and the Result 3 spoken note's stale
+"77 per cent Chinese" is corrected. Both slides rendered and checked for
+overflow.
+
+Red re-marked after every rebuild: 65/147 paragraphs and 81 table cells differ
+from v2.15; verified by an independent differ (0 differing-but-black, 0
+identical-but-red) with all 8 figures intact.
+
 ## v2.15c deck — acknowledgements slide added (2026-08-25)
 
 New slide 26, "Acknowledgements", inserted before the closing slide (now 27):
