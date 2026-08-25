@@ -1,5 +1,39 @@
 # Version History
 
+## v2.7.4 — 2026-08-25 (v2.15b docx) — CITATION AUDIT AGAINST THE SOURCE PDFs
+
+Verified reference [20] (Excoffier–Slatkin) against the primary literature:
+Gragert et al. NEJM 2014 cites it directly as its own ref 20 ("haplotype
+frequencies ... calculated ... with the use of the expectation-maximization
+algorithm.15,16,20"), as does Maiers/Gragert/Klitz 2007 (our [5], its ref 6).
+The method citation is the field standard, not an outlier. Note Gragert used a
+STAGED EM (C-B and DRB1-DQB1 clusters, then a three-locus run) on four-locus
+adult-donor haplotypes; this study does full five-locus phase enumeration.
+
+Three miscitations corrected — Gragert 2014 is a four-locus 8/8/7/8 paper and
+contains no "9/10" or "10/10" anywhere, so it cannot support a 9/10 claim:
+
+- Abstract: "Relaxing to 9/10 ... halves the required registry size [14]" — [14]
+  is Anasetti (PBSC vs bone marrow), which has zero content on matching level.
+  Citation removed; the result is this study's own (Section 3.4).
+- Discussion + Recommendation 3 + Conclusions: [2] / [2,19] re-pointed to
+  Section 3.4 for the halving itself. Recommendation 3 now cites [2] correctly,
+  as the analogous U.S. precedent for reporting 7/8 alongside 8/8. Conclusions
+  retains [19] (Petersdorf) for the clinical meaning of a single mismatch —
+  verified to use 9/10 terminology, though it says nothing about registry size.
+
+Added reference [21] Kollman et al., Transplantation 2004;78(1):89–95
+("Assessment of optimal size and composition of the U.S. National Registry of
+hematopoietic stem cell donors") — cited by Gragert as their ref 18, and the
+direct predecessor to this paper's question. Cited in Section 2.3 alongside
+Beatty [4]. Appended as [21] so the existing twenty keep their numbers.
+
+All 21 references now cited; no dangling citations and no uncited entries.
+Red marking after rebuild: 15 paragraphs + 60 table cells.
+
+Also: Publications/05_Gragret_HLA_Likelihood_NEJM2014.pdf previously held a
+duplicate of Lee et al. Blood 2007; replaced with the actual NEJM paper.
+
 ## v2.7.3 — 2026-08-25 (v2.15b docx + slides) — BOOTSTRAP n_eff MATCHED TO THE EM SAMPLE
 
 Four related defects, all inherited from the June `16bd246` snapshot, which was

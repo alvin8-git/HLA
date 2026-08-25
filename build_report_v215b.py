@@ -160,6 +160,12 @@ REFS = [
      'diploid population.',
      'Mol Biol Evol. 1995;12(5):921–927.',
      ''),
+    # 21
+    ('Kollman C, Abella E, Baitty RL, et al.',
+     'Assessment of optimal size and composition of the U.S. National Registry '
+     'of hematopoietic stem cell donors.',
+     'Transplantation. 2004;78(1):89–95.',
+     ''),
 ]
 
 
@@ -445,7 +451,7 @@ add_para(doc,
     'Filipino/SE Asian cluster ceiling — is the recommended planning target. '
     'Cross-ethnic matching is infeasible for Malay, Indian, and Others patients '
     'regardless of registry size. Relaxing to 9/10 matching approximately halves '
-    'the required registry size [14]. Registry size estimates are robust across '
+    'the required registry size. Registry size estimates are robust across '
     'patient demographic scenarios (variation <3%) [2].')
 add_para(doc,
     'Conclusions: An ethnicity-specific same-ethnicity registry of approximately '
@@ -599,7 +605,8 @@ add_corrected_para(doc, [
      'Same-ethnicity and cross-ethnic model variants were compared ' + cite(2) + '. ', False),
     ('The coverage-based framework — computing C(N) as the diplotype-frequency-weighted '
      'sum of per-patient match probabilities — follows the approach pioneered by '
-     'Beatty et al. ' + cite(4) + '.', True),
+     'Beatty et al. ' + cite(4) + ' and applied to national registry planning by '
+     'Kollman et al. ' + cite(21) + '.', True),
 ])
 
 add_heading(doc, '2.4 Bootstrap Confidence Intervals', level=2)
@@ -844,7 +851,7 @@ add_para(doc,
     'T-cell epitope group position — carries minimal additional survival impact '
     + cite(12, 15) + '. Programmes that formalise evidence-based partial-match '
     'protocols could effectively double their donor reach without recruiting a '
-    'single additional donor ' + cite(2, 19) + '.')
+    'single additional donor (Section 3.4).')
 
 add_figure(doc, 'partial_match_8locus.png', width=6.2,
     caption='Figure 4. Coverage curves for 8-locus (HLA-A, -B, -C, -DRB1) partial '
@@ -1130,7 +1137,9 @@ rec_items = [
     (
         'Adopt partial-match protocols to extend effective coverage.',
         'Relaxing from 10/10 to 9/10 matching roughly halves the effective '
-        'registry size requirement ' + cite(2) + '. In clinical contexts where '
+        'registry size requirement (Section 3.4); the U.S. registry reports 7/8 '
+        'alongside 8/8 match likelihoods on the same logic ' + cite(2) + '. '
+        'In clinical contexts where '
         'survival outcomes are comparable between 10/10 and permissive 9/10 '
         'matches — particularly when the single mismatch is at a permissive '
         'DPB1 T-cell epitope group ' + cite(12, 15) + ' — formalising 9/10 as '
@@ -1273,7 +1282,7 @@ add_para(doc,
 
 add_corrected_para(doc, [
     ('Partial-match analysis demonstrates that 9/10 matching halves this requirement ', False),
-    (cite(2, 19), True),
+    ('(Section 3.4) ' + cite(19), True),
     (', providing a practical and clinically justifiable path to '
      'improving access in the near term ' + cite(12, 15) + '. The Others subgroup '
      'is ethnically heterogeneous; sub-cluster analysis identifies three distinct '
