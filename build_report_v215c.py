@@ -900,16 +900,16 @@ scenario_labels = {
     'Patient.txt composition':              'HSA Patient-Donor Data',
     'Minority-focus (Indian+Malay+Others)': 'Minority-focus',
 }
-scenario_weights = {
-    'SG population (current model)':        '77/8/9/6',
-    'BMDP+SCBB registry composition':       '75/9/9/6',
-    'Patient.txt composition':              '72/15/5/8',
-    'Minority-focus (Indian+Malay+Others)': '0/40/40/20',
-}
+# Read the weights off the same rows the sizes come from. The literals that
+# used to live here (77/8/9/6) were the pre-census weights and contradicted the
+# prose two paragraphs above once SG_WEIGHTS was corrected.
+def scenario_weight_label(sk):
+    r = sens[sens.scenario == sk].iloc[0]
+    return '/'.join(f'{r["weight_" + e] * 100:.1f}' for e in ETHS)
 for sk in ['SG population (current model)', 'BMDP+SCBB registry composition',
            'Patient.txt composition', 'Minority-focus (Indian+Malay+Others)']:
     sub = sens[sens.scenario == sk]
-    row = [scenario_labels[sk], scenario_weights[sk]]
+    row = [scenario_labels[sk], scenario_weight_label(sk)]
     for thr in THRESHOLDS:
         v = sub[sub.target_coverage == thr]['registry_size']
         row.append(n(v.iloc[0]) if not v.empty else '—')
