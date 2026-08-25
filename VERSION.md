@@ -1,5 +1,50 @@
 # Version History
 
+## v2.15c — numeric consistency audit (2026-08-26)
+
+Audited every comma-formatted figure in the built .docx against the snapshot
+CSVs. Four defects, all from builder-side literals that survived a re-run of
+the model:
+
+  - Section 3.3 said Chinese cross-ethnic needs "93,348 donors ... roughly
+    twice the same-ethnicity target" while Table 3, generated from the CSV,
+    said 69,042 on the same page. 93,348 is the pre-census-weights value. Now
+    derived; the multiple is 1.7x.
+  - The deck was worse: its whole Table 3 was hardcoded and stale, showing
+    Malay as ">10 million" at every threshold when the model gives 150,696 /
+    360,396 / 634,813 / 1,391,093. Both deck tables now read from the CSVs.
+  - "8/8 targets are typically 600-1,200 fewer donors" holds for Chinese (693),
+    Indian (1,195) and Others (640) but not Malay, at 3,832 (9.6% of its 10/10
+    target). Malay is named as the exception in both documents.
+  - Section 3.7 described "3,847 fully five-locus-typed Others donors". The
+    registry has 3,767; 11_others_stratification.py applies no MAIN_SOURCES
+    filter, so its cohort includes 128 HSA donor and 46 HSA patient records.
+    Relabelled, with a Limitations paragraph stating that Section 3.7 uses a
+    wider cohort than every other result. NOT yet fixed at source — re-running
+    script 11 with the filter would move Table 4, Table 5, Figure 7 and the
+    63,856 planning target.
+  - The abstract's "infeasible ... regardless of registry size" is false for
+    Malay at 1,391,093; softened.
+
+check_freshness.py does NOT audit the .docx or .pptx and would not have caught
+any of these. The audit that did is not yet a committed script.
+
+### Result 5 is floor-conditional — not yet reflected in the manuscript
+
+Section 3.5 attributes the flat sensitivity bars to "a structural property of
+CMIO haplotype diversity". It is a property of the 0.1% floor. At 1e-3 the
+floor truncates every group to the same common core (140/144/137/123
+haplotypes) so the four N* land within 1.39x and any weighted mean is flat. At
+1e-6 the floor stops binding, retained haplotypes diverge (Chinese 9,574 vs
+Malay 3,134), per-group N* spread to 5.28x, and the same four scenarios span
+67.1% instead of 3.4%. The outlier also flips from Others (3.2% weight, cannot
+move the mean) to Chinese (74.3% weight, dominates it).
+
+Caveat: the live 1e-6 run appears to have been uncapped while the 1e-3 snapshot
+capped the three large groups at 5,000, so part of the 5.28x spread is unequal
+EM sample size. Same conclusion either way — the cap and the floor were both
+equalising the groups, and Result 5's flatness depends on that equalisation.
+
 ## v2.15c — "combined" disambiguated; Table 6 labels; US registry citation (2026-08-25)
 
 Three different quantities were all being called "combined", and two passages
