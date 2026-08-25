@@ -46,15 +46,21 @@ def has_image(par):
         True for tag in DRAWING for _ in par._p.iter(tag))
 
 
-# v2.15 reference 8 (Lim et al.) was withdrawn as unverifiable, so 9..20
-# shifted down by one. Renumbering is bookkeeping, not a change to the text;
-# mapping the OLD numbering forward keeps red meaning "the claim changed".
-# Set to None (or {}) once a rebuilt v2.15 baseline carries the new numbering.
-CITE_RENUMBER = {k: k - 1 for k in range(9, 21)}
+# Two v2.15 references were withdrawn by the 2026-08-25 citation audit:
+#   [8]  Lim et al.      — no PubMed record exists for it
+#   [14] Anasetti et al. — a graft-source trial, cited only for a
+#                          matching-level claim it cannot support
+# Everything after each shifts down. Renumbering is bookkeeping, not a change
+# to the text, so the OLD numbering is mapped forward before diffing and red
+# keeps meaning "the claim changed". Empty this out once a rebuilt v2.15
+# baseline carries the new numbering.
+CITE_DROPPED = {8, 14}
+CITE_RENUMBER = {k: k - sum(1 for d in CITE_DROPPED if d < k)
+                 for k in range(1, 21) if k not in CITE_DROPPED}
 
 
 def _remap(nums):
-    out = [CITE_RENUMBER.get(k, k) for k in nums if k != 8]
+    out = [CITE_RENUMBER.get(k, k) for k in nums if k not in CITE_DROPPED]
     return out or nums          # never let a citation vanish entirely
 
 
@@ -258,6 +264,8 @@ if __name__ == '__main__':
         assert not any(nm('need [8,9].', 'need [8].'))
         assert not any(nm('diversity [1,8].', 'diversity [1].'))
         assert not any(nm('registries [9].', 'registries [8].'))
+        assert not any(nm('mismatch [15].', 'mismatch [13].'))   # after both drops
+        assert not any(nm('15.  Pidala J, Lee SJ.', '13.  Pidala J, Lee SJ.'))
         assert not any(nm('LD [1,13].', 'LD [1,12].'))
         assert not any(nm('9.  Aljurf M, Weisdorf D.', '8.  Aljurf M, Weisdorf D.'))
         # a genuinely different claim still reddens

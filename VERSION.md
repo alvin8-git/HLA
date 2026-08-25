@@ -1,5 +1,54 @@
 # Version History
 
+## v2.7.7 — 2026-08-25 (v2.15b) — CLAIM-LEVEL CITATION AUDIT
+
+Every citation checked against the cited paper's full text (118 claim instances,
+20 references, 17 PDFs). Full record: paper_BMT_workdir/citation_claim_audit_2026-08-25.md
+
+CLINICAL CLAIMS CORRECTED — these were the serious ones:
+
+- Recommendation 5 asserted "the clinical benefit of routine DQB1 typing is
+  well-established [7]". Lee 2007 states the OPPOSITE: "Mismatching at HLA-DP or
+  -DQ loci ... were not associated with survival" once 8/8 was achieved. The
+  recommendation now rests on cost (DQB1 is nearly free given DRB1-DQB1 LD) and
+  says plainly that withholding it is not known to cost lives.
+- Recommendation 3 asserted "survival outcomes are comparable between 10/10 and
+  permissive 9/10 matches [11,13]". Neither paper supports that. What
+  Fleischhauer shows is narrower: a 10/10 with a NON-permissive DPB1 mismatch
+  had outcomes not substantially different from a 9/10 with a PERMISSIVE one,
+  while non-permissive mismatches raised mortality within both strata. Pidala
+  found no significant DPB1 effect within 9/10 cases. Rewritten to state that a
+  9/10 donor is not clinically equivalent, that permissiveness matters as much
+  as the count, and that for patients with no 10/10 donor the comparison is
+  against no transplant rather than against a full match.
+
+REFERENCE WITHDRAWN — former [14] Anasetti 2012 (PBSC vs bone marrow) was cited
+once, for a claim about centres accepting partial matches when time is critical.
+It is a graft-source trial with no matching-level content. Citation removed and
+the reference withdrawn; 15-21 shifted down to 13-19. PDF retained as
+Publications/NOT_CITED_Anasetti_PBSCvsBM_NEJM2012.pdf.
+
+CITATIONS RE-ATTRIBUTED to this manuscript's own results, where the cited paper
+had no such content: the log-scale binary search and the same/cross-ethnic model
+comparison (were [2,5]); the rare-diplotype tail (was [2]); the HWE departures in
+Indian and Others (was [1] — Ng et al. reports no HWE testing); the 564 HSA
+patients (was [1] — the count is ours, and is correct); the EM "more concentrated
+distribution" claim (was [3,5], now cites [18] for EM and [3] for validation);
+ancestry questions at registration (was [14] AFND, a database paper).
+
+SCOPE NARROWED where a paper was stretched past what it covers: the
+under-representation claim now states the generic finding Aljurf actually makes
+and carries [19] Kollman, which says minority patients are less likely to find a
+donor, with Singapore specifics moved to our own donor counts; "Asia-Pacific
+region" softened to match Aljurf's worldwide framing; [6] Passweg moved off the
+match-difficulty claim (it is an activity survey with no ethnicity content) onto
+the transplant-volume statement it does support.
+
+mark_v217_diffs.py: CITE_DROPPED/CITE_RENUMBER now compose both withdrawals
+([8] and [14]) so renumbering still does not paint red.
+
+Result: 19 references, all cited, none dangling. Red = 27 paragraphs + 60 cells.
+
 ## v2.7.6 — 2026-08-25 (v2.15b) — REFERENCE [08] WITHDRAWN; IDENTIFIER AUDIT
 
 Reference [08] "Lim YA, Teo D, Ang AL, et al. HLA allele and haplotype
