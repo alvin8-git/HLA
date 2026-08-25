@@ -468,7 +468,7 @@ title(s, "Stress-testing our own assumptions")
 pic(s, f"{FIG}/em_convergence.png", Inches(0.55), Inches(1.45), Inches(6.9), Inches(4.6))
 bullets(s, [
     ("Computational cap check (Fig. S1): capping the EM at 5,000 samples overestimates the Chinese N* by 8.2% — errs on the safe side", {"size": 15}),
-    ("Would a much larger cohort change the answer? The haplotype vocabulary above the 0.1% floor saturates — 143 at n=5,000, 136 at n=45,018, and 123–144 across all four groups. More donors cannot create common haplotypes, only measure them better", {"size": 14, "color": RED}),
+    ("Would a much larger cohort change the answer? No — the haplotype vocabulary above the 0.1% floor saturates (table under the figure), and is 123–144 in all four groups. More donors cannot create common haplotypes, only measure them better", {"size": 14, "color": RED}),
     ("Key limitations:", {"bold": True, "size": 16}),
     (1, "0.1% frequency floor \u2192 all coverage conditional; at a 1\u00d710\u207b\u2076 floor the Chinese 95% target becomes 8.7\u00d710\u2077 \u2014 absolute sizes are order-of-magnitude", {"size": 14}),
     (1, "CIs cover frequency-sampling noise only", {"size": 14}),
@@ -477,7 +477,16 @@ bullets(s, [
     (1, "Rare-haplotype smoothing shifts 95% targets by ≤3%", {"size": 14}),
     (1, "Real-world attrition ~30–50% → sign-up targets ≈ 1.67 × N*", {"size": 14}),
 ], l=Inches(7.75), t=Inches(1.5), w=Inches(5.1), size=15, gap=6)
-caption(s, "Figure S1. Chinese N* vs EM sample size: stable above ~20,000 samples; the 5,000 cap (red dashed) is conservative.")
+table(s, [
+    ["Chinese donors used", "Haplotypes ≥0.1%", "N* at 95%"],
+    ["5,000  (the cap)", "143", "45,148"],
+    ["20,000", "140", "44,326"],
+    ["45,018  (all)", "136", "41,727"],
+], Inches(0.55), Inches(5.80), Inches(6.90), Inches(0.98), size=12,
+      col_w=[2.4, 2.2, 1.8],
+      red_cells=tuple((r, c) for r in range(1, 4) for c in range(3)))
+caption(s, "Figure S1. Chinese N* vs EM sample size: stable above ~20,000 samples; the 5,000 cap (red dashed) is conservative. "
+           "Table: the vocabulary above the floor saturates — 9× more donors changes it by 7 haplotypes.")
 notes(s, "Every model has assumptions, and we stress-tested ours. The figure addresses the most technical one: for computational reasons the haplotype estimation was capped at 5,000 donors per group. Only the Chinese group has more data than that, so we re-ran the estimation at sample sizes from 500 up to the full 45,000. The curve stabilises above 20,000 samples, and at the cap the estimate is 8.2 per cent too high — an error in the safe direction: we'd recruit slightly more donors than strictly needed, never fewer. The same run answers a question people often ask: would a much larger cohort — say half a million donors — change these targets? Look at how many haplotypes clear the 0.1 per cent floor: 143 at five thousand donors, 136 at forty-five thousand. It saturates. At a fixed floor, more donors cannot make rare haplotypes common; they only measure the common ones more precisely. And the flip side is the important one — the mass sitting below the floor is a property of the population, not of our sample size, so no amount of recruitment lifts those patients above it. That is why mismatch tolerance, not scale, is the lever for them. Other limitations, briefly: the 0.1 per cent frequency floor makes every coverage figure conditional, and moving the floor moves the absolute targets by orders of magnitude — the comparative findings are what survive; the confidence intervals cover sampling noise only; Hardy–Weinberg departures make the Indian and Others estimates more exploratory; minority validation awaits larger patient cohorts; rare-haplotype smoothing moves the 95 per cent targets by under three per cent; and real-world attrition means sign-up targets exceed the biological targets by roughly two-thirds. [~1.5 min]")
 
 # ---------------------------------------------------------------- 23 recommendations

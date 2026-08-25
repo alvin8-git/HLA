@@ -63,7 +63,11 @@ them better, which is why N* plateaus by n~5,000.
 The corollary is the load-bearing half: retained mass (51.7/52.9/40.2/35.6%) is
 population structure, not sample size, so no recruitment scale lifts a
 below-floor patient above it — mismatch tolerance is the only lever for them.
-Added as a red bullet plus both notes layers (spoken and reader).
+Added as a red bullet, a three-row table under Figure S1, and both notes
+layers (spoken and reader). The table is what makes it land — 5,000 donors
+give 143 haplotypes above the floor, 45,018 give 136: nine times the data,
+seven fewer haplotypes. Slide rendered and inspected; table clears the figure
+above and the caption below with no overlap.
 
 Also corrected on that slide: the floor-sensitivity note quoted the Chinese 95%
 target as 42,871, the EM point estimate, where the rest of the document reports
