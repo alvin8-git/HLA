@@ -125,7 +125,7 @@ bash analysis/run_all.sh
 pytest tests/ -v
 ```
 
-Expected: **29 tests passing**
+Expected: **35 tests passing**
 
 ### 4. Run individual steps
 
@@ -147,6 +147,37 @@ python 15_em_convergence.py        # EM cap convergence / bias test
 python 16_smoothing_sensitivity.py # rare-haplotype smoothing sensitivity
 python 05_report.py                # assemble verification_summary.md
 ```
+
+### 5. Rebuild the manuscripts and slide decks
+
+The Word manuscripts and PowerPoint decks are **build outputs** and are not
+committed; regenerate them from the repo root (requires `python-docx` and
+`python-pptx`):
+
+```bash
+# Submission candidate: v2.15 text + 5 clearly-marked additions (red)
+python build_report_v215b.py
+python mark_v217_diffs.py HLA_Registry_Size_CMIO_v2.15.docx HLA_Registry_Size_CMIO_v2.15b.docx
+python build_slides_v215b.py           # 26-slide deck with full speaker + reader notes
+
+# Extended version: full conditional/unconditional reporting
+python build_report_v217.py
+python mark_v217_diffs.py              # defaults to v2.15 -> v2.17
+python build_slides.py                 # v2.17 deck
+```
+
+Two conventions matter here:
+
+- **Frozen inputs.** Both builders read `analysis/snapshot_1e-3/` (data and
+  figures frozen at the 0.1% haplotype floor), *not* the live
+  `analysis/data/` + `analysis/figures/`, which may hold a re-run under
+  different parameters. Re-running the pipeline does not silently change the
+  manuscripts.
+- **Red marking.** `mark_v217_diffs.py` runs *after* each build and repaints
+  the document mechanically: red = text that differs from v2.15, everything
+  else black. It is idempotent; re-run it after any rebuild.
+
+`VERSION.md` is the changelog for the manuscript releases.
 
 ---
 
