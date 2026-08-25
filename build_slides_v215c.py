@@ -518,7 +518,33 @@ bullets(s, [
 pic(s, "assets/cartoons/target.png", Inches(9.7), Inches(2.2), Inches(3.2), Inches(3.2))
 notes(s, "So, four take-home messages. First, the number: about 40 to 45 thousand same-ethnicity donors per community gives 95 per cent of common-haplotype patients a fully matched donor — which, once the frequency floor is accounted for, is roughly half of all patients, and 41.8 per cent is what the Chinese registry actually delivers today. Second, there is no shortcut through a shared pool: for Malay, Indian and Others patients, cross-ethnic matching fails at any realistic scale. Third, clinical flexibility is powerful: accepting a single well-chosen mismatch halves the requirement overnight. And fourth, the Others category conceals three genetically distinct populations and must be planned to its hardest sub-group, not its misleading pooled average. More broadly, this is the first uncertainty-quantified registry sizing for Singapore, and the framework transfers directly to other multiethnic populations across the Asia-Pacific. [~1.5 min]")
 
-# ---------------------------------------------------------------- 25 thanks
+# ---------------------------------------------------------------- 26 acknowledgements
+s = slide()
+title(s, "Acknowledgements")
+txt(s, Inches(0.9), Inches(1.75), Inches(11.5), Inches(1.1),
+    "Caitlyn Ng — Ngee Ann Polytechnic", size=30, bold=True, color=ACCENT)
+txt(s, Inches(0.9), Inches(2.75), Inches(11.5), Inches(0.9),
+    "Contributed all of the coding for this project: the ingestion and cleaning "
+    "pipeline, the EM haplotype phasing, the coverage and registry-size model, "
+    "the bootstrap, and the figures reproduced throughout this deck.",
+    size=18, color=INK)
+bullets(s, [
+    ("Data providers", {"bold": True, "size": 18}),
+    (1, "Bone Marrow Donor Programme (BMDP)", {"size": 16}),
+    (1, "Singapore Cord Blood Bank (SCBB)", {"size": 16}),
+    (1, "Health Sciences Authority (HSA) — patient and donor typing used for validation", {"size": 16}),
+    ("Foundation dataset", {"bold": True, "size": 18}),
+    (1, "Ng AYJ et al., Blood Cell Therapy 2022 — the 59,186-donor HLA survey this work builds on", {"size": 16}),
+], l=Inches(0.9), t=Inches(4.0), w=Inches(11.5), size=16, gap=7)
+notes(s, "Before I close, the acknowledgements. All of the coding for this project was "
+         "contributed by Caitlyn Ng of Ngee Ann Polytechnic — the ingestion and cleaning "
+         "pipeline, the EM haplotype phasing, the coverage and registry-size model, the "
+         "bootstrap, and every figure you have seen this afternoon. The data came from the "
+         "Bone Marrow Donor Programme, the Singapore Cord Blood Bank, and the Health Sciences "
+         "Authority, and the whole analysis builds on the 2022 Blood Cell Therapy survey of "
+         "59,186 donors by Ng and colleagues. [~0.5 min]")
+
+# ---------------------------------------------------------------- 27 thanks
 s = slide()
 txt(s, Inches(1.0), Inches(2.5), Inches(11.3), Inches(1.2), "Thank you", size=44, bold=True, color=ACCENT)
 txt(s, Inches(1.0), Inches(3.9), Inches(11.3), Inches(1.8),
@@ -765,10 +791,15 @@ EXTRA = {
         "×0.517 mass → 49.1% of all Chinese patients → 41.8% observed. "
         "Recruitment stays worthwhile (10× registry ≈ +20 points at 10/10) "
         "but cannot close the gap; mismatch tolerance can.",
-    26: "Additional detail — Reproducibility: build_report_v215c.py + "
+    26: "Additional detail — Caitlyn Ng (Ngee Ann Polytechnic) wrote the "
+        "analysis code for this project. The repository at "
+        "github.com/alvin8-git/HLA holds that work: the numbered pipeline "
+        "scripts, the three library modules (hwe_test.py, registry_model.py, "
+        "plot_coverage.py) and the test suite.",
+    27: "Additional detail — Reproducibility: build_report_v215c.py + "
         "analysis/snapshot_1e-3/ rebuild the manuscript; "
-        "build_slides_v215c.py rebuilds this deck. Additions over v2.15 are "
-        "marked red in the manuscript (5 paragraphs).",
+        "build_slides_v215c.py rebuilds this deck. Every difference from v2.15 "
+        "is marked red in the manuscript (65 paragraphs, 77 table cells).",
 }
 for idx, sl in enumerate(prs.slides, 1):
     extra = EXTRA.get(idx)

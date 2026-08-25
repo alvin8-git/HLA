@@ -1,5 +1,22 @@
 # Version History
 
+## v2.15c deck — acknowledgements slide added (2026-08-25)
+
+New slide 26, "Acknowledgements", inserted before the closing slide (now 27):
+Caitlyn Ng (Ngee Ann Polytechnic) contributed all of the coding for this
+project — the ingestion and cleaning pipeline, the EM haplotype phasing, the
+coverage and registry-size model, the bootstrap, and the figures. The slide
+also lists the data providers (BMDP, SCBB, HSA) and the foundation dataset
+(Ng et al. 2022).
+
+The per-slide reader-notes dict is keyed by slide number, so the closing
+slide's entry moved from 26 to 27; its text was also stale ("additions marked
+red ... 5 paragraphs") and now states the current 65 paragraphs / 77 cells.
+Deck is 27 slides, 21 images. Rendered and inspected.
+
+Not added to the manuscript — its Declarations section has no Acknowledgements
+subsection, and a contributorship statement is a decision for the authors.
+
 ## v2.15c — 2026-08-25 — POPULATION WEIGHTS CORRECTED; SUPERSEDES v2.15b
 
 New label for the manuscript and deck carrying every correction from this
