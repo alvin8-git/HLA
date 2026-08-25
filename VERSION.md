@@ -1,5 +1,48 @@
 # Version History
 
+## v2.15c — 2026-08-25 — POPULATION WEIGHTS CORRECTED; SUPERSEDES v2.15b
+
+New label for the manuscript and deck carrying every correction from this
+session: build_report_v215c.py -> HLA_Registry_Size_CMIO_v2.15c.docx,
+build_slides_v215c.py -> HLA_Registry_Size_CMIO_v2.15c_slides.pptx.
+Red still means "differs from v2.15": 30 paragraphs + 75 table cells.
+
+SG_WEIGHTS corrected from 0.77/0.08/0.09/0.06 to the Census of Population 2020
+resident population: Chinese 3,006,770, Malays 545,500, Indians 362,270,
+Others 129,670 of 4,044,210 = 74.3/13.5/9.0/3.2 per cent. The four counts sum
+exactly to the total. Ng et al. quotes the same split (13.5/9/3.2; its "73.3%
+Chinese" looks like a typo for 74.3%), so the old weights matched neither
+source. The old Chinese 0.77 appears to have come from the census HOUSEHOLD
+table (77.4% of household reference persons), not the population table.
+The constant was duplicated in registry_model.py, 06 and 13 — all three fixed.
+
+Re-ran 04, 06 and 13 against the snapshot. What moved:
+  - Per-group same-ethnicity targets: UNCHANGED (they do not use weights), so
+    the 40,000-45,000 headline and every bootstrap CI stand.
+  - Combined pooled registry, 10/10 95%: 236,906 -> 243,849 (+2.9%).
+  - Cross-ethnic Malay is no longer censored at the search ceiling:
+    >10,000,000 -> 1,391,093 at 95% 10/10, because a correctly weighted pool
+    contains proportionally more Malay haplotypes. Still infeasible, but now a
+    real number rather than a ceiling hit. Indian and Chinese also improve.
+  - Result 5: scenario spread 2.92% -> 3.50%, so the manuscript's "varies by
+    less than 3%" claim is now FALSE and has been rewritten to state 3.5%
+    (42,567 down to 41,129 at the 95% target). The qualitative conclusion —
+    the target is robust to demographic reweighting — survives.
+
+The re-run was done with n_max pinned to the snapshot's 1e7. Current code uses
+1e10, and re-running unpinned silently rewrote ten ">10,000,000" ceiling values
+as 1e10 — unrelated drift since the snapshot was frozen. Pinning isolates the
+weights change and preserves the manuscript's ">10,000,000" convention. That
+drift is still there for whoever next rebuilds the snapshot.
+
+The Malay/Indian access claim is now cited to [1] Ng, which states it directly
+("recipients from the Malay and Indian communities experience particular
+challenges ... attributed to an underrepresentation of their haplotypes in
+local donor pools"), with [8] Aljurf and [19] Kollman kept for the general
+pattern. This is what the withdrawn Lim reference had been carrying.
+
+Prior CSVs kept as *_PRE_WEIGHTS_FIX.csv.bak in the snapshot.
+
 ## v2.7.7 — 2026-08-25 (v2.15b) — CLAIM-LEVEL CITATION AUDIT
 
 Every citation checked against the cited paper's full text (118 claim instances,

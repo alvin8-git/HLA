@@ -4,7 +4,7 @@ Cross-ethnic sensitivity analysis: how do registry size targets change under
 different ethnic composition assumptions for donors and patients?
 
 Scenarios compared:
-  1. SG population weights (current model): Chinese 77%, Malay 8%, Indian 9%, Others 6%
+  1. SG population weights (Census 2020): Chinese 74.3%, Malay 13.5%, Indian 9.0%, Others 3.2%
   2. BMDP+SCBB registry composition (actual donors): derived from hla_clean.csv source counts
   3. Patient.txt composition: ethnic breakdown of actual patients seeking donors
   4. Worst-case minority-focus: Indian 50%, Malay 30%, Others 20%, Chinese 0%
@@ -120,7 +120,7 @@ def main():
     # Define scenarios
     scenarios = {
         'SG population\n(current model)': {
-            'Chinese': 0.77, 'Malay': 0.08, 'Indian': 0.09, 'Others': 0.06},
+            'Chinese': 0.743, 'Malay': 0.135, 'Indian': 0.090, 'Others': 0.032},
         'BMDP+SCBB\nregistry composition': registry_weights,
         'Patient.txt\ncomposition': patient_weights,
         'Minority-focus\n(Indian+Malay+Others)': {

@@ -1,5 +1,5 @@
 """
-build_report_v215b.py  —  v2.15b: the v2.15 manuscript (commit 792fa1a),
+build_report_v215c.py  —  v2.15c: the v2.15 manuscript (commit 792fa1a),
 unchanged except for the minimum additions that make it defensible:
 
   1. Section 2.2: one sentence stating that post-floor frequencies are renormalised
@@ -10,7 +10,7 @@ unchanged except for the minimum additions that make it defensible:
 
 Tables, figures, recommendations, and all other text are v2.15 verbatim.
 Reads the frozen 1e-3 snapshot. After building, run
-    python mark_v217_diffs.py HLA_Registry_Size_CMIO_v2.15.docx HLA_Registry_Size_CMIO_v2.15b.docx
+    python mark_v217_diffs.py HLA_Registry_Size_CMIO_v2.15.docx HLA_Registry_Size_CMIO_v2.15c.docx
 to paint the additions red (everything else black).
 """
 
@@ -24,7 +24,7 @@ from docx.oxml import OxmlElement
 import pandas as pd
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-# v2.15b reads the frozen 1e-3 snapshot (commit 16bd246); the live analysis/data
+# v2.15c reads the frozen 1e-3 snapshot (commit 16bd246); the live analysis/data
 # now holds the 1e-6 re-run and would silently change every number.
 DATA = os.path.join(HERE, 'analysis', 'snapshot_1e-3', 'data')
 FIGS = os.path.join(HERE, 'analysis', 'snapshot_1e-3', 'figures')
@@ -1391,7 +1391,7 @@ for i, (authors, title, journal, doi) in enumerate(REFS, 1):
     p.add_run(ref_text).font.size = Pt(9)
 
 # ── Save ─────────────────────────────────────────────────────────────────────
-out_path = os.path.join(HERE, 'HLA_Registry_Size_CMIO_v2.15b.docx')
+out_path = os.path.join(HERE, 'HLA_Registry_Size_CMIO_v2.15c.docx')
 doc.save(out_path)
 print(f'Saved: {out_path}')
 print(f'  Paragraphs: {len(doc.paragraphs)}')

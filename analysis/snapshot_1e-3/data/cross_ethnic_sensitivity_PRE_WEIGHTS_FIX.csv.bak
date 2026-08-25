@@ -1,8 +1,8 @@
 scenario,target_coverage,registry_size,weight_Chinese,weight_Malay,weight_Indian,weight_Others
-SG population (current model),0.75,7619,0.743,0.135,0.09,0.032
-SG population (current model),0.85,15147,0.743,0.135,0.09,0.032
-SG population (current model),0.9,23411,0.743,0.135,0.09,0.032
-SG population (current model),0.95,42567,0.743,0.135,0.09,0.032
+SG population (current model),0.75,7672,0.77,0.08,0.09,0.06
+SG population (current model),0.85,15193,0.77,0.08,0.09,0.06
+SG population (current model),0.9,23400,0.77,0.08,0.09,0.06
+SG population (current model),0.95,42332,0.77,0.08,0.09,0.06
 BMDP+SCBB registry composition,0.75,7661,0.7496,0.0942,0.0927,0.0636
 BMDP+SCBB registry composition,0.85,15169,0.7496,0.0942,0.0927,0.0636
 BMDP+SCBB registry composition,0.9,23368,0.7496,0.0942,0.0927,0.0636

@@ -7,7 +7,13 @@ import pandas as pd
 import math
 
 # Singapore population ethnic weights
-SG_WEIGHTS = {'Chinese': 0.77, 'Malay': 0.08, 'Indian': 0.09, 'Others': 0.06}
+SG_WEIGHTS = {'Chinese': 0.743, 'Malay': 0.135, 'Indian': 0.090, 'Others': 0.032}
+# Census of Population 2020, resident population by ethnic group:
+# 3,006,770 / 545,500 / 362,270 / 129,670 of 4,044,210 = 74.3/13.5/9.0/3.2 %.
+# Corrected 2026-08-25 from 0.77/0.08/0.09/0.06, which matched neither the
+# census nor Ng et al. 2022 (which quotes 13.5% Malay, 9% Indian, 3.2% Others);
+# the old Chinese 0.77 appears to come from the census HOUSEHOLD table (77.4%
+# of household reference persons), not the population table.
 
 
 def collapse_to_4locus(haplotype_df):
