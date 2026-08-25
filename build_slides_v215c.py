@@ -465,10 +465,10 @@ notes(s, "Here's the payoff of that clustering — Tables 4 and 5. Each sub-grou
 # ---------------------------------------------------------------- 22 honesty / limitations
 s = slide()
 title(s, "Stress-testing our own assumptions")
-pic(s, f"{FIG}/em_convergence.png", Inches(0.55), Inches(1.45), Inches(6.9), Inches(4.6))
+pic(s, f"{FIG}/em_convergence.png", Inches(0.55), Inches(1.42), Inches(6.3), Inches(3.85))
 bullets(s, [
     ("Computational cap check (Fig. S1): capping the EM at 5,000 samples overestimates the Chinese N* by 8.2% — errs on the safe side", {"size": 15}),
-    ("Would a much larger cohort change the answer? No — the haplotype vocabulary above the 0.1% floor saturates (table under the figure), and is 123–144 in all four groups. More donors cannot create common haplotypes, only measure them better", {"size": 14, "color": RED}),
+    ("Would a 500,000-donor starting dataset change these targets? For Chinese, no — the estimate is converged (30,000→45,018 moves it 0.14%). For Malay, Indian and Others (n=3,767–5,578) it would: they sit where the curve is still 8–40% high, so their targets are probably overestimates", {"size": 14, "color": RED}),
     ("Key limitations:", {"bold": True, "size": 16}),
     (1, "0.1% frequency floor \u2192 all coverage conditional; at a 1\u00d710\u207b\u2076 floor the Chinese 95% target becomes 8.7\u00d710\u2077 \u2014 absolute sizes are order-of-magnitude", {"size": 14}),
     (1, "CIs cover frequency-sampling noise only", {"size": 14}),
@@ -478,16 +478,18 @@ bullets(s, [
     (1, "Real-world attrition ~30–50% → sign-up targets ≈ 1.67 × N*", {"size": 14}),
 ], l=Inches(7.75), t=Inches(1.5), w=Inches(5.1), size=15, gap=6)
 table(s, [
-    ["Chinese donors used", "Haplotypes ≥0.1%", "N* at 95%"],
-    ["5,000  (the cap)", "143", "45,148"],
-    ["20,000", "140", "44,326"],
-    ["45,018  (all)", "136", "41,727"],
-], Inches(0.55), Inches(5.80), Inches(6.90), Inches(0.98), size=12,
-      col_w=[2.4, 2.2, 1.8],
-      red_cells=tuple((r, c) for r in range(1, 4) for c in range(3)))
-caption(s, "Figure S1. Chinese N* vs EM sample size: stable above ~20,000 samples; the 5,000 cap (red dashed) is conservative. "
-           "Table: the vocabulary above the floor saturates — 9× more donors changes it by 7 haplotypes.")
-notes(s, "Every model has assumptions, and we stress-tested ours. The figure addresses the most technical one: for computational reasons the haplotype estimation was capped at 5,000 donors per group. Only the Chinese group has more data than that, so we re-ran the estimation at sample sizes from 500 up to the full 45,000. The curve stabilises above 20,000 samples, and at the cap the estimate is 8.2 per cent too high — an error in the safe direction: we'd recruit slightly more donors than strictly needed, never fewer. The same run answers a question people often ask: would a much larger cohort — say half a million donors — change these targets? Look at how many haplotypes clear the 0.1 per cent floor: 143 at five thousand donors, 136 at forty-five thousand. It saturates. At a fixed floor, more donors cannot make rare haplotypes common; they only measure the common ones more precisely. And the flip side is the important one — the mass sitting below the floor is a property of the population, not of our sample size, so no amount of recruitment lifts those patients above it. That is why mismatch tolerance, not scale, is the lever for them. Other limitations, briefly: the 0.1 per cent frequency floor makes every coverage figure conditional, and moving the floor moves the absolute targets by orders of magnitude — the comparative findings are what survive; the confidence intervals cover sampling noise only; Hardy–Weinberg departures make the Indian and Others estimates more exploratory; minority validation awaits larger patient cohorts; rare-haplotype smoothing moves the 95 per cent targets by under three per cent; and real-world attrition means sign-up targets exceed the biological targets by roughly two-thirds. [~1.5 min]")
+    ["Chinese donors used", "Haplotypes ≥0.1%", "N* at 95%", "vs full sample"],
+    ["500", "451", "482,681", "+1,057%"],
+    ["2,000", "163", "59,324", "+42%"],
+    ["5,000  (the cap)", "143", "45,148", "+8%"],
+    ["20,000", "140", "44,326", "+6%"],
+    ["45,018  (all)", "136", "41,727", "—"],
+], Inches(0.55), Inches(5.42), Inches(6.90), Inches(1.42), size=11,
+      col_w=[2.2, 2.0, 1.7, 1.6],
+      red_cells=tuple((r, c) for r in range(1, 6) for c in range(4)))
+caption(s, "Figure S1 and table. Chinese N* vs EM input size. Below ~5,000 donors the estimate is wildly high; "
+           "by 30,000 it has converged (30,000→45,018 shifts it 0.14%). The other three groups have only 3,767–5,578 donors.")
+notes(s, "Every model has assumptions, and we stress-tested ours. The figure addresses the most technical one: for computational reasons the haplotype estimation was capped at 5,000 donors per group. Only the Chinese group has more data than that, so we re-ran the estimation at sample sizes from 500 up to the full 45,000. The curve stabilises above 20,000 samples, and at the cap the estimate is 8.2 per cent too high — an error in the safe direction: we'd recruit slightly more donors than strictly needed, never fewer. The same run answers the question people ask most often: if we had started from half a million typed CMIO donors instead of fifty-nine thousand, would these targets be different? Read the table. At five hundred donors the model says you need four hundred and eighty thousand — nonsense, ten times too high. At two thousand it is still forty-two per cent too high. By five thousand it is within eight per cent, and between thirty thousand and the full forty-five thousand it moves by one-seventh of one per cent. So for Chinese, the answer is no: we are already converged, and half a million would not move it. But look at the other three groups — Malay, Indian and Others have only three-and-a-half to five-and-a-half thousand donors each. They sit exactly where that curve is still eight to forty per cent high, which is why the paper calls their estimates exploratory, and it means their true targets are probably somewhat lower than we report. A larger CMIO dataset would sharpen those three, not the Chinese figure. One thing it would not change is the conditional framing: the mass below the floor is a property of the population, not of our sample size. Other limitations, briefly: the 0.1 per cent frequency floor makes every coverage figure conditional, and moving the floor moves the absolute targets by orders of magnitude — the comparative findings are what survive; the confidence intervals cover sampling noise only; Hardy–Weinberg departures make the Indian and Others estimates more exploratory; minority validation awaits larger patient cohorts; rare-haplotype smoothing moves the 95 per cent targets by under three per cent; and real-world attrition means sign-up targets exceed the biological targets by roughly two-thirds. [~1.5 min]")
 
 # ---------------------------------------------------------------- 23 recommendations
 s = slide()
@@ -699,23 +701,28 @@ EXTRA = {
         "European/Eurasian 35,193, NE Asian/Mixed 45,731, Filipino/SE Asian "
         "63,856. The pooled 31,129 sits below all three because mixing "
         "heterogeneous pools inflates apparent common-haplotype coverage.",
-    23: "Additional detail — Would a much larger cohort change these numbers? "
-        "No, and the convergence run shows why. The count of haplotypes "
-        "clearing the 0.1% floor is 143 at n=5,000, 140 at n=20,000 and 136 at "
-        "the full n=45,018 — it saturates — and sits at 123–144 across all four "
-        "groups despite a 12-fold span in group size (Others 3,767 to Chinese "
-        "44,400). At a fixed floor extra donors cannot create common "
-        "haplotypes; they only estimate the existing ones more precisely, which "
-        "is why N* plateaus by n≈5,000 and moves only ~6% from 20,000 to "
-        "45,018. The n=500 figure of 451 haplotypes is the opposite artefact: "
-        "at that depth almost everything observed appears to clear the floor.\n"
-        "The corollary matters more. Retained mass (51.7/52.9/40.2/35.6%) "
-        "reflects population structure, not sample size, so a much larger "
-        "registry would not lift a single below-floor patient above it — "
-        "recruitment scale cannot close that gap, mismatch tolerance "
-        "(Recommendation 3) can. What a larger cohort would buy is a defensible "
-        "floor below 0.1%, since 1/(2n) only reaches ~10⁻⁶ at that scale, plus "
-        "the removal of the small-group caveats in Sections 3.6 and 4.1.\n"
+    23: "Additional detail — the question is about the INPUT dataset, not the "
+        "registry: if this analysis had started from 500,000 typed CMIO donors "
+        "instead of 59,186, would the targets differ? The convergence run answers "
+        "it directly, by re-estimating from subsamples of the Chinese group. N* at "
+        "95%: 482,681 at n=500; 59,324 at n=2,000; 45,148 at n=5,000; 44,326 at "
+        "n=20,000; 41,787 at n=30,000; 41,727 at n=45,018. The last step moves it "
+        "0.14%, so the Chinese estimate is converged and 500,000 would not change "
+        "it. The curve is noisy between 7,500 and 15,000 (47,225 / 47,346 / 48,088), "
+        "so read it as a trend, not point by point.\n"
+        "The caveat is the other three groups. Malay (5,578), Indian (5,490) and "
+        "Others (3,767) sit where the Chinese curve was still 8-40% above its "
+        "converged value, so their reported targets are likely overestimates — this "
+        "is the quantitative content behind calling them exploratory (Sections 3.6, "
+        "4.1). A 500,000-donor CMIO dataset would sharpen those three materially and "
+        "the Chinese figure hardly at all. Haplotype counts above the floor behave "
+        "the same way: 451 at n=500 (an artefact — at that depth almost everything "
+        "observed appears to clear the floor), then 163, 143, 140, 136 — saturating.\n"
+        "What a larger input would NOT change is the conditional estimand: retained "
+        "mass (51.7/52.9/40.2/35.6%) is population structure, not sample size. It "
+        "would, however, make a floor below 0.1% defensible, since 1/(2n) only "
+        "reaches ~10⁻⁶ at that scale — and that would RAISE the targets by orders of "
+        "magnitude, not lower them.\n"
         "Floor sensitivity (manuscript Sections 2.2 and 4.1): a 1×10⁻⁶ floor "
         "(below every group's singleton frequency 1/(2n)) raises the Chinese "
         "95% target from 41,183 to 8.7×10⁷. Absolute sizes are "

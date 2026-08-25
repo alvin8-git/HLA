@@ -63,11 +63,22 @@ them better, which is why N* plateaus by n~5,000.
 The corollary is the load-bearing half: retained mass (51.7/52.9/40.2/35.6%) is
 population structure, not sample size, so no recruitment scale lifts a
 below-floor patient above it — mismatch tolerance is the only lever for them.
-Added as a red bullet, a three-row table under Figure S1, and both notes
-layers (spoken and reader). The table is what makes it land — 5,000 donors
-give 143 haplotypes above the floor, 45,018 give 136: nine times the data,
-seven fewer haplotypes. Slide rendered and inspected; table clears the figure
-above and the caption below with no overlap.
+The question is about the INPUT dataset, not the registry: had this analysis
+started from 500,000 typed CMIO donors rather than 59,186, would the targets
+differ? The convergence run answers it by re-estimating from subsamples of the
+Chinese group. N* at 95%: 482,681 (n=500), 59,324 (n=2,000), 45,148 (n=5,000),
+44,326 (n=20,000), 41,787 (n=30,000), 41,727 (n=45,018). The last step moves it
+0.14% — the Chinese estimate is converged, and 500,000 would not change it.
+
+The caveat is the other three groups. Malay (5,578), Indian (5,490) and Others
+(3,767) sit where the Chinese curve was still 8-40% above its converged value,
+so their reported targets are probably overestimates. That is the quantitative
+content behind calling them exploratory: a larger CMIO dataset would sharpen
+those three materially and the Chinese figure hardly at all.
+
+Presented as a six-row table under Figure S1 with a "vs full sample" column,
+a red bullet, and both notes layers. Slide rendered and inspected: figure
+shrunk to 6.3in wide to make room, table clears the caption, no overlap.
 
 Also corrected on that slide: the floor-sensitivity note quoted the Chinese 95%
 target as 42,871, the EM point estimate, where the rest of the document reports
