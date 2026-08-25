@@ -93,9 +93,9 @@ def normalize_refs(t):
 def word_mask(old, new):
     """Per-character bool over `new`: True where it differs from `old`.
 
-    `old` must already be normalised — normalize_refs is NOT idempotent (it
-    shifts citation numbers), so it is applied exactly once, where the old
-    text is read.
+    `old` is the RAW v2.15 text. normalize_refs is used for paragraph
+    ALIGNMENT only (see main) — masking against normalised text would hide a
+    changed citation number, which is a visible difference on the page.
     """
     if old is None:
         return [True] * len(new)
@@ -195,20 +195,27 @@ def pair_tables(old_tables, new_tables, floor=0.35):
 def main():
     old_doc, new_doc = Document(OLD), Document(NEW)
 
-    old_paras = [normalize_refs(p.text) for p in old_doc.paragraphs]
+    # Normalised text is used ONLY to align paragraphs: it lets the differ see
+    # a renumbered reference line as the same line and the withdrawn entries as
+    # clean deletes, instead of knocking the whole list out of step. The mask is
+    # then computed against the RAW original, so a citation whose number changed
+    # still shows red — red means "differs from v2.15 on the page".
+    old_norm = [normalize_refs(p.text) for p in old_doc.paragraphs]
+    old_raw = [p.text for p in old_doc.paragraphs]
     new_paras = [p.text for p in new_doc.paragraphs]
 
     masks = [None] * len(new_paras)
     for tag, i1, i2, j1, j2 in difflib.SequenceMatcher(
-            None, old_paras, new_paras, autojunk=False).get_opcodes():
+            None, old_norm, new_paras, autojunk=False).get_opcodes():
         if tag == 'equal':
-            for j in range(j1, j2):
-                masks[j] = [False] * len(new_paras[j])
+            # aligned, but may still differ before normalisation
+            for k, j in enumerate(range(j1, j2)):
+                masks[j] = word_mask(old_raw[i1 + k], new_paras[j])
         elif tag == 'insert':
             for j in range(j1, j2):
                 masks[j] = [True] * len(new_paras[j])
         elif tag == 'replace':
-            olds = old_paras[i1:i2]
+            olds = old_raw[i1:i2]
             for k, j in enumerate(range(j1, j2)):
                 masks[j] = word_mask(olds[k] if k < len(olds) else None,
                                      new_paras[j])
@@ -233,7 +240,9 @@ def main():
                 prev = None
                 if match is not None and ri < len(match.rows) \
                         and ci < len(match.rows[ri].cells):
-                    prev = normalize_refs(cell_text(match.rows[ri].cells[ci]))
+                    # raw, not normalised: a renumbered citation in a cell is
+                    # still a visible difference and must show red
+                    prev = cell_text(match.rows[ri].cells[ci])
                 cur = cell_text(cell)
                 mask = word_mask(prev, cur)
                 if any(mask):

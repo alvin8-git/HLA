@@ -5,7 +5,14 @@
 New label for the manuscript and deck carrying every correction from this
 session: build_report_v215c.py -> HLA_Registry_Size_CMIO_v2.15c.docx,
 build_slides_v215c.py -> HLA_Registry_Size_CMIO_v2.15c_slides.pptx.
-Red still means "differs from v2.15": 30 paragraphs + 75 table cells.
+Red means "differs from v2.15" and now covers EVERY difference, citation
+renumbering included: 65 paragraphs + 77 table cells. The marker previously
+masked against normalised text, which hid renumbered citations; normalisation
+is now used for paragraph ALIGNMENT only (so the withdrawn entries read as
+clean deletes) while the mask is computed against the raw v2.15 text.
+Verified by an independent differ that imports none of the marker's logic:
+0 differing-but-black and 0 identical-but-red, for both paragraphs and table
+cells; 8 figures intact.
 
 SG_WEIGHTS corrected from 0.77/0.08/0.09/0.06 to the Census of Population 2020
 resident population: Chinese 3,006,770, Malays 545,500, Indians 362,270,
