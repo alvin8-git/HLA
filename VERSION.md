@@ -50,6 +50,24 @@ pattern. This is what the withdrawn Lim reference had been carrying.
 
 Prior CSVs kept as *_PRE_WEIGHTS_FIX.csv.bak in the snapshot.
 
+### v2.15c addendum — census source pinned (2026-08-25)
+
+The census PDF was fetched from the URL supplied by the user and is byte-identical
+(md5 bc290a1c...) to the copy already in Publications/. It is Statistical Release 2
+(Households, Geographic Distribution, Transport and Difficulty in Basic
+Activities) — NOT Release 1, which is where ethnic composition would normally
+sit. The CMIO figures are valid regardless: they come from its annex table
+"Resident Population by Planning Area/Subzone of Residence, Ethnic Group and
+Sex", Total row — Chinese 3,006,770, Malays 545,500, Indians 362,270, Others
+129,670 of 4,044,210, which sums exactly.
+
+Reference [10] now names Release 2 explicitly and carries the direct PDF URL;
+Section 3.5 quotes the four counts so a reader can check the weights without
+hunting. PDF filed as Publications/10_SingStat_Census2020_SR2.pdf. The old
+cop2020-sr1 landing-page URL in DOWNLOAD_LINKS.txt was never verified and is
+replaced. 17 of 19 references now have a PDF; only [04] Beatty and [16] Efron
+(a book) are outstanding.
+
 ## v2.7.7 — 2026-08-25 (v2.15b) — CLAIM-LEVEL CITATION AUDIT
 
 Every citation checked against the cited paper's full text (118 claim instances,

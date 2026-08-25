@@ -98,9 +98,10 @@ REFS = [
      ''),
     # 10
     ('Singapore Department of Statistics.',
-     'Census of Population 2020.',
+     'Census of Population 2020, Statistical Release 2: Households, Geographic '
+     'Distribution, Transport and Difficulty in Basic Activities.',
      'Singapore: Department of Statistics; 2021.',
-     ''),
+     'https://www.singstat.gov.sg/files/efc2c599-f1d1-429d-b8fa-3f100f2c8e4c.pdf'),
     # 11
     ('Fleischhauer K, Shaw BE, Gooley T, et al.',
      'Effect of T-cell-epitope matching at HLA-DPB1 in recipients of unrelated-donor '
@@ -864,7 +865,8 @@ add_heading(doc,
 add_para(doc,
     'Registry size models must assume a patient population composition ' + cite(2, 5) + '. '
     'We tested four scenarios: Singapore resident population weights (74.3% Chinese, '
-    '13.5% Malay, 9.0% Indian, 3.2% Others) ' + cite(10) + ', BMDP+SCBB registry composition, '
+    '13.5% Malay, 9.0% Indian, 3.2% Others; 3,006,770, 545,500, 362,270 and 129,670 '
+    'of 4,044,210 residents) ' + cite(10) + ', BMDP+SCBB registry composition, '
     'HSA Patient-Donor Data (referral composition from Health Sciences Authority Singapore), and an extreme minority-focus '
     'scenario (equal Malay, Indian, and Others weighting, no Chinese). Table 6 and '
     'Figure 5 show that the combined N* varies by 3.5% across all scenarios at the '
