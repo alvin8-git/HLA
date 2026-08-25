@@ -50,6 +50,25 @@ pattern. This is what the withdrawn Lim reference had been carrying.
 
 Prior CSVs kept as *_PRE_WEIGHTS_FIX.csv.bak in the snapshot.
 
+### v2.15c slide 23 — saturation argument added (2026-08-25)
+
+Slide 23 stress-tested the 5,000-donor EM cap but never answered the question
+it invites: would a much larger cohort change the targets? The data was already
+in em_convergence.csv, in a column the slide ignored. Haplotypes clearing the
+0.1% floor: 143 at n=5,000, 140 at n=20,000, 136 at n=45,018 — it saturates,
+and sits at 123-144 across all four groups despite a 12-fold span in group size.
+At a fixed floor extra donors cannot create common haplotypes, only measure
+them better, which is why N* plateaus by n~5,000.
+
+The corollary is the load-bearing half: retained mass (51.7/52.9/40.2/35.6%) is
+population structure, not sample size, so no recruitment scale lifts a
+below-floor patient above it — mismatch tolerance is the only lever for them.
+Added as a red bullet plus both notes layers (spoken and reader).
+
+Also corrected on that slide: the floor-sensitivity note quoted the Chinese 95%
+target as 42,871, the EM point estimate, where the rest of the document reports
+the bootstrap median 41,183.
+
 ### v2.15c addendum — census source pinned (2026-08-25)
 
 The census PDF was fetched from the URL supplied by the user and is byte-identical
