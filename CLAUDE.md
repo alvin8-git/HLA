@@ -16,7 +16,8 @@ The end product is a Word manuscript (`HLA_Registry_Size_CMIO_v*.docx`), regener
 pip install -r analysis/requirements.txt   # deps (build_report.py also needs python-docx)
 bash analysis/run_all.sh                    # core pipeline: steps 01→05 + plot_coverage
 pytest tests/ -v                            # 35 tests (run from repo root)
-python build_report.py                      # regenerate the manuscript .docx (run from repo root)
+python build_report_v215c.py                # regenerate the manuscript .docx (run from repo root)
+                                            # NOTE: builders are gitignored — local only
 ```
 
 Individual analysis steps run from inside `analysis/` (e.g. `cd analysis && python 09_bootstrap_ci.py`). They read/write `analysis/data/*.csv` and `analysis/figures/*.png`.

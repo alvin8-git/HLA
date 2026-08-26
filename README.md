@@ -98,7 +98,7 @@ HLA Data.cleaned.xlsx (BMDP + SCBB)
     │
     ├──▶ 16_smoothing_sensitivity.py ──▶ smoothing_sensitivity.csv
     │
-    └──▶ build_report.py ──▶ HLA_Registry_Size_CMIO_v*.docx
+    └──▶ (local builders) ──▶ HLA_Registry_Size_CMIO_v*.docx
 ```
 
 ---
@@ -148,34 +148,27 @@ python 16_smoothing_sensitivity.py # rare-haplotype smoothing sensitivity
 python 05_report.py                # assemble verification_summary.md
 ```
 
-### 5. Rebuild the manuscripts and slide decks
+### 5. Manuscript and slide-deck builders
 
-The Word manuscripts and PowerPoint decks are **build outputs** and are not
-committed; regenerate them from the repo root (requires `python-docx` and
-`python-pptx`):
+The Word manuscripts and PowerPoint decks are **build outputs**, and the
+scripts that render them (`build_report_*.py`, `build_slides*.py`,
+`mark_*_diffs.py`) are **kept local and not published here**. What this
+repository provides is the analysis: `analysis/` derives every number from the
+source data, and `analysis/snapshot_1e-3/data/*.csv` holds the frozen results
+the manuscripts report. Those CSVs are the citable artefacts — the builders
+only typeset them.
 
-```bash
-# Submission candidate: v2.15 text + 5 clearly-marked additions (red)
-python build_report_v215b.py
-python mark_v217_diffs.py HLA_Registry_Size_CMIO_v2.15.docx HLA_Registry_Size_CMIO_v2.15b.docx
-python build_slides_v215b.py           # 26-slide deck with full speaker + reader notes
+Two conventions govern the builders, recorded here because they explain the
+snapshot directory you will find in the tree:
 
-# Extended version: full conditional/unconditional reporting
-python build_report_v217.py
-python mark_v217_diffs.py              # defaults to v2.15 -> v2.17
-python build_slides.py                 # v2.17 deck
-```
-
-Two conventions matter here:
-
-- **Frozen inputs.** Both builders read `analysis/snapshot_1e-3/` (data and
+- **Frozen inputs.** The builders read `analysis/snapshot_1e-3/` (data and
   figures frozen at the 0.1% haplotype floor), *not* the live
   `analysis/data/` + `analysis/figures/`, which may hold a re-run under
   different parameters. Re-running the pipeline does not silently change the
   manuscripts.
-- **Red marking.** `mark_v217_diffs.py` runs *after* each build and repaints
-  the document mechanically: red = text that differs from v2.15, everything
-  else black. It is idempotent; re-run it after any rebuild.
+- **Red marking.** A diff pass runs *after* each build and repaints the
+  document mechanically: red = text that differs from v2.15, everything else
+  black.
 
 `VERSION.md` is the changelog for the manuscript releases.
 

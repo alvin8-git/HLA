@@ -5,3 +5,13 @@ __pycache__/
 HLA_Registry_Size*.docx
 AUDIT_*.docx
 ~$*
+
+# Manuscript and deck builders — kept local, not published.
+# The analysis pipeline (analysis/, tests/) remains public and reproducible;
+# these only render the CSVs it produces into .docx/.pptx.
+build_paper_docx.py
+build_report*.py
+build_slides*.py
+mark_*_diffs.py
+generate_report.py
+build_cartoons.py
