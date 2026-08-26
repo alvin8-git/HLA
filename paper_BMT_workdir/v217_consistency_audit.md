@@ -1,5 +1,12 @@
 # v2.17 + v2.15 slides — sample-count consistency audit (2026-08-24)
 
+
+> **Historical record — describes the v2.17 line at a 1×10⁻⁶ floor.** Not the
+> submission manuscript, which is v2.15c at 1×10⁻³. Figures here are three orders of
+> magnitude larger by design. Left unchanged as the record of that audit; see
+> [../docs/explanation-frequency-floor.md](../docs/explanation-frequency-floor.md)
+> for how the two floors relate.
+
 Ground truth from `analysis/data/hla_clean.csv` (live; identical ingest to snapshot):
 
 | source | unique samples |

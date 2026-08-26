@@ -1,5 +1,9 @@
 # Pending fix: order-sensitive cross-ethnic merge (found 2026-08-20)
 
+
+> **Historical work note.** Check against `git log` before acting on anything here;
+> the manuscript has since moved to v2.15c.
+
 **Not yet applied** — held until the freq_threshold=1e-4 run completes, so the two
 changes stay separately attributable.
 

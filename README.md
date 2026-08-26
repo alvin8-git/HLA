@@ -1,6 +1,7 @@
 # HLA Registry Analysis — Singapore CMIO Population
 
-[![Version](https://img.shields.io/badge/version-2.3.0-informational)](VERSION.md)
+[![Version](https://img.shields.io/badge/manuscript-v2.15c-informational)](VERSION.md)
+[![Floor](https://img.shields.io/badge/frequency%20floor-1e--3-orange)](docs/explanation-frequency-floor.md)
 [![Python](https://img.shields.io/badge/python-3.10%2B-blue?logo=python&logoColor=white)](https://www.python.org/)
 [![Tests](https://img.shields.io/badge/tests-35%20passing-brightgreen?logo=pytest&logoColor=white)](tests/)
 [![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
@@ -31,6 +32,8 @@ A reproducible Python pipeline for:
 - [Citation](#citation)
 
 ---
+
+- [Why the frequency floor decides the answer](docs/explanation-frequency-floor.md) — required reading before quoting any registry size
 
 ## Background
 
@@ -309,17 +312,22 @@ With fewer samples, rare haplotypes will be missed and registry size estimates w
 
 | Ethnicity | 75% coverage | 85% coverage | 90% coverage | 95% coverage |
 |-----------|-------------|-------------|-------------|-------------|
-| Chinese | 7,577 | 15,173 | 23,497 | 42,847 |
-| Malay | 6,206 | 12,787 | 20,657 | 40,032 |
-| Indian | 9,547 | 17,793 | 26,134 | 43,855 |
-| Others | 6,884 | 12,525 | 18,386 | 31,181 |
-| **Combined** | **24,530** | **57,443** | **102,032** | **236,906** |
+| Chinese | 7,292 | 14,555 | 22,534 | 41,183 |
+| Malay | 6,169 | 12,712 | 20,521 | 39,831 |
+| Indian | 9,491 | 17,706 | 26,038 | 43,785 |
+| Others | 6,864 | 12,487 | 18,341 | 31,129 |
+| *Combined pooled registry*† | *26,210* | *60,875* | *107,139* | *243,849* |
 
-> Values are **bootstrap median estimates** (bias-corrected; B=1,000 Dirichlet resamples using actual 5-locus donor counts as n_eff). Full 95% CIs are in `analysis/data/registry_size_ci.csv`. Cross-ethnic matching remains infeasible for minority groups at high coverage targets.
+> Values are **bootstrap median estimates** (bias-corrected; B=1,000 Dirichlet resamples, `n_eff = min(EM cap, 5-locus count)`). Full 95% CIs are in `analysis/snapshot_1e-3/data/registry_size_ci.csv`. Cross-ethnic matching remains infeasible for minority groups at high coverage targets.
 
-> **Donor attrition:** N* is the biologically matched minimum (active registered donors). To account for ~40% real-world volunteer attrition, the recommended signed-up recruitment target is **N* ÷ 0.60** (≈ N* × 1.67). For Chinese at 95% coverage: ~71,400 recruited to maintain 42,847 registered.
+> † The *Combined pooled registry* row is a different quantity and a different model: one merged donor pool serving a census-mix patient population, computed deterministically rather than by bootstrap. Keep three numbers apart — the per-group targets above (one dedicated registry each), their **sum** if you build all four (155,928 at 95%), and this **pooled** figure (243,849). Pooling costs 1.6× more than four dedicated registries, because a merged pool dilutes each patient's own haplotypes.
 
-See [Documentation.md](Documentation.md) for full methodology and figure interpretation.
+> **Donor attrition:** N* is the biologically matched minimum (active registered donors). To account for ~40% real-world volunteer attrition, the recommended signed-up recruitment target is **N* ÷ 0.60** (≈ N* × 1.67). For Chinese at 95% coverage: ~68,600 recruited to maintain 41,183 registered.
+
+> **These are conditional numbers, at one frequency floor.** Coverage is of patients whose haplotypes both clear the 0.1% floor — 52% of Chinese and 36% of Others patients. And the floor itself sets the scale: the same pipeline at 1×10⁻⁶ returns 16–87 million, and reverses which group needs the largest registry. Read [docs/explanation-frequency-floor.md](docs/explanation-frequency-floor.md) before quoting any absolute figure here.
+
+See [Documentation.md](Documentation.md) for full methodology and figure interpretation, and
+[docs/explanation-frequency-floor.md](docs/explanation-frequency-floor.md) for why the floor decides the scale of every number above.
 
 ---
 

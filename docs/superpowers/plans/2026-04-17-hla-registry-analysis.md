@@ -1,5 +1,11 @@
 # HLA Registry Analysis Implementation Plan
 
+
+> **Historical plan — April 2026.** Describes the analysis as originally scoped.
+> The pipeline and its results have moved substantially since; see
+> [VERSION.md](../../../VERSION.md) for what changed and
+> [README](../../../README.md) for current state.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Verify the 2022 Singapore HLA paper's allele/haplotype frequency analysis using independent tools, and model the optimal bone marrow donor registry size for Singapore across CMIO ethnic groups, 8/8 and 10/10 match levels, and same-ethnicity vs cross-ethnic matching.

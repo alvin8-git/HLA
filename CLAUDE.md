@@ -32,6 +32,8 @@ Individual analysis steps run from inside `analysis/` (e.g. `cd analysis && pyth
 
 **Two report generators at root — only one is current.** `build_report.py` is canonical: data-driven, reads `registry_size_ci.csv` + other CSVs, emits bootstrap-median registry sizes with 95% CIs. `generate_report.py` is an **older draft with hardcoded numbers** (different, smaller registry figures) — don't update it.
 
+**The frequency floor sets the scale of every registry number.** v2.15c uses 1e-3; the live `analysis/data/` holds a 1e-6 re-run whose targets are ~2,098x larger and whose cross-group ranking is inverted. Comparative conclusions survive the change, absolute targets and rankings do not. Before quoting or editing any registry size, read `docs/explanation-frequency-floor.md`.
+
 **Watch for two coexisting number sets.** `verification_summary.md`/`README` results tables and the `build_report.py` manuscript use different models (per-locus exact-match vs EM-phased bootstrap median), so e.g. "Chinese 95% 10/10" legitimately appears as both ~11.6k and ~42.8k. Don't "fix" one to match the other — confirm which model a table is reporting first.
 
 ## Conventions

@@ -1,5 +1,12 @@
 # Integrity audit of `HLA_Registry_Size_CMIO_v2.15.docx`
 
+
+> **Historical record — describes manuscript v2.15 (superseded).** The figures here
+> are the v2.15 ones and are left unchanged on purpose; several were corrected in
+> v2.15b/v2.15c, and this file is the record of *why*. Current numbers are in
+> [README](README.md) and [Documentation.md](Documentation.md). See
+> [VERSION.md](VERSION.md) for the chain of corrections.
+
 Prepared 2026-08-20 during preparation of the independent reanalysis
 (`HLA_Registry_Size_CMIO_BoneMarrowTransplantation.md`). Every finding below was
 verified against the pipeline's own CSV outputs or by re-running its own code; the

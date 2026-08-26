@@ -1,5 +1,10 @@
 # Claim-level citation audit — v2.15b, 2026-08-25
 
+
+> **Historical record — the 2026-08-25 citation audit against v2.15b.** Its
+> before/after pairs are the point of the file and are left unchanged. The
+> resulting reference list (19 entries) ships in v2.15c.
+
 Every citation in the manuscript was checked against the cited paper's full
 text (17 PDFs; [4] Beatty, [10] Census and [16] Efron have no PDF and were not
 checkable). 118 claim instances across 20 references, verified in five parallel

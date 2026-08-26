@@ -2,9 +2,27 @@
 ## HLA Registry Analysis — Singapore CMIO Population
 
 **Author:** Alvin Ng Yu-Jin  
-**Date:** April 2026  
 **Dataset:** BMDP + SCBB, n = 59,186 donors  
 **Reference:** Ng AYJ et al. (2022), *Blood Cell Therapy* 5(3):86–95
+
+> **Which version this describes.** The current manuscript is **v2.15c**, built
+> from the frozen inputs in `analysis/snapshot_1e-3/` at a rare-haplotype
+> frequency floor of **1×10⁻³**. A methodological re-run at **1×10⁻⁶** exists
+> under the v2.17 line and lives in the live `analysis/data/`; it produces
+> registry targets three orders of magnitude larger. Neither supersedes the
+> other — they answer different questions.
+>
+> **Before quoting any absolute registry size from this document, read
+> [Why the frequency floor decides the answer](docs/explanation-frequency-floor.md).**
+> The comparative conclusions here are robust to the floor; the absolute targets
+> and the ranking between ethnic groups are not.
+
+> **Two number sets coexist, deliberately.** Sections 6.1–6.5 report the **EM
+> maximum-likelihood** point estimates (Chinese 42,871). The manuscript's Table 1
+> headline reports the **bootstrap median** (Chinese 41,183), a bias-corrected
+> summary of the same distribution. Both appear side by side in §6.5. They are
+> not a discrepancy to be reconciled — check which one a table is reporting
+> before comparing.
 
 ---
 
@@ -966,13 +984,13 @@ $$
 
 > **In plain language**
 >
-> **What we're doing:** Instead of reporting a single number for the required registry size, we report a bias-corrected central estimate (the bootstrap median) plus a plausible range — e.g., "42,847 donors (bootstrap median), 95% CI: 42,649–43,058."
+> **What we're doing:** Instead of reporting a single number for the required registry size, we report a bias-corrected central estimate (the bootstrap median) plus a plausible range — e.g., "41,183 donors (bootstrap median), 95% CI: 40,184–42,153."
 >
 > **Why this approach:** Our 56,000 donors are a sample of Singapore's population, not the entire population. The true HLA frequencies in Singapore are unknown — we only have estimates. If we had a slightly different set of donors, we'd get slightly different frequency estimates, and therefore a slightly different N*. The confidence interval captures this uncertainty so policymakers know whether the answer is "roughly 40,000" or "somewhere between 30,000 and 55,000."
 >
 > **How it works:** We simulate 1,000 alternative versions of our dataset using a statistical technique called Dirichlet bootstrapping. Each simulated dataset produces its own N* estimate. The middle 95% of those 1,000 estimates forms the confidence interval.
 >
-> **Simple example:** Think of it like polling before an election. If you poll 1,000 voters and 60% favour Candidate A, the true support might be anywhere from 57% to 63% depending on which 1,000 people you happened to ask. Bootstrapping is our way of quantifying that polling uncertainty — applied to HLA frequencies rather than voting intentions. For Chinese donors, our CI is very tight (±~200 out of 42,847), reflecting the large 45,754-donor cohort available for frequency estimation.
+> **Simple example:** Think of it like polling before an election. If you poll 1,000 voters and 60% favour Candidate A, the true support might be anywhere from 57% to 63% depending on which 1,000 people you happened to ask. Bootstrapping is our way of quantifying that polling uncertainty — applied to HLA frequencies rather than voting intentions. For Chinese donors, our CI is about ±1,000 out of 41,183, reflecting the large 45,754-donor cohort available for frequency estimation.
 
 The point estimates of N* (§6.3, 6.1.6) are subject to sampling uncertainty: with finite cohort sizes (44,400 Chinese, etc.), true haplotype frequencies are unknown. We estimate confidence intervals using **Dirichlet bootstrapping**.
 
@@ -987,24 +1005,44 @@ For each ethnicity, we:
 
 **Results table (10/10 same-ethnicity):**
 
-| Ethnicity | N\* (bootstrap median) | 95% CI Lower | 95% CI Upper | CI Width |
-|-----------|---|---|---|---|
-| Chinese | 42,847 | 42,649 | 43,058 | 409 |
-| Malay | 40,032 | 38,972 | 41,151 | 2,179 |
-| Indian | 43,855 | 42,963 | 44,577 | 1,614 |
-| Others | 31,181 | 30,490 | 31,959 | 1,469 |
+| Ethnicity | N\* (bootstrap median) | 95% CI Lower | 95% CI Upper | CI Width | EM point estimate |
+|-----------|---|---|---|---|---|
+| Chinese | 41,183 | 40,184 | 42,153 | 1,969 | 42,871 |
+| Malay | 39,831 | 38,680 | 40,935 | 2,255 | 41,779 |
+| Indian | 43,785 | 42,762 | 44,547 | 1,785 | 44,863 |
+| Others | 31,129 | 30,420 | 32,001 | 1,581 | 32,360 |
+
+> **Corrected 2026-08-25 (commit `28ac706`).** An earlier version of this table
+> reported a Chinese CI of 42,649–43,058, a width of 409. That interval was an
+> artefact: the Dirichlet concentration used the full donor count (44,400) while
+> the frequencies it resampled came from the 5,000 individuals the EM cap
+> actually admitted, asserting 8.9× more precision than the estimate had.
+> Setting `n_eff = min(EM cap, 5-locus count)` widened the Chinese interval 4.8×
+> and moved the point estimate from 42,847 to 41,183.
 
 **Interpretation:**
-- **Chinese CI very tight (±~200):** Largest cohort (45,754 donors) gives precise frequency estimates; the CI reflects genuine statistical precision, not artefact.
-- **Malay/Indian/Others CIs wider (±1,500–2,200):** Smaller 5-locus cohorts (3,941–5,868) produce more Dirichlet variation; CIs appropriately wider.
-- **All medians inside CI by construction:** Using the bootstrap median as point estimate corrects for the Jensen downward-bias in N*(f) near saturation (see §6.9).
-- **All lower bounds >30,000:** Even at the conservative 2.5th percentile, all groups require substantial registries (>30K).
+- **CI widths are comparable across all four groups (±790–1,130):** this is *not*
+  a statement about donor pool sizes. The 5,000-individual EM cap equalises the
+  sample from which frequencies were estimated for Chinese, Malay and Indian;
+  Others falls below the cap at 3,767. The intervals reflect the estimation
+  sample, not the registry.
+- **The median is a bias correction, not a different dataset.** N\*(f) is
+  nonlinear, so the bootstrap distribution is right-skewed and its median sits
+  below the EM maximum-likelihood estimate. Both are reported above. See §6.9.
+- **The median is inside the CI by construction**, being the 50th percentile of
+  the same distribution as the 2.5th and 97.5th. This guarantees the table looks
+  internally consistent; it is not independent evidence that the estimate is
+  sound.
+- **The interval is the smallest uncertainty term in the pipeline.** It covers
+  multinomial sampling of donors only — roughly ±2–3%. It does not cover phase
+  ambiguity, the EM cap, or the frequency floor, which move N\* by far more.
+  See [Why the frequency floor decides the answer](docs/explanation-frequency-floor.md).
 
 **Figure 9: Bootstrap Confidence Intervals**
 
 ![Registry CI Plot](analysis/figures/registry_ci_plot.png)
 
-*Bootstrap median estimates (dots) and 95% bootstrap confidence intervals (error bars) for N* at 95% coverage, 10/10 matching. Chinese CIs are narrow (±~200) due to the large 45,754-donor cohort; Malay/Indian/Others CIs are wider (±1,500–2,200) reflecting smaller 5-locus donor counts. All lower bounds exceed 30,000.*
+*Bootstrap median estimates (dots) and 95% bootstrap confidence intervals (error bars) for N* at 95% coverage, 10/10 matching. Widths are comparable across groups (±790–1,130) because the 5,000-individual EM cap equalises the estimation sample for Chinese, Malay and Indian; Others sits below the cap at 3,767. All lower bounds exceed 30,000.*
 
 **Attrition adjustment:** N* is the minimum number of *active* registered donors needed to achieve the stated coverage. In practice, volunteer registries experience approximately 40% attrition before donation (withdrawal, age-out, medical deferral). The recommended signed-up recruitment target is:
 
@@ -1012,7 +1050,7 @@ $$
 N_{\text{recruit}} = \frac{N^*}{0.60} \approx N^* \times 1.67
 $$
 
-For Chinese at 95% coverage (N* = 42,847), this implies recruiting approximately **71,400** signed-up donors to maintain coverage. The attrition-adjusted targets for all groups are presented in Tables 1–2 of the main report.
+For Chinese at 95% coverage (N* = 41,183), this implies recruiting approximately **68,600** signed-up donors to maintain coverage. The attrition-adjusted targets for all groups are presented in Tables 1–2 of the main report.
 
 ### 6.6 Ancestry Stratification of the "Others" Group
 
@@ -1027,7 +1065,7 @@ For Chinese at 95% coverage (N* = 42,847), this implies recruiting approximately
 >
 > **How it works:** We look at which HLA alleles each "Others" donor carries and use a technique called PCA (principal component analysis) to reduce this to a simple map, then group donors into clusters based on genetic similarity using k-means clustering. Each cluster is then treated as its own population with its own registry size calculation.
 >
-> **Simple example:** Out of 3,947 "Others" donors, our algorithm found three distinct genetic clusters. One cluster (likely Filipino/SE Asian ancestry) needs ~64,000 donors for 95% coverage — nearly double the pooled "Others" estimate of 32,360. If we had only used the pooled figure, we would have significantly underestimated the recruitment needed to serve this subgroup. Think of it like discovering that what you thought was one species of bird is actually three, each with different habitat needs.
+> **Simple example:** Out of 3,847 "Others" individuals, our algorithm found three distinct genetic clusters. One cluster (likely Filipino/SE Asian ancestry) needs ~64,000 donors for 95% coverage — nearly double the pooled "Others" estimate of 32,360. If we had only used the pooled figure, we would have significantly underestimated the recruitment needed to serve this subgroup. Think of it like discovering that what you thought was one species of bird is actually three, each with different habitat needs.
 
 The "Others" group (6.4% of registry) is deliberately heterogeneous: Eurasians, Caucasians, East Asians, and mixed-race individuals. Pooling these may mask sub-group structure and inflate apparent registry size requirements. We stratified Others using **unsupervised clustering**.
 
@@ -1046,7 +1084,14 @@ Best clustering: $k = 3$ (silhouette = 0.97)
 | Cluster 1 (Eurasian?) | 1,029 | 122 | 16,845 | 35,193 |
 | Cluster 2 (South Asian/Mixed?) | 1,257 | 168 | 37,239 | 63,856 |
 | Cluster 3 (East Asian/Mixed?) | 1,561 | 151 | 28,287 | 45,731 |
-| **Pooled** | **3,947** | **123** | **~21,000** | **32,360** |
+| **Pooled** | **3,847** | **123** | **~21,000** | **32,360** |
+
+> **Cohort caveat.** `11_others_stratification.py` applies no `MAIN_SOURCES`
+> filter, so these 3,847 individuals include 128 HSA donor and 46 HSA patient
+> records alongside the registry. Every other result in this document is
+> restricted to the BMDP+SCBB registry, where the five-locus Others count is
+> **3,767**. The sub-cluster targets are therefore not strictly comparable with
+> the pooled Others row, which reinforces their exploratory status.
 
 **Key finding:** Cluster 2 requires ~64K donors (95% coverage), almost **2× the pooled estimate** (32,360). Conversely, Cluster 1 is relatively homogeneous and requires only 35,193. **Pooling masks sub-group diversity.**
 
@@ -1056,7 +1101,7 @@ Cluster identities remain unconfirmed (no demographic linkage data available), b
 
 ![Others PCA Scatter](analysis/figures/others_pca_scatter.png)
 
-*Principal component plot of 3,947 Others individuals. Three clusters (colored) are visually distinct in 10-dimensional allele frequency space, projecting to the first two principal components. Silhouette score = 0.97.*
+*Principal component plot of 3,847 Others individuals. Three clusters (colored) are visually distinct in 10-dimensional allele frequency space, projecting to the first two principal components. Silhouette score = 0.97.*
 
 **Figure 11: Others Registry by Cluster**
 
@@ -1119,16 +1164,16 @@ We validated predicted match probabilities against observed matches in the **Don
 >
 > **What we're doing:** Testing whether our registry size answer changes if the patient population turns out to be different from what we assumed.
 >
-> **Why this approach:** Our baseline model assumes the patient mix mirrors Singapore's census (77% Chinese, 8% Malay, 9% Indian, 6% Others). But real transplant patients may not follow the census — Malay and Indian patients are sometimes over-represented relative to population share, due to disease incidence patterns. We need to know: if the patient mix shifts, does our recommended registry size change significantly?
+> **Why this approach:** Our baseline model assumes the patient mix mirrors Singapore's census (74.3% Chinese, 13.5% Malay, 9.0% Indian, 3.2% Others). But real transplant patients may not follow the census — Malay and Indian patients are sometimes over-represented relative to population share, due to disease incidence patterns. We need to know: if the patient mix shifts, does our recommended registry size change significantly?
 >
 > **How it works:** We re-run the combined registry size calculation four times, each time using a different set of weights for the ethnic groups — ranging from the census baseline to an extreme hypothetical where Chinese patients are excluded entirely and minorities dominate.
 >
-> **Simple example:** Imagine a restaurant planning how much of each dish to prepare. They normally expect 77% of customers to order rice, but what if one day it's only 40%? If all dishes require roughly similar ingredient quantities, the total amount of food to prepare barely changes. That is exactly what we find: despite dramatic changes in the assumed patient ethnic mix, the total recommended registry size moves by less than 3% (41,129 to 42,332 donors). This robustness is reassuring — our recommendation does not depend critically on having the exact right demographic assumption.
+> **Simple example:** Imagine a restaurant planning how much of each dish to prepare. They normally expect 77% of customers to order rice, but what if one day it's only 40%? If all dishes require roughly similar ingredient quantities, the total amount of food to prepare barely changes. That is exactly what we find: despite dramatic changes in the assumed patient ethnic mix, the total recommended registry size moves by less than 3% (41,129 to 42,567 donors). This robustness is reassuring — our recommendation does not depend critically on having the exact right demographic assumption.
 
 Registry size predictions depend on assumed population composition (§6.1.4). We tested sensitivity to different patient demographic assumptions.
 
 **Scenarios:**
-1. **Singapore population (baseline):** 77% Chinese, 8% Malay, 9% Indian, 6% Others (based on census).
+1. **Singapore population (baseline):** 74.3% Chinese, 13.5% Malay, 9.0% Indian, 3.2% Others — Census of Population 2020, Statistical Release 2: 3,006,770 / 545,500 / 362,270 / 129,670 of 4,044,210 residents. (Earlier versions of this document used 77/8/9/6, which came from the census *household* table, not the resident-population table.)
 2. **BMDP+SCBB composition:** 75.0% Chinese, 9.4% Malay, 9.3% Indian, 6.4% Others (actual registry breakdown).
 3. **Patient.txt composition:** 72.3% Chinese, 14.9% Malay, 5.0% Indian, 8.2% Others (observed patient cohort).
 4. **Minority-focus (hypothetical):** 0% Chinese, 40% Malay, 40% Indian, 20% Others (aimed at underserved groups).
@@ -1137,12 +1182,12 @@ Registry size predictions depend on assumed population composition (§6.1.4). We
 
 | Scenario | Chinese | Malay | Indian | Others | **Combined N\*** |
 |----------|---------|-------|--------|--------|---|
-| Singapore (77/8/9/6) | 42,871 | 41,779 | 44,863 | 32,360 | **42,332** |
-| BMDP+SCBB (75/9.4/9.3/6.4) | 42,871 | 41,779 | 44,863 | 32,360 | **42,289** |
-| Patient.txt (72.3/14.9/5/8.2) | 42,871 | 41,779 | 44,863 | 32,360 | **41,950** |
+| Singapore (74.3/13.5/9.0/3.2) | 42,871 | 41,779 | 44,863 | 32,360 | **42,567** |
+| BMDP+SCBB (75.0/9.4/9.3/6.4) | 42,871 | 41,779 | 44,863 | 32,360 | **42,289** |
+| Patient.txt (72.0/14.9/5.0/8.2) | 42,871 | 41,779 | 44,863 | 32,360 | **41,950** |
 | Minority-focus (0/40/40/20) | — | 41,779 | 44,863 | 32,360 | **41,129** |
 
-**Key finding:** Total required N* ranges only **41,129–42,332** (range ~1,203 donors, or ~3%), despite dramatic differences in patient population weighting.
+**Key finding:** Total required N* ranges only **41,129–42,567** (range ~1,438 donors, or ~3.4%), despite dramatic differences in patient population weighting.
 
 **Interpretation:** Per-group N* values are all in the same order of magnitude (32–45K). Even if we weight patients 40% Malay, 40% Indian (vs. baseline 8–9%), the combined N* is almost unchanged. This **structural property** of CMIO haplotype diversity means registry size is robust to patient demographics.
 
@@ -1302,6 +1347,8 @@ All changes are under 3%. Chinese and Malay show small positive shifts (smoothin
 > **What we're doing:** Summarising the twelve most important results from the entire analysis in one place, so readers can grasp the overall picture without reading every technical section.
 >
 > **Why this matters:** The individual sections are necessarily detailed; this summary distils the policy-relevant conclusions. The headline finding is that all four CMIO groups need registries of ~40,000–45,000 same-ethnicity donors for 95% coverage — substantially more than Singapore currently has for all groups except Chinese.
+>
+> **Read that headline with two conditions attached.** It is *conditional* coverage — of patients whose haplotypes both clear the 0.1% floor, which is 52% of Chinese and 36% of Others patients — and it is conditional on the floor itself. At a 1×10⁻⁶ floor the same pipeline returns 16–87 million. The findings below that are stated as ratios or directions hold at either floor; the ones stated as absolute donor counts do not. See [Why the frequency floor decides the answer](docs/explanation-frequency-floor.md).
 
 1. **Allele frequencies are high-quality:** 1,488 observed alleles, zero flagged for discrepancy; max difference from published values = 0.27% (HLA-C). No evidence of batch effects or major data quality issues.
 
@@ -1339,7 +1386,9 @@ All changes are under 3%. Chinese and Malay show small positive shifts (smoothin
 >
 > **What we're doing:** Honestly documenting what this analysis cannot tell us, where the evidence is weaker, and what follow-up work would strengthen confidence before these estimates are used to set national recruitment policy.
 >
-> **Why this matters:** Presenting results without limitations gives a false sense of certainty. The two most important gaps are: (1) volunteer registration bias — our 56,000 donors self-selected; they may not perfectly represent Singapore's full HLA diversity; and (2) the patient-donor validation is only well-powered for Chinese — Malay, Indian, and Others estimates rely on the Gene[RATE] cross-validation alone.
+> **Why this matters:** Presenting results without limitations gives a false sense of certainty. Ranked by how much they move the answer, the four largest gaps are: (1) the **frequency floor**, which moves N* by 2,098× between 1×10⁻³ and 1×10⁻⁶ and inverts the ranking between ethnic groups; (2) **phase ambiguity** — the average donor's five-locus genotype is consistent with roughly eleven distinct haplotype pairs, and no reported interval covers that; (3) volunteer registration bias — our donors self-selected and may not represent Singapore's full HLA diversity; and (4) the patient-donor validation is well-powered only for Chinese, so Malay, Indian and Others estimates rest on the Gene[RATE] cross-validation alone.
+>
+> The published confidence intervals cover none of (1), (2) or (3). They cover multinomial sampling of donors, roughly ±2–3%, which is the smallest term on this list. See [Why the frequency floor decides the answer](docs/explanation-frequency-floor.md).
 >
 > **Simple example:** Think of this section as the "terms and conditions" of the analysis. The main results are sound, but policymakers should be aware of these caveats before treating any single number as a definitive, immovable recruitment target.
 
@@ -1436,6 +1485,15 @@ Executes all 35 unit tests across ingestion, allele frequency, HWE, and registry
 
 ---
 
-**Document Version:** 2.3.0 (April 2026)  
-**Last Updated:** 2026-04-29  
+**Document Version:** 2.4.0  
+**Last Updated:** 2026-08-26  
+**Describes:** manuscript v2.15c, floor 1×10⁻³, inputs frozen at `analysis/snapshot_1e-3/`
+
+**Changes in 2.4.0:** bootstrap CI table and its interpretation corrected for the
+`n_eff` fix (commit `28ac706`); census weights corrected from 77/8/9/6 to the
+Census 2020 resident-population figures 74.3/13.5/9.0/3.2; the "Others" clustering
+cohort corrected from 3,947 to 3,847 (and see the note in §6.6 — that cohort
+includes HSA records and is wider than the 3,767-donor registry cohort used
+everywhere else); floor-sensitivity material added to §7, §8 and a new
+[explanation doc](docs/explanation-frequency-floor.md).  
 **Queries/Corrections:** Contact author at the reference above.

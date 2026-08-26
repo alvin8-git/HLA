@@ -1,4 +1,8 @@
 # HLA Registry Analysis Design
+
+> **Historical design spec — April 2026.** Kept as the original design record; see
+> [README](../../../README.md) for the pipeline as it now stands.
+
 **Date:** 2026-04-17
 **Author:** Alvin Ng Yu-Jin
 **Status:** Approved

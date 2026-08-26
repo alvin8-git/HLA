@@ -1,5 +1,14 @@
 # Version History
 
+
+> **This file is a change log, not a statement of current results.** Entries are
+> dated and describe what changed on that date, so figures inside older entries are
+> deliberately left as they were then — that trail is how a reader traces a
+> correction. For current numbers see [README](README.md) and
+> [Documentation.md](Documentation.md); the manuscript is **v2.15c** at a 1×10⁻³
+> frequency floor. For why the floor sets the scale of every figure in this file,
+> see [docs/explanation-frequency-floor.md](docs/explanation-frequency-floor.md).
+
 ## v2.15c — numeric consistency audit (2026-08-26)
 
 Audited every comma-formatted figure in the built .docx against the snapshot

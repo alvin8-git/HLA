@@ -4,6 +4,17 @@
 
 > **Analysis date:** 2026-04-17
 
+> **Which model this reports.** This is the *verification* pass: it re-derives
+> allele and haplotype frequencies and checks them against Ng et al. (2022), using
+> a per-locus exact-match model. The manuscript (v2.15c) reports a different
+> model — EM-phased haplotypes with a bootstrap median — so the same quantity can
+> legitimately appear here and there with different values (e.g. Chinese 95% 10/10
+> as ~11.6k here and 41,183 in the manuscript). Confirm which model a table is
+> reporting before comparing; do not "fix" one to match the other. Registry sizes
+> quoted anywhere in this project are additionally conditional on the 1×10⁻³
+> frequency floor — see
+> [docs/explanation-frequency-floor.md](../docs/explanation-frequency-floor.md).
+
 
 ---
 
