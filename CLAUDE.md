@@ -13,26 +13,43 @@ The end product is a Word manuscript (`HLA_Registry_Size_CMIO_v*.docx`), regener
 ## Commands
 
 ```bash
-pip install -r analysis/requirements.txt   # deps (build_report.py also needs python-docx)
+pip install -r analysis/requirements.txt   # deps (the builders also need python-docx)
 bash analysis/run_all.sh                    # core pipeline: steps 01→05 + plot_coverage
 pytest tests/ -v                            # 35 tests (run from repo root)
+pytest tests/test_registry_model.py::test_compute_coverage_monotone_increasing -v   # single test
+python check_freshness.py                   # exit 1 if any derived artifact is stale
 python build_report_v215c.py                # regenerate the manuscript .docx (run from repo root)
                                             # NOTE: builders are gitignored — local only
 ```
 
 Individual analysis steps run from inside `analysis/` (e.g. `cd analysis && python 09_bootstrap_ci.py`). They read/write `analysis/data/*.csv` and `analysis/figures/*.png`.
 
+**Use the pinned interpreter for anything long-running.** A login shell (screen, cron) resolves `python` to 2.7, which dies on the first non-ASCII docstring. Scripts hardcode `PY=/home/alvin/miniconda3/bin/python`.
+
+`run_overnight.sh` drives the whole chain (EM → downstream → B=1000 bootstrap → build) detached under `screen`, logging to `paper_BMT_workdir/overnight.log` and touching `OVERNIGHT_DONE` on success. `finish_and_commit.sh` is the gate afterwards: it refuses to commit unless `OVERNIGHT_DONE` exists and `check_freshness.py` passes, then prints the headline numbers for eyeballing. The bootstrap step alone runs 3–4 h.
+
 ## Architecture — the part that isn't obvious from filenames
 
 **Two-tier pipeline.** `run_all.sh` only runs the *core* (01 ingest → 02 allele_freq → 03 hwe → 04 registry_model → plot_coverage → 05 report). Scripts **06–16 and the bootstrap are NOT in run_all.sh** — they are standalone, run manually, and produce the CSV/PNG inputs that `build_report.py` consumes. So `run_all.sh` passing ≠ the manuscript being current. To rebuild the paper end-to-end you must also run 06, 07, 09–16 before `build_report.py`.
 
-**Numbered scripts are runners; logic lives in three library modules** (`hwe_test.py`, `registry_model.py`, `plot_coverage.py`) — these are what the tests import. Core model math in `registry_model.py`: `get_diplotype_frequencies` (HWE expansion), `compute_coverage` (C(N)=Σ f·[1−(1−f)^N]), `find_registry_size` (log-scale binary search), `get_combined_haplotype_freqs` (Singapore-weighted pool). EM haplotype phasing in `hwe_test.py:run_em_haplotypes` — **capped at 5,000 individuals/ethnicity** for speed (a known ~8% conservative bias, quantified by `15_em_convergence.py`).
+**Numbered scripts are runners; logic lives in three library modules** (`hwe_test.py`, `registry_model.py`, `plot_coverage.py`) — these are what the tests import. Core model math in `registry_model.py`: `get_diplotype_frequencies` (HWE expansion), `compute_coverage` (C(N)=Σ f·[1−(1−f)^N]), `find_registry_size` (log-scale binary search), `get_combined_haplotype_freqs` (Singapore-weighted pool). EM haplotype phasing in `hwe_test.py:run_em_haplotypes` — cap raised 5,000 → **50,000** on 2026-08-20, so it **no longer binds for any CMIO group**. The old 5,000 cap cost ~8% at the 1e-3 floor but *inflated* the Chinese target by 264% at 1e-4 (11,487,962 capped vs 3,153,571 uncapped). Its direction of bias is not stable across floors, so cap and floor cannot be chosen independently — see `15_em_convergence.py`. Any doc still saying "capped at 5,000" is pre-2026-08-20.
 
 **Data flows long-format.** `01_ingest.py` reads Excel/txt sources → `analysis/data/hla_clean.csv` (one row per sample×locus; `source` ∈ {`BMDP_OUT`,`SCBB_OUT`}). Downstream scripts filter on the `MAIN_SOURCES` constant. Ingestion is skipped if `hla_clean.csv` exists. Full input-format contract (column regexes, ethnicity codes, bypassing ingestion) is documented in `README.md` → "Using Your Own CMIO HLA Data".
 
-**Two report generators at root — only one is current.** `build_report.py` is canonical: data-driven, reads `registry_size_ci.csv` + other CSVs, emits bootstrap-median registry sizes with 95% CIs. `generate_report.py` is an **older draft with hardcoded numbers** (different, smaller registry figures) — don't update it.
+**Several builders at root; the current ones read the frozen snapshot.** Pick by what a builder points at, not by its name:
 
-**The frequency floor sets the scale of every registry number.** v2.15c uses 1e-3; the live `analysis/data/` holds a 1e-6 re-run whose targets are ~2,098x larger and whose cross-group ranking is inverted. Comparative conclusions survive the change, absolute targets and rankings do not. Before quoting or editing any registry size, read `docs/explanation-frequency-floor.md`.
+| Builder | Reads | Status |
+|---|---|---|
+| `build_report_v215c.py` | `analysis/snapshot_1e-3/` | **current** — v2.15c, the submission candidate |
+| `build_report_v217.py` | `analysis/snapshot_1e-3/` | v2.17 draft, also snapshot-based |
+| `build_report.py` | live `analysis/data/` | superseded (emits v2.16 from whatever the last re-run left) |
+| `generate_report.py` | nothing — hardcoded | older draft, wrong smaller figures; don't update it |
+
+Build from `analysis/snapshot_1e-3/`, never live `analysis/data/`. The snapshot is frozen at the 0.1% floor so that re-running the pipeline cannot silently move the manuscript's numbers. A **red-marking diff pass runs after each build** and repaints the document mechanically: red = differs from v2.15, everything else black. Re-mark after every rebuild and confirm the 8 figures survived.
+
+**Derive figures from the CSVs; never type a number into a builder.** Every defect in the v2.15c audit was a builder-side literal that outlived a model re-run — a stale Table 3, a pre-census-weights multiple, an 8/8 claim that quietly excluded Malay. Before changing any pipeline parameter, grep for private copies of the constant: `11_others_stratification.py` and `15_em_convergence.py` each held their own `FREQ_THRESHOLD` that ignored the global change.
+
+**The frequency floor sets the scale of every registry number.** v2.15c uses 1e-3; the live `analysis/data/` holds a 1e-6 re-run whose targets are ~2,098x larger and whose cross-group ranking is inverted. Comparative conclusions survive the change, absolute targets and rankings do not. Before quoting or editing any registry size, read `docs/explanation-frequency-floor.md`. Bootstrap CIs exist only in the 1e-3 snapshot. For the live 1e-6 chain they were withdrawn, because the Dirichlet bootstrap biases the registry-size estimate downward on a long-tailed distribution. `check_freshness.py` therefore does not track `registry_size_ci.csv`.
 
 **Watch for two coexisting number sets.** `verification_summary.md`/`README` results tables and the `build_report.py` manuscript use different models (per-locus exact-match vs EM-phased bootstrap median), so e.g. "Chinese 95% 10/10" legitimately appears as both ~11.6k and ~42.8k. Don't "fix" one to match the other — confirm which model a table is reporting first.
 
