@@ -147,7 +147,7 @@ How to read the table:
   patients who carry rare haplotypes.
 - **1e-6 is the only floor that is both calibrated today and able to extrapolate.**
 
-Scripts and logs: `/data/alvin/tmp/hla_review/` (`dedup_coverage.py`, `floor_sweep.py`,
+Scripts and logs: `analysis/review/` (`dedup_coverage.py`, `floor_sweep.py`,
 `dedup_em.py`).
 
 ---

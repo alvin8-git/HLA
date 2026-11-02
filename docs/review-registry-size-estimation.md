@@ -2,7 +2,7 @@
 
 *Reviewer: independent re-analysis, 2026-11-01. Scope: the registry-size model behind
 `HLA_Registry_Size_CMIO_v2.15c` and the 1e-6 re-run in `analysis/data/`. No pipeline file was
-changed. Every experiment script and its log are in `/data/alvin/tmp/hla_review/`.*
+changed. Every experiment script and its log are in `analysis/review/`.*
 
 ---
 
@@ -364,7 +364,7 @@ its 95% targets are model-dependent extrapolations, not estimates.
 
 ## 7. Reproducing this review
 
-Each script is run with `/home/alvin/miniconda3/bin/python -I`, from `/data/alvin/tmp/hla_review/`.
+Each script is run with `/home/alvin/miniconda3/bin/python -I`, from `analysis/review/`.
 
 | Script | Purpose | Log |
 |---|---|---|
@@ -414,7 +414,7 @@ Retrieved during this review unless marked otherwise.
 The live `haplo_freqs_em.csv` was fitted on BMDP and SCBB together, so the §4.3 check against
 SCBB units was not strictly out of sample. `dedup_em.py` reruns the 5-locus EM at the 1e-6 floor
 on BMDP donors only, after removing duplicates. It uses unconditional coverage with no pooling.
-Each EM run takes about 50 s for all four groups (`dedup_em.log`, `dedup_em_results_point.csv`).
+Each EM run takes about 50 s for all four groups (`dedup_em.log`, `dedup_em_results.csv`).
 
 | Group | Dedup rule | n | SCBB probe | C(n) | C(2n) | C(3n) | N\*50 | N\*75 | N\*95 |
 |---|---|---|---|---|---|---|---|---|---|

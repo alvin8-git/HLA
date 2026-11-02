@@ -1,0 +1,17 @@
+             size   mean
+eth near                
+C   gap<=10  3430  1.000
+    gap>10   9041  0.793
+I   gap<=10   368  1.000
+    gap>10    235  0.685
+M   gap<=10   309  1.000
+    gap>10    630  0.622
+O   gap<=10   267  1.000
+    gap>10    253  0.700
+
+all:           size   mean
+near                 
+gap<=10   4374  1.000
+gap>10   10159  0.777
+
+fully identical raw rows (keep=False): 19311 | removable duplicates (keep=first): 12060 of 57785

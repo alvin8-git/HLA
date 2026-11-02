@@ -1,0 +1,28 @@
+(1) per-locus genotype twin rate (LOO) vs HWE
+    eth locus  obs_twin  hwe_twin  homo_obs  homo_exp       F
+Chinese HLA-A    0.9970    0.9970    0.1452    0.1467 -0.0017
+Chinese HLA-B    0.9900    0.9896    0.0848    0.0837  0.0012
+Chinese HLA-C    0.9972    0.9970    0.1212    0.1184  0.0033
+Chinese  DRB1    0.9960    0.9955    0.0740    0.0747 -0.0007
+Chinese  DQB1    0.9991    0.9991    0.1252    0.1254 -0.0001
+  Malay HLA-A    0.9819    0.9829    0.1241    0.1182  0.0067
+  Malay HLA-B    0.9383    0.9334    0.0583    0.0514  0.0073
+  Malay HLA-C    0.9849    0.9859    0.1041    0.1013  0.0031
+  Malay  DRB1    0.9790    0.9792    0.1758    0.1745  0.0016
+  Malay  DQB1    0.9957    0.9963    0.1817    0.1815  0.0003
+ Indian HLA-A    0.9832    0.9810    0.1031    0.0953  0.0087
+ Indian HLA-B    0.9452    0.9382    0.0621    0.0483  0.0145
+ Indian HLA-C    0.9818    0.9827    0.0989    0.0815  0.0190
+ Indian  DRB1    0.9705    0.9691    0.0918    0.0808  0.0120
+ Indian  DQB1    0.9951    0.9945    0.1263    0.1129  0.0151
+ Others HLA-A    0.9616    0.9566    0.1157    0.0855  0.0330
+ Others HLA-B    0.8854    0.8629    0.0605    0.0300  0.0315
+ Others HLA-C    0.9765    0.9751    0.1015    0.0758  0.0279
+ Others  DRB1    0.9483    0.9430    0.1007    0.0650  0.0382
+ Others  DQB1    0.9941    0.9946    0.1346    0.1133  0.0240
+
+(2) 10/10 twins by source
+Chinese  BMDP n= 43372 within=0.419 | SCBB n= 1000 within=0.024 | SCBB unit has BMDP twin=0.261
+Malay    BMDP n=  5484 within=0.255 | SCBB n=   90 within=0.022 | SCBB unit has BMDP twin=0.078
+Indian   BMDP n=  5397 within=0.199 | SCBB n=   91 within=0.000 | SCBB unit has BMDP twin=0.044
+Others   BMDP n=  3532 within=0.189 | SCBB n=  220 within=0.000 | SCBB unit has BMDP twin=0.032

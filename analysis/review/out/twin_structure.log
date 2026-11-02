@@ -1,0 +1,4 @@
+Chinese  twin-adjacent pairs=12277  gap<=10: 0.279 (null 0.0002)  gap<=1000: 0.413 (null 0.0322)  median gap 2101 (null 17325)  cluster sizes: {2: 4239, 3: 765, 4: 307, 5: 174, 6: 115, 7: 61}
+Malay    twin-adjacent pairs=  841  gap<=10: 0.363 (null 0.0024)  gap<=1000: 0.428 (null 0.0357)  median gap 2719 (null 17375)  cluster sizes: {2: 432, 3: 74, 4: 17, 5: 7, 6: 6, 7: 11}
+Indian   twin-adjacent pairs=  575  gap<=10: 0.645 (null 0.0000)  gap<=1000: 0.678 (null 0.0383)  median gap 1 (null 15859)  cluster sizes: {2: 454, 3: 33, 4: 4, 5: 3, 6: 2, 7: 1}
+Others   twin-adjacent pairs=  345  gap<=10: 0.774 (null 0.0029)  gap<=1000: 0.794 (null 0.0377)  median gap 1 (null 16562)  cluster sizes: {2: 307, 3: 9, 4: 4, 5: 2}

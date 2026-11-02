@@ -1,0 +1,33 @@
+coverage at k x current (near-dedup) size: genotype Chao-Jost | 1e-6 haplotype model
+Chinese  n= 39922  1x: 0.310 | 0.285  2x: 0.411 | 0.352  3x: 0.497 | 0.394
+Malay    n=  5174  1x: 0.163 | 0.152  2x: 0.244 | 0.206  3x: 0.316 | 0.243
+Indian   n=  4993  1x: 0.071 | 0.057  2x: 0.118 | 0.087  3x: 0.163 | 0.110
+Others   n=  3261  1x: 0.044 | 0.029  2x: 0.077 | 0.049  3x: 0.109 | 0.064
+
+live 1e-6 model N* (same-ethnicity):
+target_coverage           0.75      0.85      0.90       0.95
+match_level ethnicity                                        
+10of10      Chinese    3148792  11287987  26222315   87384114
+            Combined   9852498  36499084  86174218  289962528
+            Indian     3319587   7996681  13826361   28817950
+            Malay      1121822   3394488   6716756   16552048
+            Others     3924269   8783643  14229289   26762600
+8of8        Chinese    2355697   8344407  19302595   64612698
+            Combined   7126960  26077209  61470270  208938879
+            Indian     2858862   6975347  12192674   25924485
+            Malay       838708   2573956   5214840   13457360
+            Others     3357321   7624512  12496019   23860159
+
+snapshot 1e-3 model N*:
+target_coverage         0.75   0.85    0.90    0.95
+match_level ethnicity                              
+10of10      Chinese     7581  15181   23506   42871
+            Combined   26210  60875  107139  243849
+            Indian      9857  18363   26906   44863
+            Malay       6433  13298   21546   41779
+            Others      7207  13119   19246   32360
+8of8        Chinese     7485  14956   23132   42137
+            Combined   25082  57847  101369  229800
+            Indian      9519  17777   26105   43684
+            Malay       5857  12030   19418   37688
+            Others      6763  12505   18592   31774

@@ -1,0 +1,4 @@
+Chinese  K= 9574  model@near n=39922: 0.285  model@all n=32756: 0.266  probe=0.261 [0.234,0.289]  eval 0.4s
+Indian   K= 4024  model@near n=4993: 0.057  model@all n=4849: 0.056  probe=0.044 [0.012,0.109]  eval 0.1s
+Malay    K= 3134  model@near n=5174: 0.152  model@all n=4841: 0.147  probe=0.078 [0.032,0.154]  eval 0.1s
+Others   K= 4634  model@near n=3261: 0.029  model@all n=3216: 0.029  probe=0.032 [0.013,0.064]  eval 0.1s

@@ -1,0 +1,121 @@
+rep 30
+rep 21
+rep 18
+rep 6
+rep 9
+rep 15
+rep 24
+rep 27
+rep 12
+rep 0
+rep 33
+rep 3
+rep 22
+rep 7
+rep 31
+rep 25
+rep 19
+rep 28
+rep 4
+rep 1
+rep 10
+rep 16
+rep 13
+rep 34
+rep 23
+rep 32
+rep 8
+rep 5
+rep 20
+rep 26
+rep 29
+rep 2
+rep 14
+rep 11
+rep 35
+rep 17
+rep 36
+rep 42
+rep 39
+rep 54
+rep 45
+rep 51
+rep 48
+rep 63
+rep 69
+rep 66
+rep 60
+rep 57
+rep 43
+rep 37
+rep 55
+rep 40
+rep 46
+rep 52
+rep 70
+rep 67
+rep 49
+rep 61
+rep 64
+rep 58
+rep 44
+rep 38
+rep 56
+rep 41
+rep 53
+rep 68
+rep 50
+rep 71
+rep 65
+rep 47
+rep 62
+rep 59
+rep 72
+rep 75
+rep 81
+rep 78
+rep 84
+rep 90
+rep 93
+rep 96
+rep 99
+rep 87
+rep 73
+rep 76
+rep 82
+rep 85
+rep 79
+rep 94
+rep 91
+rep 97
+rep 74
+rep 88
+rep 77
+rep 83
+rep 80
+rep 86
+rep 95
+rep 92
+rep 98
+rep 89
+ethnicity   stat     point        lo        hi  half_median  drift_pct
+  Chinese  cov_n    0.2853    0.2815    0.2889       0.2938      2.986
+  Chinese cov_2n    0.3533    0.3494     0.357       0.3642      3.088
+  Chinese cov_3n    0.3953    0.3914     0.399       0.4078      3.162
+  Chinese    N50 3.171e+05 3.083e+05 3.262e+05    2.737e+05     -13.67
+  Chinese    N75 3.724e+06  3.63e+06 3.806e+06    2.906e+06     -21.96
+   Indian  cov_n   0.05676   0.05224   0.06175      0.06445      13.56
+   Indian cov_2n   0.08681   0.08068   0.09311      0.09966       14.8
+   Indian cov_3n    0.1093     0.102    0.1162       0.1263      15.53
+   Indian    N50 6.059e+05 5.808e+05 6.314e+05    3.692e+05     -39.08
+   Indian    N75 3.769e+06 3.656e+06 3.867e+06    1.944e+06     -48.43
+    Malay  cov_n    0.1522    0.1434    0.1617       0.1646      8.086
+    Malay cov_2n    0.2066    0.1962    0.2175       0.2248      8.829
+    Malay cov_3n    0.2432     0.232     0.255       0.2657      9.255
+    Malay    N50  1.47e+05 1.384e+05 1.568e+05     1.01e+05     -31.27
+    Malay    N75 1.292e+06  1.23e+06 1.355e+06    7.773e+05     -39.83
+   Others  cov_n   0.02987   0.02594   0.03355      0.03533      18.26
+   Others cov_2n   0.04995   0.04448   0.05513       0.0596      19.33
+   Others cov_3n   0.06561    0.0593    0.0718      0.07881      20.12
+   Others    N50 7.369e+05 7.076e+05 7.705e+05    3.996e+05     -45.77
+   Others    N75 4.283e+06 4.176e+06  4.46e+06    1.957e+06     -54.31

@@ -1,0 +1,37 @@
+Chinese  1e-6    K= 9574 mass=0.9997 obs=0.418 uncond=0.295 cond=0.295 pool99=0.306
+Chinese  1/(4n)  K= 9394 mass=0.9993 obs=0.418 uncond=0.295 cond=0.295 pool99=0.306
+Chinese  1/(2n)  K= 6181 mass=0.9669 obs=0.418 uncond=0.294 cond=0.321 pool99=0.333
+Chinese  2/(2n)  K= 3824 mass=0.9285 obs=0.418 uncond=0.293 cond=0.356 pool99=0.368
+Chinese  1e-4    K= 1257 mass=0.8079 obs=0.418 uncond=0.285 cond=0.494 pool99=0.507
+Chinese  3e-4    K=  489 mass=0.6797 obs=0.418 uncond=0.263 cond=0.682 pool99=0.693
+Chinese  1e-3    K=  138 mass=0.4934 obs=0.418 uncond=0.195 cond=0.949 pool99=0.952
+Indian   1e-6    K= 4024 mass=1.0000 obs=0.197 uncond=0.061 cond=0.061 pool99=0.065
+Indian   1/(4n)  K= 3520 mass=0.9964 obs=0.197 uncond=0.061 cond=0.061 pool99=0.065
+Indian   1/(2n)  K= 1784 mass=0.8431 obs=0.197 uncond=0.060 cond=0.104 pool99=0.108
+Indian   2/(2n)  K=  940 mass=0.7201 obs=0.197 uncond=0.058 cond=0.165 pool99=0.171
+Indian   1e-4    K= 1609 mass=0.8266 obs=0.197 uncond=0.060 cond=0.110 pool99=0.115
+Indian   3e-4    K=  600 mass=0.6375 obs=0.197 uncond=0.057 cond=0.232 pool99=0.238
+Indian   1e-3    K=  145 mass=0.4013 obs=0.197 uncond=0.047 cond=0.635 pool99=0.641
+Malay    1e-6    K= 3134 mass=1.0000 obs=0.253 uncond=0.157 cond=0.157 pool99=0.164
+Malay    1/(4n)  K= 2759 mass=0.9970 obs=0.253 uncond=0.157 cond=0.159 pool99=0.165
+Malay    1/(2n)  K= 1420 mass=0.8816 obs=0.253 uncond=0.156 cond=0.224 pool99=0.232
+Malay    2/(2n)  K=  817 mass=0.7969 obs=0.253 uncond=0.154 cond=0.295 pool99=0.303
+Malay    1e-4    K= 1256 mass=0.8663 obs=0.253 uncond=0.156 cond=0.235 pool99=0.243
+Malay    3e-4    K=  517 mass=0.7241 obs=0.253 uncond=0.151 cond=0.377 pool99=0.385
+Malay    1e-3    K=  132 mass=0.5235 obs=0.253 uncond=0.135 cond=0.732 pool99=0.739
+Others   1e-6    K= 4634 mass=1.0000 obs=0.181 uncond=0.033 cond=0.033 pool99=0.035
+Others   1/(4n)  K= 3106 mass=0.9837 obs=0.181 uncond=0.033 cond=0.035 pool99=0.037
+Others   1/(2n)  K= 1276 mass=0.7460 obs=0.181 uncond=0.031 cond=0.086 pool99=0.091
+Others   2/(2n)  K=  613 mass=0.5947 obs=0.181 uncond=0.030 cond=0.173 pool99=0.179
+Others   1e-4    K= 3035 mass=0.9786 obs=0.181 uncond=0.033 cond=0.035 pool99=0.038
+Others   3e-4    K=  553 mass=0.5779 obs=0.181 uncond=0.030 cond=0.188 pool99=0.194
+Others   1e-3    K=  123 mass=0.3563 obs=0.181 uncond=0.026 cond=0.611 pool99=0.616
+        MAE_uncond_err_pts  MAE_cond_err_pts  MAE_cond_pool99_err_pts
+floor                                                                
+1e-6                 12.60             12.60                    12.00
+1/(4n)               12.60             12.49                    11.89
+1/(2n)               12.71              7.84                     7.14
+2/(2n)               12.84              3.57                     3.19
+1e-4                 12.91              8.19                     8.12
+3e-4                 13.72             10.74                    11.52
+1e-3                 16.16             46.93                    47.45
