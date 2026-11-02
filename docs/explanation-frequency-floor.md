@@ -105,32 +105,50 @@ about the floor, not about the population.
 
 ## Which floor predicts reality better
 
-There is one quantity here that can be measured without a model: how often a
-donor already in the registry has an exact 10/10 genotype twin. Both floors
-make a prediction about it at the registry's *actual* size, so this is a real
-test.
+> **Corrected 2026-11-02.** An earlier version of this section scored both floors against the
+> in-registry twin rate and concluded that 1e-3 was closer to reality. That benchmark is
+> inflated by duplicate donor records, and the 1e-3 figures multiplied by retained mass instead
+> of mass squared. Details: `docs/review-registry-size-estimation.md` §4.1–4.3.
 
-| | actual N | observed | 1e-3 predicts | error | 1e-6 predicts | error |
-|---|---|---|---|---|---|---|
-| Chinese | 44,400 | **41.8%** | 49.2% | +7.4 | 30.6% | −11.2 |
-| Malay | 5,578 | **25.3%** | 38.5% | +13.2 | 16.4% | −8.9 |
-| Indian | 5,490 | **19.7%** | 25.8% | +6.1 | 6.5% | −13.2 |
-| Others | 3,767 | **18.1%** | 22.0% | +3.9 | 3.5% | −14.6 |
+The quantity a model must reproduce is how often a patient finds an exact 10/10 genotype twin
+among the donors the registry holds *today*. Two benchmarks exist.
 
-Mean absolute error: **1e-3 → 7.7 points, 1e-6 → 12.0 points.**
+**The in-registry twin rate is contaminated.** BMDP contains duplicate records: 4,370 records
+repeat the raw typing string of a record at most 10 rows earlier, and every one of those nearby
+pairs is identical character for character. A duplicate is its own twin, so the as-ingested
+rates (Chinese 41.8%, Malay 25.3%, Indian 19.7%, Others 18.1%) overstate coverage.
 
-(The 1e-3 prediction is conditional coverage at the actual N multiplied by the
-frequency mass the floor retains; at 1e-6 the retained mass is 100%.)
+**The SCBB cord units are clean.** They are typed and banked independently of BMDP. The share
+of cord units with a 10/10 twin in BMDP is an uncontaminated estimate of coverage at BMDP's
+size.
 
-Both are biased, in opposite directions. But the 1e-6 model says Indian and
-Others patients find a match 6.5% and 3.5% of the time when they observably do
-so about 20% and 18% of the time. That is not conservatism, it is a failed
-prediction — most likely EM over-fragmentation, where phase ambiguity spreads
-mass across thousands of near-duplicate rare haplotypes and makes patients look
-more distinct from one another than they are.
+| | SCBB probe (95% CI) | 1e-3, unconditional | 1e-3, as reported (conditional) | 1e-6, BMDP-only fit, dedup |
+|---|---|---|---|---|
+| Chinese | **26.1%** (23.4–28.9) | 19.5% | 94.9% | 28.5% |
+| Malay | **7.8%** (3.2–15.4) | 13.5% | 73.2% | 15.2% |
+| Indian | **4.4%** (1.2–10.9) | 4.7% | 63.5% | 5.7% |
+| Others | **3.2%** (1.3–6.4) | 2.6% | 61.1% | 3.0% |
 
-So "1e-6 is the more rigorous floor" is true on internal grounds and false on
-external ones.
+The 1e-3 *unconditional* column is conditional coverage times retained mass **squared**. A
+patient needs both haplotypes to clear the floor, so that column is what the 1e-3 model claims
+about all patients. Both 1e-3 columns are evaluated at the as-ingested size, which flatters
+them slightly. The 1e-6 column comes from a fit on deduplicated BMDP donors only, so the
+cord units are out of sample.
+
+How to read the table:
+
+- **Today's coverage cannot tell the floors apart.** Both unconditional columns sit close to the
+  probes.
+- **The conditional figures the manuscript reports are far from reality.** For example, 94.9% for
+  Chinese against a measured 26.1%.
+- **The floors split when you extrapolate.** At 1e-3 unconditional coverage can never exceed
+  retained mass squared, 13–27% depending on the group, so every target above that is
+  unreachable by construction. The renormalised version reaches 95% only by dropping the
+  patients who carry rare haplotypes.
+- **1e-6 is the only floor that is both calibrated today and able to extrapolate.**
+
+Scripts and logs: `/data/alvin/tmp/hla_review/` (`dedup_coverage.py`, `floor_sweep.py`,
+`dedup_em.py`).
 
 ---
 
@@ -226,11 +244,11 @@ Two things, neither of which is speed:
    so. That is a well-defined quantity: the registry size needed to serve the
    ~52% of Chinese patients (and 36% of Others patients) who carry common
    haplotypes.
-2. **It is the only version that has been validated.** Its unconditional
-   prediction lands within 7 points of a model-free observed match rate, and
-   Section 3.6 of the manuscript reports Spearman r = 0.70 against observed
-   patient haplotype frequencies. The 1e-6 figure of 87 million has never been
-   checked against anything.
+2. ~~It is the only version that has been validated.~~ *Withdrawn 2026-11-02.* The "within
+   7 points" check used a duplicate-inflated benchmark and multiplied by retained mass instead
+   of mass squared. Against independent SCBB cord units, the 1e-6 model is calibrated at
+   today's size (see above). Spearman r = 0.70 tests the rank order of haplotypes, not the
+   level of coverage.
 
 ---
 
