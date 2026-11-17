@@ -1,0 +1,9 @@
+flowchart LR
+  A["<b>1 · Typed donors</b><br/>5 HLA genes"]:::intake --> B["<b>2 · Deduplicate</b><br/>nearby repeats"]:::gate
+  B --> C["<b>3 · Haplotypes</b><br/>EM, floor 1e-6"]:::gate
+  C --> D["<b>4 · Match odds</b><br/>C(N), N donors"]:::gate
+  D --> E["<b>5 · Check</b><br/>SCBB cord units"]:::term
+  E --> F["<b>6 · Calibrate</b><br/>subsample refits"]:::term
+  classDef intake fill:#FFFFFF,stroke:#5B6B7B
+  classDef gate fill:#F4F7FA,stroke:#006AB6
+  classDef term fill:#EAF6F3,stroke:#12B096
